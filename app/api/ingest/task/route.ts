@@ -1,5 +1,8 @@
+import { createHash } from "crypto";
 import { checkApiKey, getSupabase } from "@/lib/supabase";
-import { ensureSession, sha1 } from "@/lib/ingest";
+import { ensureSession } from "@/lib/ingest";
+
+const sha1 = (s: string) => createHash("sha1").update(s).digest("hex");
 
 export const dynamic = "force-dynamic";
 
@@ -56,20 +59,24 @@ export async function POST(req: Request) {
     const sessionId = body.session_id ?? null;
 
     let projectId: string | null = null;
+    let sessionActivePlanId: string | null = null;
     if (sessionId) {
       const { data: session } = await db
         .from("sessions")
-        .select("project_id")
+        .select("project_id, active_plan_id")
         .eq("id", sessionId)
         .maybeSingle();
       if (session) {
         projectId = session.project_id ?? null;
+        sessionActivePlanId = (session.active_plan_id as string | null) ?? null;
       } else {
         // Self-heal: session isn't tracked (hooks not fired for it, or CLI used
         // before SessionStart). Create a bare row so the FK holds and the task lands.
         await ensureSession(db, sessionId, null, { source: "cli" });
       }
     }
+    // If the caller didn't pass --plan, inherit the session's focused plan.
+    const effectivePlanId = body.plan_id !== undefined ? body.plan_id : sessionActivePlanId;
 
     // Project-scoped (falling back to session when there's no project) so the same
     // task text continues as one row across sessions instead of duplicating per session.
@@ -106,7 +113,7 @@ export async function POST(req: Request) {
     const { data, error } = await db
       .from("tasks")
       .insert({
-        plan_id: body.plan_id ?? null,
+        plan_id: effectivePlanId ?? null,
         session_id: sessionId,
         project_id: projectId,
         content: body.content,

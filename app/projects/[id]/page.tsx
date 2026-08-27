@@ -73,7 +73,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                       {sess.git_branch && <span className="font-mono">{sess.git_branch}</span>}
                       {sess.model && <span>{sess.model.replace("claude-", "")}</span>}
                       <span className="font-mono tabular-nums">{fmtNum(sess.prompt_count)} prompts</span>
-                      <span className="font-mono tabular-nums text-foreground/80">{fmtCost(Number(sess.estimated_cost_usd))}</span>
+                      <span className="ml-auto font-mono tabular-nums text-foreground/80">{fmtCost(Number(sess.estimated_cost_usd))}</span>
                     </p>
                   </div>
                   {isLive(sess) ? (

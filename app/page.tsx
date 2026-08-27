@@ -50,13 +50,13 @@ export default async function OverviewPage() {
   return (
     <>
       <PageHeader
-        title="Command Deck"
+        title="Control Panel"
         sub="What is running, what is done, what is next. Across every Claude Code session on this machine."
         right={
           liveCount > 0 ? (
             <span className="inline-flex items-center gap-2 rounded-full border border-line bg-panel px-3 py-1.5 text-[0.75rem] text-muted">
               <LiveDot />
-              <span className="font-mono tabular-nums text-foreground">{liveCount}</span> live now
+              <span className="font-mono tabular-nums text-foreground">{liveCount}</span> active session{liveCount === 1 ? "" : "s"}
             </span>
           ) : null
         }
@@ -64,14 +64,14 @@ export default async function OverviewPage() {
 
       {/* Stat rail */}
       <div className="mb-8 grid gap-3 grid-cols-2 md:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-8">
-        <Stat label="Sessions"   value={stats.sessions}            href="/sessions"    sub={`${stats.activeSessions} active now`} />
-        <Stat label="Projects"   value={stats.projects}            href="/projects" />
-        <Stat label="Plans"      value={stats.plans}               href="/plans"       sub={`${stats.plansCompleted} completed`} />
-        <Stat label="Tasks"      value={stats.tasks}               href="/tasks"       sub={`${stats.tasksCompleted} done  /  ${stats.tasksInProgress} running`} />
-        <Stat label="Prompts"    value={fmtNum(stats.prompts)}     href="/analytics" />
-        <Stat label="Tool calls" value={fmtNum(stats.toolUses)}    href="/analytics" />
-        <Stat label="Tokens"     value={fmtNum(stats.totalTokens)} href="/analytics"   sub="in, out, cache" />
-        <Stat label="Est. cost"  value={fmtCost(stats.totalCost)}  href="/analytics"   emphasis sub="rough model pricing" />
+        <Stat label="Sessions" value={stats.sessions} href="/sessions" sub={`${stats.activeSessions} active now`} />
+        <Stat label="Projects" value={stats.projects} href="/projects" />
+        <Stat label="Plans" value={stats.plans} href="/plans" sub={`${stats.plansCompleted} completed`} />
+        <Stat label="Tasks" value={stats.tasks} href="/tasks" sub={`${stats.tasksCompleted} done  /  ${stats.tasksInProgress} running`} />
+        <Stat label="Prompts" value={fmtNum(stats.prompts)} href="/analytics" />
+        <Stat label="Tool calls" value={fmtNum(stats.toolUses)} href="/analytics" />
+        <Stat label="Tokens" value={fmtNum(stats.totalTokens)} href="/analytics" sub="in, out, cache" />
+        <Stat label="Est. cost" value={fmtCost(stats.totalCost)} href="/analytics" emphasis sub="rough model pricing" />
       </div>
 
       {/* Activity spread */}
@@ -111,7 +111,7 @@ export default async function OverviewPage() {
                           <span>{s.project_id ? projectMap.get(s.project_id) ?? "project" : "no project"}</span>
                           {s.git_branch && <span className="font-mono">{s.git_branch}</span>}
                           <span className="font-mono tabular-nums">{fmtNum(s.prompt_count)} prompts</span>
-                          <span className="font-mono tabular-nums text-foreground/80">{fmtCost(Number(s.estimated_cost_usd))}</span>
+                          <span className="ml-auto font-mono tabular-nums text-foreground/80">{fmtCost(Number(s.estimated_cost_usd))}</span>
                         </p>
                       </div>
                       <div className="shrink-0">

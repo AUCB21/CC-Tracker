@@ -10,7 +10,10 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "CC-Track / Command Deck",
+  title: {
+    default: "CC-Track",
+    template: "CC-Track | %s",
+  },
   description: "Retrospective control room for every Claude Code session.",
 };
 
@@ -33,19 +36,19 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                   CC
                 </span>
                 <span className="text-[0.9375rem] font-semibold tracking-tight">
-                  Command Deck
+                  Claude Control
                 </span>
               </Link>
               <p className="mt-1 text-[0.6875rem] uppercase tracking-[0.08em] text-muted">
-                Claude Code telemetry
+                Progress Tracker
               </p>
             </div>
 
             <DeckRail />
-
+            {/* 
             <div className="border-t border-line px-5 py-4 text-[0.6875rem] uppercase tracking-[0.08em] text-muted">
-              single operator
-            </div>
+              {user ?? user.username : "Username"}
+            </div> */}
           </aside>
 
           {/* Mobile top bar */}
@@ -58,7 +61,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               >
                 CC
               </span>
-              <span className="text-sm font-semibold tracking-tight">Command Deck</span>
+              <span className="text-sm font-semibold tracking-tight">Claude Control</span>
             </Link>
             <DeckRailMobile />
           </header>
