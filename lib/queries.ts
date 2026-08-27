@@ -1,0 +1,183 @@
+import "server-only";
+import { unstable_cache } from "next/cache";
+import { getSupabase } from "./supabase";
+import type { Project, Session, Plan, Task, EventRow } from "./types";
+
+export type Stats = {
+  sessions: number;
+  activeSessions: number;
+  projects: number;
+  plans: number;
+  plansCompleted: number;
+  tasks: number;
+  tasksCompleted: number;
+  tasksInProgress: number;
+  prompts: number;
+  toolUses: number;
+  totalTokens: number;
+  totalCost: number;
+};
+
+async function computeStats(): Promise<Stats | null> {
+  const db = getSupabase();
+  if (!db) return null;
+  const [sessions, projects, plans, tasks] = await Promise.all([
+    db.from("sessions").select("id,status,last_activity_at,prompt_count,tool_use_count,input_tokens,output_tokens,cache_read_tokens,cache_creation_tokens,estimated_cost_usd"),
+    db.from("projects").select("id", { count: "exact", head: true }),
+    db.from("plans").select("status"),
+    db.from("tasks").select("status"),
+  ]);
+  const s = (sessions.data ?? []) as Pick<
+    Session,
+    | "id" | "status" | "last_activity_at" | "prompt_count" | "tool_use_count"
+    | "input_tokens" | "output_tokens" | "cache_read_tokens"
+    | "cache_creation_tokens" | "estimated_cost_usd"
+  >[];
+  const planRows = (plans.data ?? []) as { status: string }[];
+  const taskRows = (tasks.data ?? []) as { status: string }[];
+  return {
+    sessions: s.length,
+    activeSessions: s.filter(
+      (x) => x.status === "active" && Date.now() - new Date(x.last_activity_at).getTime() < 30 * 60_000
+    ).length,
+    projects: projects.count ?? 0,
+    plans: planRows.length,
+    plansCompleted: planRows.filter((p) => p.status === "completed").length,
+    tasks: taskRows.length,
+    tasksCompleted: taskRows.filter((t) => t.status === "completed").length,
+    tasksInProgress: taskRows.filter((t) => t.status === "in_progress").length,
+    prompts: s.reduce((a, x) => a + x.prompt_count, 0),
+    toolUses: s.reduce((a, x) => a + x.tool_use_count, 0),
+    totalTokens: s.reduce(
+      (a, x) => a + x.input_tokens + x.output_tokens + x.cache_read_tokens + x.cache_creation_tokens,
+      0
+    ),
+    totalCost: s.reduce((a, x) => a + Number(x.estimated_cost_usd), 0),
+  };
+}
+
+/* Cached wrapper: dedupes stats across navigations within a 15s window even
+   with dynamic="force-dynamic" pages. Freshness gap is fine for a
+   retrospective dashboard; new hook events surface within 15s of arrival. */
+export const getStats: () => Promise<Stats | null> = unstable_cache(
+  computeStats,
+  ["cc-track:stats:v1"],
+  { revalidate: 15, tags: ["stats"] },
+);
+
+export async function getProjects(): Promise<Project[] | null> {
+  const db = getSupabase();
+  if (!db) return null;
+  const { data } = await db.from("projects").select("*").order("created_at", { ascending: false });
+  return (data as Project[]) ?? [];
+}
+
+export async function getProject(id: string): Promise<Project | null> {
+  const db = getSupabase();
+  if (!db) return null;
+  const { data } = await db.from("projects").select("*").eq("id", id).maybeSingle();
+  return (data as Project) ?? null;
+}
+
+export async function getSessions(
+  opts: {
+    projectId?: string;
+    projectIds?: string[];
+    models?: string[];
+    sinceIso?: string;
+    limit?: number;
+  } = {},
+): Promise<Session[] | null> {
+  const db = getSupabase();
+  if (!db) return null;
+  let q = db.from("sessions").select("*").order("last_activity_at", { ascending: false });
+  if (opts.projectId) q = q.eq("project_id", opts.projectId);
+  if (opts.projectIds && opts.projectIds.length > 0) q = q.in("project_id", opts.projectIds);
+  if (opts.models && opts.models.length > 0) q = q.in("model", opts.models);
+  if (opts.sinceIso) q = q.gte("started_at", opts.sinceIso);
+  if (opts.limit) q = q.limit(opts.limit);
+  const { data } = await q;
+  return (data as Session[]) ?? [];
+}
+
+export async function getSession(id: string): Promise<Session | null> {
+  const db = getSupabase();
+  if (!db) return null;
+  const { data } = await db.from("sessions").select("*").eq("id", id).maybeSingle();
+  return (data as Session) ?? null;
+}
+
+export async function getPlans(opts: { projectId?: string; sessionId?: string } = {}): Promise<Plan[] | null> {
+  const db = getSupabase();
+  if (!db) return null;
+  let q = db.from("plans").select("*").order("created_at", { ascending: false });
+  if (opts.projectId) q = q.eq("project_id", opts.projectId);
+  if (opts.sessionId) q = q.eq("session_id", opts.sessionId);
+  const { data } = await q;
+  return (data as Plan[]) ?? [];
+}
+
+export async function getTasks(opts: { projectId?: string; sessionId?: string; planId?: string } = {}): Promise<Task[] | null> {
+  const db = getSupabase();
+  if (!db) return null;
+  let q = db.from("tasks").select("*").order("created_at", { ascending: true });
+  if (opts.projectId) q = q.eq("project_id", opts.projectId);
+  if (opts.sessionId) q = q.eq("session_id", opts.sessionId);
+  if (opts.planId) q = q.eq("plan_id", opts.planId);
+  const { data } = await q;
+  return (data as Task[]) ?? [];
+}
+
+export async function getEvents(
+  sessionId: string,
+  opts: { limit?: number; types?: string[]; toolNames?: string[] } = {},
+): Promise<EventRow[] | null> {
+  const db = getSupabase();
+  if (!db) return null;
+  let q = db
+    .from("events")
+    .select("*")
+    .eq("session_id", sessionId)
+    .order("created_at", { ascending: false })
+    .limit(opts.limit ?? 200);
+  if (opts.types && opts.types.length > 0) q = q.in("type", opts.types);
+  if (opts.toolNames && opts.toolNames.length > 0) q = q.in("tool_name", opts.toolNames);
+  const { data } = await q;
+  return (data as EventRow[]) ?? [];
+}
+
+export async function getRecentEvents(limit = 60): Promise<EventRow[] | null> {
+  const db = getSupabase();
+  if (!db) return null;
+  const { data } = await db
+    .from("events")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  return (data as EventRow[]) ?? [];
+}
+
+export async function getEventsSince(
+  sinceIso: string,
+  types?: string[],
+  limit = 20000
+): Promise<EventRow[] | null> {
+  const db = getSupabase();
+  if (!db) return null;
+  let q = db
+    .from("events")
+    .select("id,type,tool_name,created_at")
+    .gte("created_at", sinceIso)
+    .order("created_at", { ascending: true })
+    .limit(limit);
+  if (types?.length) q = q.in("type", types);
+  const { data } = await q;
+  return (data as EventRow[]) ?? [];
+}
+
+export async function getAllSessions(): Promise<Session[] | null> {
+  const db = getSupabase();
+  if (!db) return null;
+  const { data } = await db.from("sessions").select("*").order("started_at", { ascending: true });
+  return (data as Session[]) ?? [];
+}

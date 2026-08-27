@@ -1,0 +1,102 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* Warm graphite palette (Command Deck) */
+  --color-background: #0c0b0a;      /* Deep Slate */
+  --color-foreground: #ece8e1;      /* Bone Cream */
+  --color-panel: #161412;           /* Ink Slate */
+  --color-panel2: #1d1a17;          /* Lifted Slate */
+  --color-line: #2a2621;            /* Hairline Char */
+  --color-muted: #9b938a;           /* Dust */
+  --color-muted-2: #57504a;         /* Ash */
+
+  /* One signal + three roles */
+  --color-accent: #d97757;          /* Terracotta Signal */
+  --color-accent-soft: #d9775733;
+  --color-accent-ring: #d9775780;
+  --color-green: #7fb069;           /* Sage Signal (done) */
+  --color-yellow: #d9a441;          /* Ember Signal (in-flight) */
+  --color-blue: #6a9fd9;            /* Indigo Signal (reference) */
+
+  /* Type stacks */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Motion */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --duration-fast: 120ms;
+  --duration-max: 150ms;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-feature-settings: "ss01", "cv11";
+}
+
+::selection {
+  background: var(--color-accent-soft);
+  color: var(--color-foreground);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 0.5rem;
+  height: 0.5rem;
+}
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: var(--color-line);
+  border-radius: 9999px;
+}
+*::-webkit-scrollbar-thumb:hover { background: var(--color-muted-2); }
+
+/* Focus ring: keyboard only */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 0.125rem var(--color-accent-ring);
+  border-radius: 0.375rem;
+}
+
+/* Skip-to-content link: visible on focus */
+.skip-link {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 50;
+  background: var(--color-accent);
+  color: var(--color-background);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transform: translateY(-150%);
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+/* Respect prefers-reduced-motion: preserve state change, kill animation */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Tabular numerals everywhere digits share a column */
+.tabular-nums, table, .stat-value, .data {
+  font-variant-numeric: tabular-nums;
+}
