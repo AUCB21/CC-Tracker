@@ -25,10 +25,6 @@ export function fmtDate(iso: string | null | undefined): string {
   });
 }
 
-export function fmtDay(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
-}
-
 export function fmtDuration(startIso: string, endIso: string | null): string {
   const ms = (endIso ? new Date(endIso).getTime() : Date.now()) - new Date(startIso).getTime();
   if (ms < 0) return DASH;

@@ -149,17 +149,6 @@ export async function getEvents(
   return (data as EventRow[]) ?? [];
 }
 
-export async function getRecentEvents(limit = 60): Promise<EventRow[] | null> {
-  const db = getSupabase();
-  if (!db) return null;
-  const { data } = await db
-    .from("events")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(limit);
-  return (data as EventRow[]) ?? [];
-}
-
 export async function getEventsSince(
   sinceIso: string,
   types?: string[],

@@ -2,9 +2,7 @@ import { createHash } from "crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { estimateCost } from "./cost";
 
-export function sha1(s: string): string {
-  return createHash("sha1").update(s).digest("hex");
-}
+const sha1 = (s: string) => createHash("sha1").update(s).digest("hex");
 
 function basename(p: string): string {
   const parts = p.replace(/[/\\]+$/, "").split(/[/\\]/);
@@ -138,6 +136,14 @@ async function syncTodoWrite(
   projectId: string | null,
   todos: { content: string; status: string; activeForm?: string }[]
 ): Promise<void> {
+  // Inherit the session's active plan pointer (set by `cctrack plan focus <id>`)
+  // so TodoWrite items roll up under the plan the operator is working on.
+  const { data: sess } = await db
+    .from("sessions")
+    .select("active_plan_id")
+    .eq("id", sessionId)
+    .maybeSingle();
+  const activePlanId = (sess?.active_plan_id as string | null) ?? null;
   for (let i = 0; i < todos.length; i++) {
     const t = todos[i];
     if (!t?.content) continue;
@@ -169,7 +175,7 @@ async function syncTodoWrite(
       }
     } else {
       await db.from("tasks").insert({
-        plan_id: null,
+        plan_id: activePlanId,
         session_id: sessionId,
         project_id: projectId,
         content: t.content,

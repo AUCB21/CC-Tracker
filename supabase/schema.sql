@@ -112,3 +112,8 @@ alter table public.events   enable row level security;
 -- Persist Stop's last_assistant_message and StopFailure's error payload on the session row.
 alter table public.sessions add column if not exists last_message text;
 alter table public.sessions add column if not exists last_error   jsonb;
+
+-- Pointer to the plan the session is currently working on. TodoWrite tasks and
+-- CLI-created tasks inherit this when no explicit plan_id is given. `cctrack plan focus <id>`
+-- sets it; `cctrack plan unfocus` clears.
+alter table public.sessions add column if not exists active_plan_id uuid references public.plans(id) on delete set null;

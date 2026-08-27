@@ -94,6 +94,18 @@ try {
     });
     console.log(`✔ plan created: ${data.plan.id}`);
     console.log(`  add tasks with: cctrack task add --plan ${data.plan.id} --content "…"`);
+  } else if (entity === "plan" && action === "focus") {
+    const id = positional[0];
+    if (!id) {
+      console.error("Usage: cctrack plan focus <plan-id>");
+      process.exit(1);
+    }
+    const data = await post(`/api/sessions/${sessionId(flags)}/focus`, { plan_id: id });
+    console.log(`✔ session focused on plan: ${data.session.active_plan_id}`);
+    console.log(`  TodoWrite items and 'cctrack task add' (no --plan) will inherit this.`);
+  } else if (entity === "plan" && action === "unfocus") {
+    const data = await post(`/api/sessions/${sessionId(flags)}/focus`, { plan_id: null });
+    console.log(`✔ session unfocused (active_plan_id=${data.session.active_plan_id})`);
   } else if (entity === "plan" && (action === "done" || action === "drop" || action === "update")) {
     const id = positional[0];
     if (!id) {
@@ -154,6 +166,8 @@ try {
   cctrack plan add --title "…" [--desc "…"] [--session <id>]
   cctrack plan done <plan-id>          mark plan completed
   cctrack plan drop <plan-id>          mark plan abandoned
+  cctrack plan focus <plan-id>         make this the session's active plan (TodoWrite + task add inherit it)
+  cctrack plan unfocus                 clear the session's active plan
   cctrack plan update <plan-id> --title/--desc/--status …
   cctrack task add --content "…" [--desc "…"] [--plan <id>] [--status …]
   cctrack task start <task-id>

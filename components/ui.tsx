@@ -5,13 +5,11 @@ export function Card({
   right,
   children,
   className = "",
-  padded = true,
 }: {
   title?: string;
   right?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
-  padded?: boolean;
 }) {
   return (
     <section className={`rounded-2xl border border-line bg-panel ${className}`}>
@@ -25,7 +23,7 @@ export function Card({
           {right}
         </header>
       )}
-      <div className={padded ? "px-5 pb-5" : ""}>{children}</div>
+      <div className="px-5 pb-5">{children}</div>
     </section>
   );
 }
@@ -184,11 +182,9 @@ export function PageHeader({
 export function TaskLine({
   status,
   content,
-  strikeCompleted = true,
 }: {
   status: "pending" | "in_progress" | "completed";
   content: string;
-  strikeCompleted?: boolean;
 }) {
   const spec = {
     completed:  { glyph: "✓", tone: "text-[color:var(--color-green)]" },
@@ -198,7 +194,7 @@ export function TaskLine({
   return (
     <li className="flex items-center gap-2 text-sm">
       <span className={`inline-flex w-4 justify-center ${spec.tone}`}>{spec.glyph}</span>
-      <span className={status === "completed" && strikeCompleted ? "text-muted line-through decoration-[color:var(--color-line)]" : "text-foreground"}>
+      <span className={status === "completed" ? "text-muted line-through decoration-[color:var(--color-line)]" : "text-foreground"}>
         {content}
       </span>
     </li>

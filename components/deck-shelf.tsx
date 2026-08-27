@@ -31,17 +31,16 @@ export function DeckShelf({ connected }: { connected: boolean }) {
 
       <Link
         href="/setup"
-        aria-label={connected ? "Supabase connected" : "Supabase not configured"}
+        aria-label={connected ? "Database connected" : "Database not configured"}
         className="group inline-flex items-center gap-2 rounded-full border border-line bg-panel px-3 py-1 text-[0.6875rem] uppercase tracking-[0.06em] transition-colors hover:border-accent/60"
       >
         <span
           aria-hidden
-          className={`inline-block h-2 w-2 rounded-full ${
-            connected ? "bg-[color:var(--color-green)]" : "bg-[color:var(--color-yellow)]"
-          }`}
+          className={`inline-block h-2 w-2 rounded-full ${connected ? "bg-[color:var(--color-green)]" : "bg-[color:var(--color-yellow)]"
+            }`}
         />
         <span className="text-muted group-hover:text-foreground">
-          {connected ? "Supabase connected" : "Supabase not configured"}
+          {connected ? "Database connected" : "Database not configured"}
         </span>
       </Link>
     </div>
