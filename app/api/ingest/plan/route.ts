@@ -43,6 +43,15 @@ export async function POST(req: Request) {
         .maybeSingle();
       if (error) throw error;
       if (!data) return Response.json({ error: "plan not found" }, { status: 404 });
+      // Auto-unfocus any session whose active_plan_id points at this plan once
+      // it's terminal (completed or abandoned) - a focus pointer to a done plan
+      // is a data smell and causes new TodoWrite items to keep rolling into it.
+      if (body.status === "completed" || body.status === "abandoned") {
+        await db
+          .from("sessions")
+          .update({ active_plan_id: null })
+          .eq("active_plan_id", body.id);
+      }
       return Response.json({ ok: true, plan: data });
     }
 
