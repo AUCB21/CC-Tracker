@@ -48,7 +48,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         }
       />
 
-      <div className="mb-8 grid gap-3 grid-cols-2 md:grid-cols-4 2xl:max-w-[52rem]">
+      <div className="mb-8 grid gap-3 grid-cols-2 md:grid-cols-4">
         <Stat label="Sessions" value={s.length} />
         <Stat label="Tokens"   value={fmtNum(tokens)} />
         <Stat label="Est. cost" value={fmtCost(cost)} emphasis />

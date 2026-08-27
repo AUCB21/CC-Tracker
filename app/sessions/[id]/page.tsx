@@ -124,7 +124,7 @@ export default async function SessionDetailPage({
         }
       />
 
-      <div className="mb-8 grid gap-3 grid-cols-2 md:grid-cols-5 2xl:max-w-[64rem]">
+      <div className="mb-8 grid gap-3 grid-cols-2 md:grid-cols-5">
         <Stat
           label="Project"
           value={

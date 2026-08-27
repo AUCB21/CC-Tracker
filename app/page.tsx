@@ -10,7 +10,7 @@ import {
   getProjects,
 } from "@/lib/queries";
 import { buildActivitySeries } from "@/lib/series";
-import { fmtNum, fmtCost, fmtRelative, truncate } from "@/lib/format";
+import { fmtNum, fmtCost, fmtRelative, truncate, fmtProjectName } from "@/lib/format";
 import { isLive } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -44,7 +44,7 @@ export default async function OverviewPage() {
   const activity = buildActivitySeries(30, events30 ?? [], allSessions);
   const openTasks = (tasks ?? []).filter((t) => t.status !== "completed").slice(-12).reverse();
   const activePlans = (plans ?? []).filter((p) => p.status === "active").slice(0, 8);
-  const projectMap = new Map((projects ?? []).map((p) => [p.id, p.name]));
+  const projectMap = new Map((projects ?? []).map((p) => [p.id, fmtProjectName(p.name, p.path)]));
   const liveCount = recent.filter(isLive).length;
 
   return (

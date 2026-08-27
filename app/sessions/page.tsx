@@ -4,7 +4,7 @@ import { FilterRail, type Facet } from "@/components/filter-rail";
 import { ActiveFilterBar } from "@/components/active-filters";
 import { Pager } from "@/components/pager";
 import { getSessionsPage, getSessionFacetRows, getProjects } from "@/lib/queries";
-import { fmtNum, fmtCost, fmtDate, fmtDuration, truncate } from "@/lib/format";
+import { fmtNum, fmtCost, fmtDate, fmtDuration, truncate, fmtProjectName } from "@/lib/format";
 import { isLive } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -64,7 +64,7 @@ export default async function SessionsPage({ searchParams }: { searchParams: Sea
 
   const { rows: sessions, total } = sessionsPage;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const projectMap = new Map((projects ?? []).map((p) => [p.id, p.name]));
+  const projectMap = new Map((projects ?? []).map((p) => [p.id, fmtProjectName(p.name, p.path)]));
 
   // Facet options derived from the full session set
   const modelSet = new Map<string, number>();
@@ -80,7 +80,7 @@ export default async function SessionsPage({ searchParams }: { searchParams: Sea
       label: "Project",
       options: (projects ?? []).map((p) => ({
         value: p.id,
-        label: p.name,
+        label: fmtProjectName(p.name, p.path),
         count: facetRows.filter((s) => s.project_id === p.id).length,
       })),
     },

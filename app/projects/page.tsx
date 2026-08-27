@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { SetupBanner, Badge, PageHeader, Empty, Progress } from "@/components/ui";
+import { CopyButton } from "@/components/copy-button";
 import { Pager } from "@/components/pager";
 import { getProjectsPage, getSessions, getTasks } from "@/lib/queries";
-import { fmtNum, fmtRelative, fmtCost } from "@/lib/format";
+import { fmtNum, fmtRelative, fmtCost, fmtProjectName } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -49,39 +50,52 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Sea
               0
             );
             const last = pSessions[0]?.last_activity_at;
+            const displayName = fmtProjectName(p.name, p.path);
+            const countText = `${pSessions.length} ${pSessions.length === 1 ? "session" : "sessions"}`;
+
             return (
-              <Link
+              <div
                 key={p.id}
-                href={`/projects/${p.id}`}
-                className="rounded-2xl border border-line bg-panel p-5 transition-colors hover:border-accent/50"
+                className="group relative rounded-2xl border border-line bg-panel p-5 transition-all hover:border-accent/50 hover:bg-panel2/40"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <h2 className="text-base font-semibold tracking-tight">{p.name}</h2>
-                  <Badge color="muted">{pSessions.length} sessions</Badge>
+                  <Link href={`/projects/${p.id}`} className="min-w-0 hover:text-accent">
+                    <h2 className="truncate text-base font-semibold tracking-tight" title={displayName}>
+                      {displayName}
+                    </h2>
+                  </Link>
+                  <Badge color="muted">{countText}</Badge>
                 </div>
-                <p className="mt-1 truncate font-mono text-[0.6875rem] text-muted" title={p.path}>
-                  {p.path}
-                </p>
-                <div className="mt-4 grid grid-cols-3 gap-3 text-[0.6875rem] text-muted">
-                  <div>
-                    <div className="font-mono text-lg font-medium tabular-nums text-foreground">{fmtNum(tokens)}</div>
-                    tokens
-                  </div>
-                  <div>
-                    <div className="font-mono text-lg font-medium tabular-nums text-foreground">{fmtCost(cost)}</div>
-                    est. cost
-                  </div>
-                  <div>
-                    <div className="font-mono text-lg font-medium tabular-nums text-foreground">{fmtRelative(last)}</div>
-                    last activity
-                  </div>
+
+                <div className="mt-1 flex items-center justify-between gap-2">
+                  <p className="truncate font-mono text-[0.6875rem] text-muted" title={p.path}>
+                    {p.path}
+                  </p>
+                  {p.path && <CopyButton text={p.path} label="Copy path" iconOnly className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />}
                 </div>
-                {pTasks.length > 0 && (
-                  <div className="mt-4">
-                    <Progress done={done} total={pTasks.length} />
+
+                <Link href={`/projects/${p.id}`} className="mt-4 block">
+                  <div className="grid grid-cols-3 gap-3 text-[0.6875rem] text-muted">
+                    <div>
+                      <div className="font-mono text-lg font-medium tabular-nums text-foreground">{fmtNum(tokens)}</div>
+                      tokens
+                    </div>
+                    <div>
+                      <div className="font-mono text-lg font-medium tabular-nums text-foreground">{fmtCost(cost)}</div>
+                      est. cost
+                    </div>
+                    <div>
+                      <div className="font-mono text-lg font-medium tabular-nums text-foreground">{fmtRelative(last)}</div>
+                      last activity
+                    </div>
                   </div>
-                )}
-              </Link>
+                  {pTasks.length > 0 && (
+                    <div className="mt-4">
+                      <Progress done={done} total={pTasks.length} />
+                    </div>
+                  )}
+                </Link>
+              </div>
             );
           })}
         </div>

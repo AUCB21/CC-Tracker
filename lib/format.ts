@@ -56,3 +56,17 @@ export function truncate(s: string | null | undefined, n = 80): string {
   const clean = s.replace(/\s+/g, " ").trim();
   return clean.length > n ? clean.slice(0, n - 1) + "…" : clean;
 }
+
+export function fmtProjectName(name: string | null | undefined, path?: string | null): string {
+  const raw = (path || name || "").trim();
+  if (!raw) return "Untitled project";
+  const cleanPath = raw.replace(/\\/g, "/");
+  const gitBashMatch = cleanPath.match(/^\/([a-zA-Z])\/(.*)/);
+  const normalized = gitBashMatch ? `${gitBashMatch[1].toUpperCase()}:/${gitBashMatch[2]}` : cleanPath;
+  const parts = normalized.replace(/\/+$/, "").split("/");
+  const lastPart = parts[parts.length - 1];
+  if (lastPart && lastPart.length > 0 && !lastPart.includes(":")) {
+    return lastPart;
+  }
+  return name || raw;
+}
