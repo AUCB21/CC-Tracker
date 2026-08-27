@@ -10,7 +10,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:hooks": "node hooks/test.mjs"
+    "test:hooks": "node hooks/test.mjs",
+    "agent": "node --env-file=.env.local --import tsx bin/agent.mts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.109.0",

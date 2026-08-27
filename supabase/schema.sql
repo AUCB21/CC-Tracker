@@ -117,3 +117,28 @@ alter table public.sessions add column if not exists last_error   jsonb;
 -- CLI-created tasks inherit this when no explicit plan_id is given. `cctrack plan focus <id>`
 -- sets it; `cctrack plan unfocus` clears.
 alter table public.sessions add column if not exists active_plan_id uuid references public.plans(id) on delete set null;
+
+-- ---------- task_runs (remote task attendance) ----------
+-- One row per "Attend" click. The web app queues it; a `cctrack agent` running
+-- on a machine that has the project cwd picks it up and runs `claude -p` there.
+create table if not exists public.task_runs (
+  id                uuid primary key default gen_random_uuid(),
+  task_id           uuid references public.tasks(id) on delete cascade,
+  project_id        uuid references public.projects(id) on delete set null,
+  prompt            text not null,
+  status            text not null default 'queued'
+                    check (status in ('queued','claimed','running','done','error','cancelled')),
+  agent_id          text,                                              -- which local agent picked it up
+  claude_session_id uuid references public.sessions(id) on delete set null,
+  stdout_tail       text,                                              -- last ~8KB, for the UI
+  error             text,
+  requested_at      timestamptz not null default now(),
+  claimed_at        timestamptz,
+  finished_at       timestamptz
+);
+
+create index if not exists task_runs_status_idx  on public.task_runs (status, requested_at);
+create index if not exists task_runs_task_idx    on public.task_runs (task_id, requested_at desc);
+create index if not exists task_runs_project_idx on public.task_runs (project_id, requested_at desc);
+
+alter table public.task_runs enable row level security;

@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { SetupBanner, Badge, PageHeader, Empty } from "@/components/ui";
+import { AttendButton } from "./attend-button";
 import { FilterRail, type Facet } from "@/components/filter-rail";
 import { ActiveFilterBar } from "@/components/active-filters";
 import { Pager } from "@/components/pager";
 import { getTasksPage, getTaskFacetRows, getProjects, getPlans } from "@/lib/queries";
 import { fmtDate } from "@/lib/format";
+import { getSupabase } from "@/lib/supabase";
+import { getLatestRunsByTask } from "@/lib/attend";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +44,11 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
     getPlans(),
     getTaskFacetRows(),
   ]);
+
+  const db = getSupabase();
+  const latestRuns = db && tasksPage
+    ? await getLatestRunsByTask(db, tasksPage.rows.map((t) => t.id))
+    : new Map();
 
   if (!tasksPage) {
     return (
@@ -125,6 +133,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
                         <span className="font-mono">{fmtDate(t.created_at)}</span>
                       </p>
                     </div>
+                    <AttendButton taskId={t.id} initialRun={latestRuns.get(t.id) ?? null} />
                   </li>
                 ))}
               </ul>

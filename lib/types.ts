@@ -56,6 +56,25 @@ export type Task = {
   completed_at: string | null;
 };
 
+export type TaskRunStatus = "queued" | "claimed" | "running" | "done" | "error" | "cancelled";
+
+export type TaskRun = {
+  id: string;
+  task_id: string | null;
+  project_id: string | null;
+  prompt: string;
+  status: TaskRunStatus;
+  agent_id: string | null;
+  claude_session_id: string | null;
+  stdout_tail: string | null;
+  error: string | null;
+  requested_at: string;
+  claimed_at: string | null;
+  finished_at: string | null;
+};
+
+export const TASK_RUN_TERMINAL: TaskRunStatus[] = ["done", "error", "cancelled"];
+
 export type EventRow = {
   id: number;
   session_id: string | null;
