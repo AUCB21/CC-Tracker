@@ -4,7 +4,7 @@ import { ToolUsageChart } from "@/components/charts";
 import { FilterRail, type Facet } from "@/components/filter-rail";
 import { LiveTimeline } from "@/components/live-timeline";
 import { getSession, getProject, getPlans, getTasks, getEvents } from "@/lib/queries";
-import { fmtNum, fmtCost, fmtDate, fmtDuration, fmtRelative, truncate } from "@/lib/format";
+import { fmtNum, fmtCost, fmtDate, fmtDuration, fmtRelative, truncate, toList } from "@/lib/format";
 import { isLive } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -18,12 +18,6 @@ const EVENT_TYPE_LABEL: Record<string, string> = {
 };
 
 type Search = Promise<{ [key: string]: string | string[] | undefined }>;
-
-function toList(v: string | string[] | undefined): string[] {
-  if (!v) return [];
-  const raw = Array.isArray(v) ? v.join(",") : v;
-  return raw.split(",").filter(Boolean);
-}
 
 export default async function SessionDetailPage({
   params,

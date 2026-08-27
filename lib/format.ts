@@ -53,6 +53,13 @@ export function truncate(s: string | null | undefined, n = 80): string {
   return clean.length > n ? clean.slice(0, n - 1) + "…" : clean;
 }
 
+/** Flattens a searchParams value (string | string[] | undefined) into a comma-split list. */
+export function toList(v: string | string[] | undefined): string[] {
+  if (!v) return [];
+  const raw = Array.isArray(v) ? v.join(",") : v;
+  return raw.split(",").filter(Boolean);
+}
+
 export function fmtProjectName(name: string | null | undefined, path?: string | null): string {
   const raw = (path || name || "").trim();
   if (!raw) return "Untitled project";

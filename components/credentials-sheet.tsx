@@ -420,14 +420,3 @@ function Field({
     </div>
   );
 }
-
-/* Back-compat: existing imports of `CredentialsSheet` still work by wrapping the
-   provider + master button + surface into one drop-in component. */
-export function CredentialsSheet({ initial }: { initial: InitialStatus }) {
-  return (
-    <CredentialsProvider initial={initial}>
-      <CredentialsMaster />
-      <CredentialsSheetSurface />
-    </CredentialsProvider>
-  );
-}

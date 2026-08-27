@@ -5,7 +5,7 @@ import { ActiveFilterBar } from "@/components/active-filters";
 import { CopyButton } from "@/components/copy-button";
 import { Pager } from "@/components/pager";
 import { getPlansPage, getPlanFacetRows, getTasks, getProjects } from "@/lib/queries";
-import { fmtDate, truncate } from "@/lib/format";
+import { fmtDate, truncate, toList } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -18,12 +18,6 @@ const STATUS_OPTIONS = [
   { value: "completed", label: "completed" },
   { value: "abandoned", label: "abandoned" },
 ];
-
-function toList(v: string | string[] | undefined): string[] {
-  if (!v) return [];
-  const raw = Array.isArray(v) ? v.join(",") : v;
-  return raw.split(",").filter(Boolean);
-}
 
 export default async function PlansPage({ searchParams }: { searchParams: Search }) {
   const params = await searchParams;

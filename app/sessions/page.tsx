@@ -4,7 +4,7 @@ import { FilterRail, type Facet } from "@/components/filter-rail";
 import { ActiveFilterBar } from "@/components/active-filters";
 import { Pager } from "@/components/pager";
 import { getSessionsPage, getSessionFacetRows, getProjects } from "@/lib/queries";
-import { fmtNum, fmtCost, fmtDate, fmtDuration, truncate, fmtProjectName } from "@/lib/format";
+import { fmtNum, fmtCost, fmtDate, fmtDuration, truncate, fmtProjectName, toList } from "@/lib/format";
 import { isLive } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -25,12 +25,6 @@ function windowToSinceIso(w: string | undefined): string | undefined {
   const days = w === "7d" ? 7 : w === "30d" ? 30 : w === "90d" ? 90 : 0;
   if (days === 0) return undefined;
   return new Date(Date.now() - days * 86_400_000).toISOString();
-}
-
-function toList(v: string | string[] | undefined): string[] {
-  if (!v) return [];
-  const raw = Array.isArray(v) ? v.join(",") : v;
-  return raw.split(",").filter(Boolean);
 }
 
 export default async function SessionsPage({ searchParams }: { searchParams: Search }) {

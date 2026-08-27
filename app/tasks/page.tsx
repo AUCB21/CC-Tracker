@@ -5,7 +5,7 @@ import { FilterRail, type Facet } from "@/components/filter-rail";
 import { ActiveFilterBar } from "@/components/active-filters";
 import { Pager } from "@/components/pager";
 import { getTasksPage, getTaskFacetRows, getProjects, getPlans } from "@/lib/queries";
-import { fmtDate } from "@/lib/format";
+import { fmtDate, toList } from "@/lib/format";
 import { getSupabase } from "@/lib/supabase";
 import { getLatestRunsByTask } from "@/lib/attend";
 
@@ -20,12 +20,6 @@ const STATUS_OPTIONS = [
   { value: "in_progress", label: "in progress" },
   { value: "completed",   label: "completed" },
 ];
-
-function toList(v: string | string[] | undefined): string[] {
-  if (!v) return [];
-  const raw = Array.isArray(v) ? v.join(",") : v;
-  return raw.split(",").filter(Boolean);
-}
 
 export default async function TasksPage({ searchParams }: { searchParams: Search }) {
   const params = await searchParams;
