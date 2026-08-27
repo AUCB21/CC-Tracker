@@ -7,8 +7,20 @@ export function sha1(s: string): string {
 }
 
 function basename(p: string): string {
-  const parts = p.replace(/\/+$/, "").split("/");
+  const parts = p.replace(/[/\\]+$/, "").split(/[/\\]/);
   return parts[parts.length - 1] || p;
+}
+
+export function normalizePath(p: string): string {
+  let normalized = p.trim().replace(/\\/g, "/");
+  const gitBashMatch = normalized.match(/^\/([a-zA-Z])\/(.*)/);
+  if (gitBashMatch) {
+    normalized = `${gitBashMatch[1].toUpperCase()}:/${gitBashMatch[2]}`;
+  }
+  if (/^[a-z]:/i.test(normalized)) {
+    normalized = normalized[0].toUpperCase() + normalized.slice(1);
+  }
+  return normalized;
 }
 
 export type HookPayload = {
@@ -56,10 +68,11 @@ export type HookPayload = {
 
 async function resolveProject(
   db: SupabaseClient,
-  cwd: string | undefined,
+  rawCwd: string | undefined,
   repo?: string
 ): Promise<string | null> {
-  if (!cwd) return null;
+  if (!rawCwd) return null;
+  const cwd = normalizePath(rawCwd);
   const { data: existing } = await db
     .from("projects")
     .select("id")

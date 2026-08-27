@@ -58,6 +58,7 @@ create table if not exists public.plans (
 
 create index if not exists plans_session_idx on public.plans (session_id);
 create index if not exists plans_project_idx on public.plans (project_id);
+create index if not exists plans_created_idx on public.plans (created_at desc);
 
 -- ---------- tasks ----------
 create table if not exists public.tasks (
@@ -79,6 +80,7 @@ create table if not exists public.tasks (
 create index if not exists tasks_session_idx on public.tasks (session_id);
 create index if not exists tasks_plan_idx    on public.tasks (plan_id);
 create index if not exists tasks_project_idx on public.tasks (project_id);
+create index if not exists tasks_created_idx on public.tasks (created_at desc);
 
 -- Longer free-text detail, separate from the short `content` name.
 -- Auto-filled from TodoWrite's activeForm; also settable via `cctrack task --description`.

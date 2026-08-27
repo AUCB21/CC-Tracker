@@ -1,13 +1,17 @@
 import Link from "next/link";
 import { SetupBanner, Badge, PageHeader, Empty, LiveDot } from "@/components/ui";
 import { FilterRail, type Facet } from "@/components/filter-rail";
-import { getSessions, getProjects } from "@/lib/queries";
+import { ActiveFilterBar } from "@/components/active-filters";
+import { Pager } from "@/components/pager";
+import { getSessionsPage, getSessionFacetRows, getProjects } from "@/lib/queries";
 import { fmtNum, fmtCost, fmtDate, fmtDuration, truncate } from "@/lib/format";
 import { isLive } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 type Search = Promise<{ [key: string]: string | string[] | undefined }>;
+
+const PAGE_SIZE = 50;
 
 const WINDOW_OPTIONS = [
   { value: "all", label: "All time" },
@@ -35,18 +39,21 @@ export default async function SessionsPage({ searchParams }: { searchParams: Sea
   const modelFilter = toList(params.model);
   const windowFilter = (Array.isArray(params.window) ? params.window[0] : params.window) ?? "all";
   const sinceIso = windowToSinceIso(windowFilter);
+  const page = Math.max(1, Number(Array.isArray(params.page) ? params.page[0] : params.page) || 1);
 
-  const [sessions, projects, allSessions] = await Promise.all([
-    getSessions({
+  const [sessionsPage, projects, facetRows] = await Promise.all([
+    getSessionsPage({
       projectIds: projectFilter.length > 0 ? projectFilter : undefined,
       models: modelFilter.length > 0 ? modelFilter : undefined,
       sinceIso,
+      page,
+      pageSize: PAGE_SIZE,
     }),
     getProjects(),
-    getSessions(), // unfiltered, for the facet option list
+    getSessionFacetRows(), // unfiltered, narrow columns, for the facet option counts
   ]);
 
-  if (!sessions) {
+  if (!sessionsPage) {
     return (
       <>
         <PageHeader title="Sessions" sub="Every Claude Code session, newest activity first." />
@@ -55,11 +62,13 @@ export default async function SessionsPage({ searchParams }: { searchParams: Sea
     );
   }
 
+  const { rows: sessions, total } = sessionsPage;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const projectMap = new Map((projects ?? []).map((p) => [p.id, p.name]));
 
   // Facet options derived from the full session set
   const modelSet = new Map<string, number>();
-  for (const s of allSessions ?? []) {
+  for (const s of facetRows) {
     const m = s.model ?? "unknown";
     modelSet.set(m, (modelSet.get(m) ?? 0) + 1);
   }
@@ -72,7 +81,7 @@ export default async function SessionsPage({ searchParams }: { searchParams: Sea
       options: (projects ?? []).map((p) => ({
         value: p.id,
         label: p.name,
-        count: (allSessions ?? []).filter((s) => s.project_id === p.id).length,
+        count: facetRows.filter((s) => s.project_id === p.id).length,
       })),
     },
     {
@@ -100,11 +109,12 @@ export default async function SessionsPage({ searchParams }: { searchParams: Sea
     <>
       <PageHeader
         title="Sessions"
-        sub={`${sessions.length} of ${(allSessions ?? []).length} sessions match the current filters.`}
+        sub={`${total} session${total === 1 ? "" : "s"} match${total === 1 ? "es" : ""} the current filters.`}
       />
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_18rem]">
         <div className="min-w-0 space-y-4">
+          <ActiveFilterBar facets={facets} />
           {/* Mobile / tablet: filters as drawer above the table */}
           <FilterRail facets={facets} variant="drawer" className="xl:hidden" />
 
@@ -172,6 +182,8 @@ export default async function SessionsPage({ searchParams }: { searchParams: Sea
               </table>
             </div>
           )}
+
+          <Pager pathname="/sessions" searchParams={params} page={page} totalPages={totalPages} />
         </div>
 
         {/* Desktop: sticky filter rail on the right */}

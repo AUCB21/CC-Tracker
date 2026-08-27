@@ -64,14 +64,14 @@ export default async function OverviewPage() {
 
       {/* Stat rail */}
       <div className="mb-8 grid gap-3 grid-cols-2 md:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-8">
-        <Stat label="Sessions"   value={stats.sessions}                                sub={`${stats.activeSessions} active now`} />
-        <Stat label="Projects"   value={stats.projects} />
-        <Stat label="Plans"      value={stats.plans}                                   sub={`${stats.plansCompleted} completed`} />
-        <Stat label="Tasks"      value={stats.tasks}                                   sub={`${stats.tasksCompleted} done  /  ${stats.tasksInProgress} running`} />
-        <Stat label="Prompts"    value={fmtNum(stats.prompts)} />
-        <Stat label="Tool calls" value={fmtNum(stats.toolUses)} />
-        <Stat label="Tokens"     value={fmtNum(stats.totalTokens)}                    sub="in, out, cache" />
-        <Stat label="Est. cost"  value={fmtCost(stats.totalCost)}     emphasis        sub="rough model pricing" />
+        <Stat label="Sessions"   value={stats.sessions}            href="/sessions"    sub={`${stats.activeSessions} active now`} />
+        <Stat label="Projects"   value={stats.projects}            href="/projects" />
+        <Stat label="Plans"      value={stats.plans}               href="/plans"       sub={`${stats.plansCompleted} completed`} />
+        <Stat label="Tasks"      value={stats.tasks}               href="/tasks"       sub={`${stats.tasksCompleted} done  /  ${stats.tasksInProgress} running`} />
+        <Stat label="Prompts"    value={fmtNum(stats.prompts)}     href="/analytics" />
+        <Stat label="Tool calls" value={fmtNum(stats.toolUses)}    href="/analytics" />
+        <Stat label="Tokens"     value={fmtNum(stats.totalTokens)} href="/analytics"   sub="in, out, cache" />
+        <Stat label="Est. cost"  value={fmtCost(stats.totalCost)}  href="/analytics"   emphasis sub="rough model pricing" />
       </div>
 
       {/* Activity spread */}
@@ -172,8 +172,8 @@ export default async function OverviewPage() {
           <Card
             title="Open tasks"
             right={
-              <Link href="/plans" className="text-[0.75rem] text-accent hover:underline underline-offset-4">
-                all plans
+              <Link href="/tasks" className="text-[0.75rem] text-accent hover:underline underline-offset-4">
+                all tasks
               </Link>
             }
           >

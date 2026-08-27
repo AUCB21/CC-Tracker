@@ -6,10 +6,10 @@ executed, tool usage, prompts, tokens and estimated cost — plus workflow
 analytics over all of it.
 
 ```
-┌────────────────┐   hooks (stdin JSON)    ┌──────────────┐   service key   ┌───────────┐
-│  Claude Code   │ ──▶ claude-tracker.mjs ─▶│  Next.js API │ ──────────────▶ │ Supabase  │
-│  (your mac/pc) │ ──▶ cctrack CLI ────────▶│ /api/ingest  │                 │ (Postgres)│
-└────────────────┘                          └──────────────┘                 └───────────┘
+┌────────────────┐   hooks (stdin JSON)      ┌──────────────┐   service key   ┌───────────┐
+│  Claude Code   │ ──▶ claude-tracker.mjs ─▶│ Next.js API  │ ──────────────▶│  Supabase |
+│  (your mac/pc) │ ──▶ cctrack CLI ────────▶│ /api/ingest  │                 └───────────┘
+└────────────────┘                           └──────────────┘
 ```
 
 **Data model** — `projects` (auto-created per working directory) → `sessions`
@@ -49,24 +49,70 @@ This writes `~/.cc-track/config.json` and prints a snippet to merge into
 ```json
 {
   "hooks": {
-    "SessionStart":     [{ "hooks": [{ "type": "command", "command": "node /ABS/PATH/cc-track/hooks/claude-tracker.mjs" }] }],
-    "UserPromptSubmit": [{ "hooks": [{ "type": "command", "command": "node /ABS/PATH/cc-track/hooks/claude-tracker.mjs" }] }],
-    "PostToolUse":      [{ "matcher": "*", "hooks": [{ "type": "command", "command": "node /ABS/PATH/cc-track/hooks/claude-tracker.mjs" }] }],
-    "Stop":             [{ "hooks": [{ "type": "command", "command": "node /ABS/PATH/cc-track/hooks/claude-tracker.mjs" }] }],
-    "SessionEnd":       [{ "hooks": [{ "type": "command", "command": "node /ABS/PATH/cc-track/hooks/claude-tracker.mjs" }] }]
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node /ABS/PATH/cc-track/hooks/claude-tracker.mjs"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node /ABS/PATH/cc-track/hooks/claude-tracker.mjs"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node /ABS/PATH/cc-track/hooks/claude-tracker.mjs"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node /ABS/PATH/cc-track/hooks/claude-tracker.mjs"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node /ABS/PATH/cc-track/hooks/claude-tracker.mjs"
+          }
+        ]
+      }
+    ]
   }
 }
 ```
 
 What gets captured automatically:
 
-| Hook | Captured |
-|---|---|
-| `SessionStart` | new session row, project (from cwd), git branch + remote |
-| `UserPromptSubmit` | prompt count, session title, raw prompt event |
-| `PostToolUse` | every tool call (name + trimmed input), tool breakdown; **TodoWrite lists sync into `tasks`** |
-| `Stop` | transcript summary: model, tokens (in/out/cache), tool counts, estimated cost |
-| `SessionEnd` | marks the session ended |
+| Hook               | Captured                                                                                      |
+| ------------------ | --------------------------------------------------------------------------------------------- |
+| `SessionStart`     | new session row, project (from cwd), git branch + remote                                      |
+| `UserPromptSubmit` | prompt count, session title, raw prompt event                                                 |
+| `PostToolUse`      | every tool call (name + trimmed input), tool breakdown; **TodoWrite lists sync into `tasks`** |
+| `Stop`             | transcript summary: model, tokens (in/out/cache), tool counts, estimated cost                 |
+| `SessionEnd`       | marks the session ended                                                                       |
 
 The hook script fails silently and exits 0 — it can never block Claude Code.
 

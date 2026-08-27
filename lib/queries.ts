@@ -117,11 +117,14 @@ export async function getPlans(opts: { projectId?: string; sessionId?: string } 
   return (data as Plan[]) ?? [];
 }
 
-export async function getTasks(opts: { projectId?: string; sessionId?: string; planId?: string } = {}): Promise<Task[] | null> {
+export async function getTasks(
+  opts: { projectId?: string; projectIds?: string[]; sessionId?: string; planId?: string } = {},
+): Promise<Task[] | null> {
   const db = getSupabase();
   if (!db) return null;
   let q = db.from("tasks").select("*").order("created_at", { ascending: true });
   if (opts.projectId) q = q.eq("project_id", opts.projectId);
+  if (opts.projectIds && opts.projectIds.length > 0) q = q.in("project_id", opts.projectIds);
   if (opts.sessionId) q = q.eq("session_id", opts.sessionId);
   if (opts.planId) q = q.eq("plan_id", opts.planId);
   const { data } = await q;
@@ -180,4 +183,100 @@ export async function getAllSessions(): Promise<Session[] | null> {
   if (!db) return null;
   const { data } = await db.from("sessions").select("*").order("started_at", { ascending: true });
   return (data as Session[]) ?? [];
+}
+
+export type Page<T> = { rows: T[]; total: number };
+
+// ponytail: a `page` past the real last page makes PostgREST 416, which
+// supabase-js surfaces as count:null (-> 0 here) instead of the true total.
+// Harmless: rows correctly come back empty, and the UI's own Pager never
+// links past the last real page, so this only shows for a hand-edited URL.
+function rangeFor(page: number, pageSize: number): [number, number] {
+  const from = (page - 1) * pageSize;
+  return [from, from + pageSize - 1];
+}
+
+export async function getSessionsPage(opts: {
+  page: number;
+  pageSize: number;
+  projectIds?: string[];
+  models?: string[];
+  sinceIso?: string;
+}): Promise<Page<Session> | null> {
+  const db = getSupabase();
+  if (!db) return null;
+  let q = db
+    .from("sessions")
+    .select("*", { count: "exact" })
+    .order("last_activity_at", { ascending: false });
+  if (opts.projectIds && opts.projectIds.length > 0) q = q.in("project_id", opts.projectIds);
+  if (opts.models && opts.models.length > 0) q = q.in("model", opts.models);
+  if (opts.sinceIso) q = q.gte("started_at", opts.sinceIso);
+  const { data, count } = await q.range(...rangeFor(opts.page, opts.pageSize));
+  return { rows: (data as Session[]) ?? [], total: count ?? 0 };
+}
+
+export async function getSessionFacetRows(): Promise<Pick<Session, "project_id" | "model">[]> {
+  const db = getSupabase();
+  if (!db) return [];
+  const { data } = await db.from("sessions").select("project_id,model");
+  return (data as Pick<Session, "project_id" | "model">[]) ?? [];
+}
+
+export async function getTasksPage(opts: {
+  page: number;
+  pageSize: number;
+  projectIds?: string[];
+  statuses?: string[];
+}): Promise<Page<Task> | null> {
+  const db = getSupabase();
+  if (!db) return null;
+  let q = db.from("tasks").select("*", { count: "exact" }).order("created_at", { ascending: false });
+  if (opts.projectIds && opts.projectIds.length > 0) q = q.in("project_id", opts.projectIds);
+  if (opts.statuses && opts.statuses.length > 0) q = q.in("status", opts.statuses);
+  const { data, count } = await q.range(...rangeFor(opts.page, opts.pageSize));
+  return { rows: (data as Task[]) ?? [], total: count ?? 0 };
+}
+
+export async function getTaskFacetRows(): Promise<Pick<Task, "project_id" | "status">[]> {
+  const db = getSupabase();
+  if (!db) return [];
+  const { data } = await db.from("tasks").select("project_id,status");
+  return (data as Pick<Task, "project_id" | "status">[]) ?? [];
+}
+
+export async function getPlansPage(opts: {
+  page: number;
+  pageSize: number;
+  projectIds?: string[];
+  statuses?: string[];
+}): Promise<Page<Plan> | null> {
+  const db = getSupabase();
+  if (!db) return null;
+  let q = db.from("plans").select("*", { count: "exact" }).order("created_at", { ascending: false });
+  if (opts.projectIds && opts.projectIds.length > 0) q = q.in("project_id", opts.projectIds);
+  if (opts.statuses && opts.statuses.length > 0) q = q.in("status", opts.statuses);
+  const { data, count } = await q.range(...rangeFor(opts.page, opts.pageSize));
+  return { rows: (data as Plan[]) ?? [], total: count ?? 0 };
+}
+
+export async function getPlanFacetRows(): Promise<Pick<Plan, "project_id" | "status">[]> {
+  const db = getSupabase();
+  if (!db) return [];
+  const { data } = await db.from("plans").select("project_id,status");
+  return (data as Pick<Plan, "project_id" | "status">[]) ?? [];
+}
+
+export async function getProjectsPage(opts: {
+  page: number;
+  pageSize: number;
+}): Promise<Page<Project> | null> {
+  const db = getSupabase();
+  if (!db) return null;
+  const { data, count } = await db
+    .from("projects")
+    .select("*", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(...rangeFor(opts.page, opts.pageSize));
+  return { rows: (data as Project[]) ?? [], total: count ?? 0 };
 }

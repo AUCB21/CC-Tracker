@@ -35,15 +35,17 @@ export function Stat({
   value,
   sub,
   emphasis = false,
+  href,
 }: {
   label: string;
   value: React.ReactNode;
   sub?: string;
   emphasis?: boolean;
+  href?: string;
 }) {
-  return (
-    <article className="flex flex-col gap-1 rounded-2xl border border-line bg-panel px-5 py-5">
-      <span className="text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-muted">
+  const content = (
+    <>
+      <span className="text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-muted group-hover:text-foreground transition-colors">
         {label}
       </span>
       <span
@@ -57,6 +59,23 @@ export function Stat({
       {sub && (
         <span className="mt-1 text-[0.75rem] text-muted">{sub}</span>
       )}
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className="group flex flex-col gap-1 rounded-2xl border border-line bg-panel px-5 py-5 transition-all hover:border-accent/50 hover:bg-panel2/60"
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <article className="flex flex-col gap-1 rounded-2xl border border-line bg-panel px-5 py-5">
+      {content}
     </article>
   );
 }

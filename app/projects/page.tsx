@@ -1,13 +1,21 @@
 import Link from "next/link";
 import { SetupBanner, Badge, PageHeader, Empty, Progress } from "@/components/ui";
-import { getProjects, getSessions, getTasks } from "@/lib/queries";
+import { Pager } from "@/components/pager";
+import { getProjectsPage, getSessions, getTasks } from "@/lib/queries";
 import { fmtNum, fmtRelative, fmtCost } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
-export default async function ProjectsPage() {
-  const [projects, sessions, tasks] = await Promise.all([getProjects(), getSessions(), getTasks()]);
-  if (!projects) {
+type Search = Promise<{ [key: string]: string | string[] | undefined }>;
+
+const PAGE_SIZE = 24;
+
+export default async function ProjectsPage({ searchParams }: { searchParams: Search }) {
+  const params = await searchParams;
+  const page = Math.max(1, Number(Array.isArray(params.page) ? params.page[0] : params.page) || 1);
+
+  const projectsPage = await getProjectsPage({ page, pageSize: PAGE_SIZE });
+  if (!projectsPage) {
     return (
       <>
         <PageHeader title="Projects" sub="Auto-created from the working directory of each session." />
@@ -15,6 +23,14 @@ export default async function ProjectsPage() {
       </>
     );
   }
+
+  const { rows: projects, total } = projectsPage;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const pageIds = projects.map((p) => p.id);
+  const [sessions, tasks] = await Promise.all([
+    pageIds.length > 0 ? getSessions({ projectIds: pageIds }) : Promise.resolve([]),
+    pageIds.length > 0 ? getTasks({ projectIds: pageIds }) : Promise.resolve([]),
+  ]);
 
   return (
     <>
@@ -70,6 +86,10 @@ export default async function ProjectsPage() {
           })}
         </div>
       )}
+
+      <div className="mt-6">
+        <Pager pathname="/projects" searchParams={params} page={page} totalPages={totalPages} />
+      </div>
     </>
   );
 }

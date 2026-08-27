@@ -1,12 +1,16 @@
 import Link from "next/link";
 import { SetupBanner, Badge, PageHeader, Empty } from "@/components/ui";
 import { FilterRail, type Facet } from "@/components/filter-rail";
-import { getTasks, getProjects, getPlans } from "@/lib/queries";
+import { ActiveFilterBar } from "@/components/active-filters";
+import { Pager } from "@/components/pager";
+import { getTasksPage, getTaskFacetRows, getProjects, getPlans } from "@/lib/queries";
 import { fmtDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
 type Search = Promise<{ [key: string]: string | string[] | undefined }>;
+
+const PAGE_SIZE = 50;
 
 const STATUS_OPTIONS = [
   { value: "pending",     label: "pending" },
@@ -24,10 +28,21 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
   const params = await searchParams;
   const projectFilter = toList(params.project);
   const statusFilter = toList(params.status);
+  const page = Math.max(1, Number(Array.isArray(params.page) ? params.page[0] : params.page) || 1);
 
-  const [allTasks, projects, plans] = await Promise.all([getTasks(), getProjects(), getPlans()]);
+  const [tasksPage, projects, plans, facetRows] = await Promise.all([
+    getTasksPage({
+      projectIds: projectFilter.length > 0 ? projectFilter : undefined,
+      statuses: statusFilter.length > 0 ? statusFilter : undefined,
+      page,
+      pageSize: PAGE_SIZE,
+    }),
+    getProjects(),
+    getPlans(),
+    getTaskFacetRows(),
+  ]);
 
-  if (!allTasks) {
+  if (!tasksPage) {
     return (
       <>
         <PageHeader title="Tasks" sub="Every task across every project, newest first." />
@@ -36,14 +51,10 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
     );
   }
 
+  const { rows: tasks, total } = tasksPage;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const projectMap = new Map((projects ?? []).map((p) => [p.id, p.name]));
   const planMap = new Map((plans ?? []).map((p) => [p.id, p.title]));
-
-  const tasks = allTasks
-    .filter((t) => projectFilter.length === 0 || (t.project_id && projectFilter.includes(t.project_id)))
-    .filter((t) => statusFilter.length === 0 || statusFilter.includes(t.status))
-    .slice()
-    .reverse();
 
   const facets: Facet[] = [
     {
@@ -53,7 +64,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
       options: (projects ?? []).map((p) => ({
         value: p.id,
         label: p.name,
-        count: allTasks.filter((t) => t.project_id === p.id).length,
+        count: facetRows.filter((t) => t.project_id === p.id).length,
       })),
     },
     {
@@ -62,7 +73,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
       label: "Status",
       options: STATUS_OPTIONS.map((o) => ({
         ...o,
-        count: allTasks.filter((t) => t.status === o.value).length,
+        count: facetRows.filter((t) => t.status === o.value).length,
       })),
     },
   ];
@@ -71,11 +82,12 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
     <>
       <PageHeader
         title="Tasks"
-        sub={`${tasks.length} of ${allTasks.length} tasks match the current filters.`}
+        sub={`${total} task${total === 1 ? "" : "s"} match${total === 1 ? "es" : ""} the current filters.`}
       />
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_18rem]">
         <div className="min-w-0 space-y-4">
+          <ActiveFilterBar facets={facets} />
           <FilterRail facets={facets} variant="drawer" className="xl:hidden" />
 
           {tasks.length === 0 ? (
@@ -118,6 +130,8 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
               </ul>
             </div>
           )}
+
+          <Pager pathname="/tasks" searchParams={params} page={page} totalPages={totalPages} />
         </div>
 
         <FilterRail facets={facets} className="hidden xl:sticky xl:top-16 xl:block xl:self-start" />

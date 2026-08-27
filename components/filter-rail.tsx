@@ -35,6 +35,7 @@ export function FilterRail({
   const setParam = useCallback(
     (key: string, value: string | null) => {
       const params = new URLSearchParams(searchParams.toString());
+      params.delete("page");
       if (value === null || value === "") params.delete(key);
       else params.set(key, value);
       const qs = params.toString();
@@ -83,7 +84,7 @@ export function FilterRail({
           <button
             type="button"
             onClick={clearAll}
-            className="text-[0.6875rem] uppercase tracking-[0.06em] text-accent hover:underline underline-offset-4"
+            className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-accent transition-all hover:underline underline-offset-4 active:scale-95"
           >
             clear
           </button>

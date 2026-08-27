@@ -1,4 +1,5 @@
 import { Card, PageHeader } from "@/components/ui";
+import { CopyButton } from "@/components/copy-button";
 import {
   CredentialsProvider,
   CredentialsMaster,
@@ -83,7 +84,7 @@ export default function SetupPage() {
             </div>
           </Card>
 
-          <Card title="Verify">
+          <Card title="Verify" right={<CopyButton text={VERIFY_SNIPPET} label="Copy snippet" />}>
             <pre className="overflow-x-auto rounded-lg border border-line bg-background p-4 font-mono text-[0.75rem] leading-relaxed">
 {VERIFY_SNIPPET}
             </pre>
@@ -101,7 +102,12 @@ export default function SetupPage() {
             </p>
           </Card>
 
-          <Card title="2. Claude Code hooks">
+          <Card
+            title="2. Claude Code hooks"
+            right={
+              <CopyButton text={HOOKS_JSON} label="Copy hooks JSON" />
+            }
+          >
             <p className="max-w-[75ch] text-sm leading-relaxed text-muted">
               Need a <code className="font-mono text-foreground">CC_TRACKER_API_KEY</code>? Generate a
               random one:
