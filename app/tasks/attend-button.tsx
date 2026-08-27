@@ -3,6 +3,22 @@ import { useState, useEffect, useRef } from "react";
 import { queueAttend, pollRun } from "./actions";
 import { TASK_RUN_TERMINAL } from "@/lib/types";
 import type { TaskRun } from "@/lib/types";
+import { getBrowserSupabase } from "@/lib/supabase-browser";
+
+// Chip aesthetic to match active-filters: soft accent-tinted pill.
+const CHIP_BASE =
+  "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.75rem] font-medium leading-none transition-colors";
+const CHIP_IDLE = `${CHIP_BASE} border-line text-muted hover:border-accent hover:text-accent`;
+const CHIP_ACTIVE = `${CHIP_BASE} border-accent/40 bg-accent/10 text-foreground hover:border-accent`;
+const CHIP_TINY =
+  "inline-flex items-center rounded-full border border-line px-2 py-[0.125rem] text-[0.6875rem] font-medium leading-none text-muted transition-colors hover:border-accent hover:text-foreground";
+
+function statusChipClass(status: TaskRun["status"]): string {
+  if (status === "done") return `${CHIP_BASE} border-[color:var(--color-green)]/40 bg-[color:var(--color-green)]/10 text-[color:var(--color-green)]`;
+  if (status === "error" || status === "cancelled") return `${CHIP_BASE} border-[color:var(--color-yellow)]/40 bg-[color:var(--color-yellow)]/10 text-[color:var(--color-yellow)]`;
+  // queued / claimed / running: pulsing accent
+  return `${CHIP_BASE} border-accent/40 bg-accent/10 text-foreground`;
+}
 
 export function AttendButton({
   taskId,
@@ -17,24 +33,53 @@ export function AttendButton({
   const [showOverride, setShowOverride] = useState(false);
   const [override, setOverride] = useState("");
   const [showDetails, setShowDetails] = useState(false);
-  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => () => { if (timer.current) clearInterval(timer.current); }, []);
+  useEffect(
+    () => () => {
+      if (pollTimer.current) clearInterval(pollTimer.current);
+    },
+    [],
+  );
 
-  // If we hydrated with a non-terminal run, resume polling.
+  // Live subscription per current run. Postgres UPDATE events flip the pill
+  // as the local agent moves the row (queued → claimed → running → done/error).
+  // Belt-and-suspenders: also poll every 6s in case Realtime isn't wired
+  // (publication missing task_runs, dropped websocket, etc.) — polling is a
+  // no-op when nothing changed, so real-time still gets the sub-second UX.
   useEffect(() => {
     if (!run || TASK_RUN_TERMINAL.includes(run.status)) return;
-    if (timer.current) return;
-    timer.current = setInterval(async () => {
-      const updated = await pollRun(run.id);
+    const runId = run.id;
+    const client = getBrowserSupabase();
+    let ch: ReturnType<NonNullable<typeof client>["channel"]> | null = null;
+
+    if (client) {
+      ch = client
+        .channel(`task_run:${runId}`)
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "task_runs", filter: `id=eq.${runId}` },
+          (payload) => setRun(payload.new as TaskRun),
+        )
+        .subscribe();
+    }
+
+    pollTimer.current = setInterval(async () => {
+      const updated = await pollRun(runId);
       if (!updated) return;
       setRun(updated);
       if (TASK_RUN_TERMINAL.includes(updated.status)) {
-        clearInterval(timer.current!);
-        timer.current = null;
+        if (pollTimer.current) clearInterval(pollTimer.current);
+        pollTimer.current = null;
       }
-    }, 2000);
-  }, [run]);
+    }, 6000);
+
+    return () => {
+      if (ch && client) client.removeChannel(ch);
+      if (pollTimer.current) clearInterval(pollTimer.current);
+      pollTimer.current = null;
+    };
+  }, [run?.id, run?.status]);
 
   async function handleAttend() {
     setLoading(true);
@@ -43,7 +88,10 @@ export function AttendButton({
     const trimmed = override.trim();
     const result = await queueAttend(taskId, trimmed || undefined);
     setLoading(false);
-    if ("error" in result) { setErr(result.error); return; }
+    if ("error" in result) {
+      setErr(result.error);
+      return;
+    }
     setRun(result.run);
     setShowOverride(false);
     setOverride("");
@@ -53,32 +101,33 @@ export function AttendButton({
     return (
       <span className="flex items-center gap-2 text-[0.6875rem] text-[color:var(--color-yellow)]">
         {err}
-        <button
-          onClick={() => setErr(null)}
-          className="rounded border border-line px-1.5 py-[0.0625rem] text-muted hover:text-foreground"
-        >
+        <button onClick={() => setErr(null)} className={CHIP_TINY}>
           retry
         </button>
       </span>
     );
   }
 
-  // Terminal or in-flight run: show status pill; on error, allow expanding details.
   if (run) {
     const terminal = TASK_RUN_TERMINAL.includes(run.status);
-    const color =
-      run.status === "done" ? "text-[color:var(--color-green)]"
-      : run.status === "error" || run.status === "cancelled" ? "text-[color:var(--color-yellow)]"
-      : "text-[color:var(--color-blue)]";
     const hasDetails = run.status === "error" && (run.error || run.stdout_tail);
+    const live = !terminal;
     return (
       <div className="flex flex-col items-end gap-1">
-        <div className="flex items-center gap-2">
-          <span className={`font-mono text-[0.6875rem] ${color}`}>{run.status}</span>
+        <div className="flex items-center gap-1.5">
+          <span className={statusChipClass(run.status)}>
+            {live && (
+              <span aria-hidden className="relative inline-flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
+              </span>
+            )}
+            <span className="font-mono">{run.status}</span>
+          </span>
           {hasDetails && (
             <button
               onClick={() => setShowDetails((v) => !v)}
-              className="rounded border border-line px-1.5 py-[0.0625rem] text-[0.6875rem] text-muted hover:text-foreground"
+              className={CHIP_TINY}
               aria-expanded={showDetails}
             >
               {showDetails ? "hide" : "details"}
@@ -86,16 +135,21 @@ export function AttendButton({
           )}
           {terminal && (
             <button
-              onClick={() => { setRun(null); setShowDetails(false); }}
-              className="rounded border border-line px-1.5 py-[0.0625rem] text-[0.6875rem] text-muted hover:text-foreground"
+              onClick={() => {
+                setRun(null);
+                setShowDetails(false);
+              }}
+              className={CHIP_TINY}
             >
               retry
             </button>
           )}
         </div>
         {hasDetails && showDetails && (
-          <pre className="max-w-[36rem] whitespace-pre-wrap break-words rounded border border-line bg-panel2 p-2 text-[0.6875rem] leading-relaxed text-muted">
-            {run.error && <span className="text-[color:var(--color-yellow)]">{run.error}\n</span>}
+          <pre className="max-w-[36rem] whitespace-pre-wrap break-words rounded-md border border-line bg-panel2 p-2 text-[0.6875rem] leading-relaxed text-muted">
+            {run.error && (
+              <span className="text-[color:var(--color-yellow)]">{run.error}{"\n"}</span>
+            )}
             {run.stdout_tail?.slice(-800) ?? ""}
           </pre>
         )}
@@ -103,20 +157,20 @@ export function AttendButton({
     );
   }
 
-  // Idle: Attend button + optional override textarea.
+  // Idle: chip-styled Attend + override toggle.
   return (
     <div className="flex flex-col items-end gap-1">
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1.5">
         <button
           onClick={handleAttend}
           disabled={loading}
-          className="shrink-0 rounded-full border border-line px-2 py-[0.125rem] text-[0.6875rem] font-medium text-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
+          className={`${showOverride || override.trim() ? CHIP_ACTIVE : CHIP_IDLE} disabled:opacity-40`}
         >
-          {loading ? "..." : "Attend"}
+          {loading ? "…" : "Attend"}
         </button>
         <button
           onClick={() => setShowOverride((v) => !v)}
-          className="rounded border border-line px-1.5 py-[0.0625rem] text-[0.6875rem] text-muted hover:text-foreground"
+          className={CHIP_TINY}
           aria-expanded={showOverride}
           title="Extra instructions for this run"
         >
@@ -128,7 +182,7 @@ export function AttendButton({
           value={override}
           onChange={(e) => setOverride(e.target.value)}
           placeholder="Extra instructions for Claude (optional)"
-          className="w-[24rem] resize-y rounded border border-line bg-panel2 p-2 text-[0.75rem] text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none"
+          className="w-[24rem] resize-y rounded-md border border-line bg-panel2 p-2 text-[0.75rem] text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none"
           rows={3}
         />
       )}

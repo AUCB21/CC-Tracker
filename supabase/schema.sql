@@ -142,3 +142,21 @@ create index if not exists task_runs_task_idx    on public.task_runs (task_id, r
 create index if not exists task_runs_project_idx on public.task_runs (project_id, requested_at desc);
 
 alter table public.task_runs enable row level security;
+
+-- Realtime: let the browser (anon) subscribe to task_run updates so the Attend
+-- button flips status the moment the local agent moves a row. Single-user
+-- localhost app; anon reads are safe here (no PII, secrets stay in .env).
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+     where pubname = 'supabase_realtime'
+       and schemaname = 'public'
+       and tablename = 'task_runs'
+  ) then
+    alter publication supabase_realtime add table public.task_runs;
+  end if;
+end $$;
+
+drop policy if exists task_runs_anon_read on public.task_runs;
+create policy task_runs_anon_read on public.task_runs for select using (true);
