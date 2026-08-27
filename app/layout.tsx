@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { DeckRail, DeckRailMobile } from "@/components/deck-rail";
 import { DeckShelf } from "@/components/deck-shelf";
+import { LiveRefresh } from "@/components/live-refresh";
 import { isDbConfigured, ingestionKeyConfigured } from "@/lib/supabase";
 import "./globals.css";
 
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <LiveRefresh />
         <a href="#main" className="skip-link">Skip to content</a>
         <div className="flex min-h-screen">
           <aside className="fixed inset-y-0 left-0 z-20 hidden w-[13rem] flex-col border-r border-line bg-panel md:flex">

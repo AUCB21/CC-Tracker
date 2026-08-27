@@ -160,3 +160,25 @@ end $$;
 
 drop policy if exists task_runs_anon_read on public.task_runs;
 create policy task_runs_anon_read on public.task_runs for select using (true);
+
+-- ---------- realtime: live-refresh for sessions/plans/tasks/projects ----------
+-- Same pattern as task_runs above: publish + anon-read so the browser can
+-- subscribe to writes and call router.refresh() (see components/live-refresh.tsx).
+-- Single-user localhost app; anon reads are safe here (no PII, secrets stay in .env).
+do $$
+declare
+  t text;
+begin
+  foreach t in array array['sessions', 'plans', 'tasks', 'projects'] loop
+    if not exists (
+      select 1 from pg_publication_tables
+       where pubname = 'supabase_realtime'
+         and schemaname = 'public'
+         and tablename = t
+    ) then
+      execute format('alter publication supabase_realtime add table public.%I', t);
+    end if;
+    execute format('drop policy if exists %I_anon_read on public.%I', t, t);
+    execute format('create policy %I_anon_read on public.%I for select using (true)', t, t);
+  end loop;
+end $$;
