@@ -12,7 +12,7 @@ export function Card({
   className?: string;
 }) {
   return (
-    <section className={`rounded-2xl border border-line bg-panel ${className}`}>
+    <section className={`min-w-0 rounded-2xl border border-line bg-panel ${className}`}>
       {(title || right) && (
         <header className="flex items-center justify-between gap-4 px-5 pt-4 pb-2">
           {title && (
@@ -214,9 +214,15 @@ export function TaskLine({
     pending:    { glyph: "○", tone: "text-muted" },
   }[status];
   return (
-    <li className="flex items-center gap-2 text-sm">
-      <span className={`inline-flex w-4 justify-center ${spec.tone}`}>{spec.glyph}</span>
-      <span className={status === "completed" ? "text-muted line-through decoration-[color:var(--color-line)]" : "text-foreground"}>
+    <li className="flex items-start gap-2 text-sm">
+      <span className={`mt-0.5 inline-flex w-4 shrink-0 justify-center ${spec.tone}`}>{spec.glyph}</span>
+      <span
+        className={`min-w-0 flex-1 break-words ${
+          status === "completed"
+            ? "text-muted line-through decoration-[color:var(--color-line)]"
+            : "text-foreground"
+        }`}
+      >
         {content}
       </span>
     </li>

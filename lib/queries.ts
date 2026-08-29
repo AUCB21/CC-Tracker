@@ -167,12 +167,87 @@ export async function getEventsSince(
   return (data as EventRow[]) ?? [];
 }
 
+/**
+ * Cached activity-window helper. `days` and `types` form the cache key;
+ * the internal sinceIso is derived from `days` on cache miss so we don't
+ * bust the cache every wallclock tick. 15s revalidate matches getStats.
+ */
+async function fetchRecentActivityEvents(
+  days: number,
+  types: string[],
+): Promise<EventRow[] | null> {
+  const sinceIso = new Date(Date.now() - days * 86_400_000).toISOString();
+  return getEventsSince(sinceIso, types.length > 0 ? types : undefined);
+}
+export const getRecentActivityEventsCached: (
+  days: number,
+  types: string[],
+) => Promise<EventRow[] | null> = unstable_cache(
+  (days: number, types: string[]) => fetchRecentActivityEvents(days, types),
+  ["cc-track:recent-activity-events:v1"],
+  { revalidate: 15, tags: ["events"] },
+);
+
+// ponytail: only Analytics still needs the full session set; narrow the
+// projection to what the aggregators actually touch so we don't ship the
+// title / cwd / git_branch / snapshots columns nothing on the chart uses.
+const ANALYTICS_SESSION_COLS =
+  "id,model,started_at,ended_at,input_tokens,output_tokens,cache_read_tokens,cache_creation_tokens,estimated_cost_usd,tool_breakdown";
+
 export async function getAllSessions(): Promise<Session[] | null> {
   const db = getSupabase();
   if (!db) return null;
-  const { data } = await db.from("sessions").select("*").order("started_at", { ascending: true });
+  const { data } = await db
+    .from("sessions")
+    .select(ANALYTICS_SESSION_COLS)
+    .order("started_at", { ascending: true });
+  return (data as unknown as Session[]) ?? [];
+}
+
+/**
+ * Recent sessions for dashboards - full row, most-recent activity first,
+ * capped so we never pull the whole table to render a "recent 8" list.
+ * 15s cache matches getStats so a rapid Overview reload doesn't re-hit
+ * Supabase for the same row set.
+ */
+async function fetchRecentSessions(limit: number): Promise<Session[] | null> {
+  const db = getSupabase();
+  if (!db) return null;
+  const { data } = await db
+    .from("sessions")
+    .select("*")
+    .order("last_activity_at", { ascending: false })
+    .limit(limit);
   return (data as Session[]) ?? [];
 }
+export const getRecentSessions: (limit?: number) => Promise<Session[] | null> = unstable_cache(
+  (limit = 8) => fetchRecentSessions(limit),
+  ["cc-track:recent-sessions:v1"],
+  { revalidate: 15, tags: ["sessions"] },
+);
+
+/**
+ * Ultra-lightweight sessions projection for the activity chart. Returns only
+ * started_at so buildActivitySeries can bucket per day without pulling jsonb
+ * columns (tool_breakdown, todos_snapshot) or token counters.
+ */
+async function fetchSessionStartsSince(
+  sinceIso: string,
+): Promise<{ started_at: string }[] | null> {
+  const db = getSupabase();
+  if (!db) return null;
+  const { data } = await db
+    .from("sessions")
+    .select("started_at")
+    .gte("started_at", sinceIso);
+  return (data as { started_at: string }[]) ?? [];
+}
+export const getSessionStartsSince: (sinceIso: string) => Promise<{ started_at: string }[] | null> =
+  unstable_cache(
+    (sinceIso: string) => fetchSessionStartsSince(sinceIso),
+    ["cc-track:session-starts-since:v1"],
+    { revalidate: 15, tags: ["sessions"] },
+  );
 
 export type Page<T> = { rows: T[]; total: number };
 

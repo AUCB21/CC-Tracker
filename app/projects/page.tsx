@@ -60,15 +60,15 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Sea
             return (
               <div
                 key={p.id}
-                className="group relative rounded-2xl border border-line bg-panel p-5 transition-all hover:border-accent/50 hover:bg-panel2/40"
+                className="group relative min-w-0 rounded-2xl border border-line bg-panel p-5 transition-all hover:border-accent/50 hover:bg-panel2/40"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <Link href={`/projects/${p.id}`} className="min-w-0 hover:text-accent">
+                  <Link href={`/projects/${p.id}`} className="min-w-0 flex-1 hover:text-accent">
                     <h2 className="font-display truncate text-base font-semibold tracking-tight" title={displayName}>
                       {displayName}
                     </h2>
                   </Link>
-                  <div className="flex shrink-0 flex-wrap gap-1">
+                  <div className="flex shrink-0 flex-wrap justify-end gap-1">
                     <Badge color="muted">{countText}</Badge>
                     {spendRatio != null && spendRatio > 0.8 && (
                       <Badge color={spendRatio >= 1 ? "red" : "yellow"}>
@@ -78,8 +78,8 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Sea
                   </div>
                 </div>
 
-                <div className="mt-1 flex items-center justify-between gap-2">
-                  <p className="truncate font-mono text-[0.6875rem] text-muted" title={p.path}>
+                <div className="mt-1 flex items-start justify-between gap-2">
+                  <p className="min-w-0 flex-1 truncate font-mono text-[0.6875rem] text-muted" title={p.path}>
                     {p.path}
                   </p>
                   {p.path && <CopyButton text={p.path} label="Copy path" iconOnly className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />}

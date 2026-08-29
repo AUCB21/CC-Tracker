@@ -68,9 +68,9 @@ export default function SetupPage() {
         }
       />
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] xl:gap-8">
+      <div className="grid gap-6 grid-cols-1 xl:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] xl:gap-8">
         {/* Left rail: environment + verify (sticky on xl) */}
-        <aside className="space-y-6 xl:sticky xl:top-16 xl:self-start">
+        <aside className="min-w-0 space-y-6 xl:sticky xl:top-16 xl:self-start">
           <Card title="Environment">
             <div className="space-y-2">
               <CredentialsField envKey="url" label="NEXT_PUBLIC_SUPABASE_URL" />
@@ -92,7 +92,7 @@ export default function SetupPage() {
         </aside>
 
         {/* Main lane: install steps */}
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <Card title="1. Supabase schema">
             <p className="max-w-[75ch] text-sm leading-relaxed text-muted">
               Open your Supabase project, SQL Editor, New query, paste the contents of{" "}

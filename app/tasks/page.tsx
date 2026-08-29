@@ -98,32 +98,40 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
             <div className="rounded-2xl border border-line bg-panel">
               <ul className="divide-y divide-line">
                 {tasks.map((t) => (
-                  <li key={t.id} className="flex items-start gap-4 px-5 py-4">
+                  <li
+                    key={t.id}
+                    className="flex flex-wrap items-start gap-3 px-4 py-4 sm:flex-nowrap sm:gap-4 sm:px-5"
+                  >
                     <Badge
                       color={t.status === "completed" ? "green" : t.status === "in_progress" ? "yellow" : "muted"}
                     >
                       {t.status.replace("_", " ")}
                     </Badge>
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1 basis-full sm:basis-auto">
                       <p
                         className={
                           t.status === "completed"
-                            ? "max-w-[75ch] text-sm font-medium text-muted line-through decoration-line"
-                            : "max-w-[75ch] text-sm font-medium text-foreground"
+                            ? "max-w-[75ch] break-words text-sm font-medium text-muted line-through decoration-line"
+                            : "max-w-[75ch] break-words text-sm font-medium text-foreground"
                         }
                       >
                         {t.content}
                       </p>
                       {t.description && (
-                        <p className="mt-1 max-w-[75ch] text-[0.75rem] text-muted">{t.description}</p>
+                        <p className="mt-1 max-w-[75ch] break-words text-[0.75rem] text-muted">{t.description}</p>
                       )}
                       <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.6875rem] text-muted">
                         {t.project_id && (
-                          <Link href={`/projects/${t.project_id}`} className="hover:text-accent hover:underline underline-offset-4">
+                          <Link
+                            href={`/projects/${t.project_id}`}
+                            className="max-w-full truncate hover:text-accent hover:underline underline-offset-4"
+                          >
                             {projectMap.get(t.project_id) ?? "project"}
                           </Link>
                         )}
-                        {t.plan_id && planMap.get(t.plan_id) && <span>{planMap.get(t.plan_id)}</span>}
+                        {t.plan_id && planMap.get(t.plan_id) && (
+                          <span className="max-w-full truncate">{planMap.get(t.plan_id)}</span>
+                        )}
                         <span className="font-mono">{fmtDate(t.created_at)}</span>
                       </p>
                     </div>

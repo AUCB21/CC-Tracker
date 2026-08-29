@@ -3,10 +3,11 @@ import { SetupBanner, Card, Stat, Badge, Progress, PageHeader, Empty, TaskLine, 
 import { ActivityChart } from "@/components/charts";
 import {
   getStats,
-  getAllSessions,
+  getRecentSessions,
+  getSessionStartsSince,
   getTasks,
   getPlans,
-  getEventsSince,
+  getRecentActivityEventsCached,
   getProjects,
 } from "@/lib/queries";
 import { buildActivitySeries } from "@/lib/series";
@@ -26,22 +27,21 @@ export default async function OverviewPage() {
     );
   }
 
-  const [allSessionsFull, tasks, plans, projects, events30] = await Promise.all([
-    getAllSessions(),
+  // ponytail: split the old getAllSessions call. Overview only needs the
+  // 8 newest full rows for the list and started_at over 30 days for the
+  // activity chart, not the entire sessions table with jsonb columns.
+  const since30 = new Date(Date.now() - 30 * 86_400_000).toISOString();
+  const [recentSessions, sessionStarts30, tasks, plans, projects, events30] = await Promise.all([
+    getRecentSessions(8),
+    getSessionStartsSince(since30),
     getTasks(),
     getPlans(),
     getProjects(),
-    getEventsSince(
-      new Date(Date.now() - 30 * 86_400_000).toISOString(),
-      ["prompt", "tool_use", "tasks_synced"]
-    ),
+    getRecentActivityEventsCached(30, ["prompt", "tool_use", "tasks_synced"]),
   ]);
 
-  const allSessions = allSessionsFull ?? [];
-  const recent = [...allSessions]
-    .sort((a, b) => new Date(b.last_activity_at).getTime() - new Date(a.last_activity_at).getTime())
-    .slice(0, 8);
-  const activity = buildActivitySeries(30, events30 ?? [], allSessions);
+  const recent = recentSessions ?? [];
+  const activity = buildActivitySeries(30, events30 ?? [], sessionStarts30 ?? []);
   const openTasks = (tasks ?? []).filter((t) => t.status !== "completed").slice(-12).reverse();
   const activePlans = (plans ?? []).filter((p) => p.status === "active").slice(0, 8);
   const projectMap = new Map((projects ?? []).map((p) => [p.id, fmtProjectName(p.name, p.path)]));
@@ -86,7 +86,7 @@ export default async function OverviewPage() {
       {/* Two-lane deck */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Sessions lane (2 cols wide) */}
-        <div className="lg:col-span-2">
+        <div className="min-w-0 lg:col-span-2">
           <Card
             title="Recent sessions"
             right={
@@ -130,7 +130,7 @@ export default async function OverviewPage() {
         </div>
 
         {/* Plans + tasks lane */}
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <Card
             title="Active plans"
             right={

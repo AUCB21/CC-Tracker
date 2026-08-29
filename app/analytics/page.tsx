@@ -6,7 +6,7 @@ import {
   DonutChart,
   SimpleBarChart,
 } from "@/components/charts";
-import { getStats, getAllSessions, getTasks, getEventsSince } from "@/lib/queries";
+import { getStats, getAllSessions, getTasks, getRecentActivityEventsCached } from "@/lib/queries";
 import {
   buildActivitySeries,
   buildTokenCostSeries,
@@ -27,10 +27,7 @@ export default async function AnalyticsPage() {
     getStats(),
     getAllSessions(),
     getTasks(),
-    getEventsSince(
-      new Date(Date.now() - DAYS * 86_400_000).toISOString(),
-      ["prompt", "tool_use", "tasks_synced"]
-    ),
+    getRecentActivityEventsCached(DAYS, ["prompt", "tool_use", "tasks_synced"]),
   ]);
 
   if (!stats) {

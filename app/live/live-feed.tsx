@@ -273,7 +273,7 @@ export function LiveFeed({
         <select
           value={filterProject ?? ""}
           onChange={(e) => setFilter("project", e.target.value)}
-          className="rounded-md border border-line bg-panel2 px-3 py-1.5 text-[0.75rem] text-foreground focus:border-accent focus:outline-none"
+          className="max-w-full flex-1 min-w-0 rounded-md border border-line bg-panel2 px-3 py-1.5 text-[0.75rem] text-foreground focus:border-accent focus:outline-none sm:flex-none"
         >
           <option value="">All projects</option>
           {projects.map((p) => (
@@ -283,7 +283,7 @@ export function LiveFeed({
         <select
           value={filterSession ?? ""}
           onChange={(e) => setFilter("session", e.target.value)}
-          className="rounded-md border border-line bg-panel2 px-3 py-1.5 text-[0.75rem] text-foreground focus:border-accent focus:outline-none"
+          className="max-w-full flex-1 min-w-0 rounded-md border border-line bg-panel2 px-3 py-1.5 text-[0.75rem] text-foreground focus:border-accent focus:outline-none sm:flex-none"
         >
           <option value="">All sessions</option>
           {sessionOptions.map((sid) => (
@@ -336,7 +336,7 @@ export function LiveFeed({
                     <span className="w-16 shrink-0 font-mono text-[0.6875rem] text-muted/60 leading-[1.6] truncate">
                       {e.session_id?.slice(0, 8)}
                     </span>
-                    <span className="min-w-0 flex-1">
+                    <span className="min-w-0 flex-1 break-all">
                       <span className="text-muted">{e.type === "tool_use" ? e.tool_name : e.type}</span>
                       {e.type === "prompt" &&
                         typeof (e.data as { prompt?: string })?.prompt === "string" && (
