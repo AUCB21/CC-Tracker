@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import Link from "next/link";
 import { DeckRail, DeckRailMobile } from "@/components/deck-rail";
 import { DeckShelf } from "@/components/deck-shelf";
@@ -8,7 +8,8 @@ import { isDbConfigured, ingestionKeyConfigured } from "@/lib/supabase";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+const spaceGrotesk = Space_Grotesk({ variable: "--font-space-grotesk", subsets: ["latin"] });
+const jetbrainsMono = JetBrains_Mono({ variable: "--font-jetbrains-mono", subsets: ["latin"], weight: ["300", "400", "500"] });
 
 export const metadata: Metadata = {
   title: {
@@ -23,7 +24,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
 
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} antialiased`}>
         <LiveRefresh />
         <a href="#main" className="skip-link">Skip to content</a>
         <div className="flex min-h-screen">
@@ -37,7 +38,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                 >
                   CC
                 </span>
-                <span className="text-[0.9375rem] font-semibold tracking-tight">
+                <span className="font-display text-[0.9375rem] font-semibold tracking-tight">
                   Claude Control
                 </span>
               </Link>
@@ -63,7 +64,19 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               >
                 CC
               </span>
-              <span className="text-sm font-semibold tracking-tight">Claude Control</span>
+              <span className="font-display text-sm font-semibold tracking-tight">Claude Control</span>
+            </Link>
+            <Link
+              href="/setup"
+              aria-label={connected ? "Database connected" : "Database not configured"}
+              className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-line"
+            >
+              <span
+                aria-hidden
+                className={`inline-block h-2 w-2 rounded-full ${
+                  connected ? "bg-[color:var(--color-green)]" : "bg-[color:var(--color-yellow)]"
+                }`}
+              />
             </Link>
             <DeckRailMobile />
           </header>

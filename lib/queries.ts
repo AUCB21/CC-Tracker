@@ -1,7 +1,7 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
 import { getSupabase } from "./supabase";
-import type { Project, Session, Plan, Task, EventRow } from "./types";
+import type { Project, Session, Plan, Task, EventRow, TaskRun } from "./types";
 
 export type Stats = {
   sessions: number;
@@ -268,4 +268,46 @@ export async function getProjectsPage(opts: {
     .order("created_at", { ascending: false })
     .range(...rangeFor(opts.page, opts.pageSize));
   return { rows: (data as Project[]) ?? [], total: count ?? 0 };
+}
+
+export async function getRecentTaskRuns(opts: {
+  projectId?: string;
+  limit?: number;
+} = {}): Promise<TaskRun[] | null> {
+  const db = getSupabase();
+  if (!db) return null;
+  let q = db.from("task_runs").select("*").order("requested_at", { ascending: false }).limit(opts.limit ?? 50);
+  if (opts.projectId) q = q.eq("project_id", opts.projectId);
+  const { data } = await q;
+  return (data as TaskRun[]) ?? [];
+}
+
+export async function getRecentActiveEvents(opts: {
+  sessionId?: string;
+  limit?: number;
+} = {}): Promise<EventRow[] | null> {
+  const db = getSupabase();
+  if (!db) return null;
+  const since = new Date(Date.now() - 30 * 60_000).toISOString();
+  let q = db
+    .from("events")
+    .select("*")
+    .gte("created_at", since)
+    .order("created_at", { ascending: false })
+    .limit(opts.limit ?? 200);
+  if (opts.sessionId) q = q.eq("session_id", opts.sessionId);
+  const { data } = await q;
+  return (data as EventRow[]) ?? [];
+}
+
+export async function getProjectDailySpend(projectIds: string[]): Promise<Map<string, number>> {
+  const db = getSupabase();
+  if (!db || projectIds.length === 0) return new Map();
+  const { data } = await db
+    .from("project_daily_spend")
+    .select("project_id,spend_usd")
+    .in("project_id", projectIds);
+  return new Map(
+    ((data ?? []) as { project_id: string; spend_usd: number }[]).map((r) => [r.project_id, Number(r.spend_usd)])
+  );
 }

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { SetupBanner, Badge, PageHeader, Empty, Progress } from "@/components/ui";
 import { CopyButton } from "@/components/copy-button";
 import { Pager } from "@/components/pager";
-import { getProjectsPage, getSessions, getTasks } from "@/lib/queries";
+import { getProjectsPage, getSessions, getTasks, getProjectDailySpend } from "@/lib/queries";
 import { fmtNum, fmtRelative, fmtCost, fmtProjectName } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -28,9 +28,10 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Sea
   const { rows: projects, total } = projectsPage;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const pageIds = projects.map((p) => p.id);
-  const [sessions, tasks] = await Promise.all([
+  const [sessions, tasks, dailySpend] = await Promise.all([
     pageIds.length > 0 ? getSessions({ projectIds: pageIds }) : Promise.resolve([]),
     pageIds.length > 0 ? getTasks({ projectIds: pageIds }) : Promise.resolve([]),
+    getProjectDailySpend(pageIds),
   ]);
 
   return (
@@ -52,6 +53,9 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Sea
             const last = pSessions[0]?.last_activity_at;
             const displayName = fmtProjectName(p.name, p.path);
             const countText = `${pSessions.length} ${pSessions.length === 1 ? "session" : "sessions"}`;
+            const budget = p.per_run_budget_usd != null ? Number(p.per_run_budget_usd) : null;
+            const spend = dailySpend.get(p.id) ?? 0;
+            const spendRatio = budget != null && budget > 0 ? spend / budget : null;
 
             return (
               <div
@@ -60,11 +64,18 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Sea
               >
                 <div className="flex items-start justify-between gap-3">
                   <Link href={`/projects/${p.id}`} className="min-w-0 hover:text-accent">
-                    <h2 className="truncate text-base font-semibold tracking-tight" title={displayName}>
+                    <h2 className="font-display truncate text-base font-semibold tracking-tight" title={displayName}>
                       {displayName}
                     </h2>
                   </Link>
-                  <Badge color="muted">{countText}</Badge>
+                  <div className="flex shrink-0 flex-wrap gap-1">
+                    <Badge color="muted">{countText}</Badge>
+                    {spendRatio != null && spendRatio > 0.8 && (
+                      <Badge color={spendRatio >= 1 ? "red" : "yellow"}>
+                        {fmtCost(spend)} / {fmtCost(budget!)} today
+                      </Badge>
+                    )}
+                  </div>
                 </div>
 
                 <div className="mt-1 flex items-center justify-between gap-2">

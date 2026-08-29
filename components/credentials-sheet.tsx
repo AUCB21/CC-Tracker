@@ -115,7 +115,7 @@ export function CredentialsField({
       aria-label={`Edit ${label}`}
       className="group flex w-full items-center justify-between gap-3 rounded-lg border border-line bg-panel2 px-3 py-2.5 text-left transition-colors hover:border-accent/60 hover:bg-panel2"
     >
-      <code className="truncate font-mono text-[0.75rem] text-foreground">{label}</code>
+      <code className="min-w-0 flex-1 truncate font-mono text-[0.75rem] text-foreground">{label}</code>
       <span className="flex shrink-0 items-center gap-2">
         <span
           className={`inline-flex items-center gap-1 rounded-full px-2 py-[0.125rem] text-[0.6875rem] font-semibold uppercase tracking-[0.06em] ${

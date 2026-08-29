@@ -83,7 +83,7 @@ export function Badge({
   children,
   glyph,
 }: {
-  color: "green" | "yellow" | "blue" | "accent" | "muted";
+  color: "green" | "yellow" | "blue" | "accent" | "muted" | "red";
   children: React.ReactNode;
   glyph?: React.ReactNode;
 }) {
@@ -93,6 +93,7 @@ export function Badge({
     blue:   "bg-[color:var(--color-blue)] text-background",
     accent: "bg-accent text-background",
     muted:  "bg-line text-muted",
+    red:    "bg-[color:var(--color-red)] text-background",
   } as const;
   return (
     <span
@@ -142,13 +143,34 @@ export function SetupBanner() {
   );
 }
 
+/* Empty-state emblem: a soft ring with a single terracotta stroke arc,
+   evoking a partial gauge - "nothing yet, room for it to fill in". Matches
+   the single-stroke weight of RailIcons and stays intentional over generic. */
 export function Empty({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex flex-col items-center gap-2 py-12 text-center">
-      <span
+    <div className="flex flex-col items-center gap-4 py-12 text-center">
+      <svg
+        viewBox="0 0 40 40"
+        width="40"
+        height="40"
+        fill="none"
         aria-hidden
-        className="inline-block h-8 w-8 rounded-full border border-line"
-      />
+      >
+        <circle
+          cx="20"
+          cy="20"
+          r="16"
+          stroke="var(--color-line)"
+          strokeWidth="1.5"
+        />
+        <path
+          d="M20 4a16 16 0 0 1 14.4 9"
+          stroke="var(--color-accent)"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+        <circle cx="20" cy="20" r="1.5" fill="var(--color-muted-2)" />
+      </svg>
       <p className="max-w-[42ch] text-sm text-muted">{children}</p>
     </div>
   );
@@ -237,6 +259,13 @@ export const RailIcons = {
       <path d="M4 16V9M9 16V4M14 16v-8" />
     </svg>
   ),
+  live: (
+    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden>
+      <circle cx="10" cy="10" r="2" />
+      <path d="M6.5 13.5a5 5 0 0 1 0-7M13.5 6.5a5 5 0 0 1 0 7" />
+      <path d="M4 16a9 9 0 0 1 0-12M16 4a9 9 0 0 1 0 12" strokeOpacity="0.4" />
+    </svg>
+  ),
   setup: (
     <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
       <circle cx="10" cy="10" r="2.5" />
@@ -248,7 +277,7 @@ export const RailIcons = {
 export function LiveDot({ className = "" }: { className?: string }) {
   return (
     <span className={`relative inline-flex h-2 w-2 ${className}`} aria-hidden>
-      <span className="absolute inset-0 rounded-full bg-[color:var(--color-green)] opacity-70 animate-ping" />
+      <span className="motion-safe-pulse absolute inset-0 rounded-full bg-[color:var(--color-green)] opacity-70 animate-ping" />
       <span className="absolute inset-0 rounded-full bg-[color:var(--color-green)]" />
     </span>
   );

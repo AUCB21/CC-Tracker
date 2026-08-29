@@ -19,3 +19,15 @@ export async function pollRun(runId: string): Promise<TaskRun | null> {
   if (!db) return null;
   return getTaskRun(db, runId);
 }
+
+export async function cancelRun(runId: string): Promise<{ ok: true } | { error: string }> {
+  const db = getSupabase();
+  if (!db) return { error: "Supabase not configured" };
+  const { error } = await db
+    .from("task_runs")
+    .update({ status: "cancelled", finished_at: new Date().toISOString() })
+    .eq("id", runId)
+    .in("status", ["queued", "claimed", "running"]);
+  if (error) return { error: error.message };
+  return { ok: true };
+}

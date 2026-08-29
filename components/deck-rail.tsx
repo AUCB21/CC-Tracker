@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { RailIcons } from "@/components/ui";
@@ -21,6 +22,7 @@ const NAV: NavGroup[] = [
     items: [
       { href: "/",          label: "Overview",  icon: RailIcons.overview },
       { href: "/analytics", label: "Analytics", icon: RailIcons.analytics },
+      { href: "/live",      label: "Live",      icon: RailIcons.live },
     ],
   },
   {
@@ -94,6 +96,12 @@ export function DeckRail() {
 export function DeckRailMobile() {
   const pathname = usePathname();
   const flat = NAV.flatMap((g) => g.items);
+  const activeRef = useRef<HTMLAnchorElement | null>(null);
+  // ponytail: scroll the active item into center on mount so users on small
+  // viewports notice items that would otherwise be scrolled off-screen.
+  useEffect(() => {
+    activeRef.current?.scrollIntoView({ inline: "center", block: "nearest" });
+  }, [pathname]);
   return (
     <nav className="ml-auto flex items-center gap-1 overflow-x-auto" aria-label="Primary">
       {flat.map((item) => {
@@ -102,6 +110,7 @@ export function DeckRailMobile() {
           <Link
             key={item.href}
             href={item.href}
+            ref={active ? activeRef : undefined}
             aria-label={item.label}
             aria-current={active ? "page" : undefined}
             className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md transition-colors ${

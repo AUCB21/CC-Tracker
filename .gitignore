@@ -17,6 +17,10 @@
 /.next/
 /out/
 
+# local agent settings (machine-specific paths)
+.claude/settings.local.json
+.playwright-mcp/
+
 # production
 /build
 

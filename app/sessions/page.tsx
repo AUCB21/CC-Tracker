@@ -115,66 +115,126 @@ export default async function SessionsPage({ searchParams }: { searchParams: Sea
           {sessions.length === 0 ? (
             <Empty>No sessions match the current filters.</Empty>
           ) : (
-            <div className="overflow-x-auto rounded-2xl border border-line bg-panel">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-line text-left text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-muted">
-                    <th className="px-5 py-3">Session</th>
-                    <th className="px-5 py-3">Project</th>
-                    <th className="px-5 py-3">Started</th>
-                    <th className="px-5 py-3 text-right">Prompts</th>
-                    <th className="px-5 py-3 text-right">Tools</th>
-                    <th className="px-5 py-3 text-right">Tokens</th>
-                    <th className="px-5 py-3 text-right">Cost</th>
-                    <th className="px-5 py-3 text-right">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-line">
-                  {sessions.map((s) => (
-                    <tr
-                      key={s.id}
-                      className="relative transition-colors hover:bg-panel2/60 focus-within:bg-panel2/60"
-                    >
-                      <td className="max-w-[24rem] px-5 py-3">
+            <>
+              {/* Below md: stacked card list. Above md: dense table. */}
+              <ul className="space-y-3 md:hidden">
+                {sessions.map((s) => {
+                  const tokens =
+                    s.input_tokens + s.output_tokens + s.cache_read_tokens + s.cache_creation_tokens;
+                  return (
+                    <li key={s.id} className="rounded-2xl border border-line bg-panel p-4">
+                      <div className="flex items-start justify-between gap-3">
                         <Link
                           href={`/sessions/${s.id}`}
-                          className="relative block truncate hover:text-accent before:absolute before:inset-0 before:z-10 before:content-['']"
+                          className="min-w-0 flex-1 text-sm text-foreground hover:text-accent"
                         >
-                          {truncate(s.title, 60)}
+                          <p className="line-clamp-2">{truncate(s.title, 90)}</p>
+                          <p className="mt-1 text-[0.6875rem] text-muted">
+                            {s.model ? s.model.replace("claude-", "") : "no model"}
+                            {s.git_branch ? ` / ${s.git_branch}` : ""}
+                          </p>
                         </Link>
-                        <p className="mt-0.5 text-[0.6875rem] text-muted">
-                          {s.model ? s.model.replace("claude-", "") : "no model"}
-                          {s.git_branch ? ` / ${s.git_branch}` : ""}
-                        </p>
-                      </td>
-                      <td className="px-5 py-3 text-muted">
-                        {s.project_id ? projectMap.get(s.project_id) ?? "" : ""}
-                      </td>
-                      <td className="px-5 py-3 font-mono text-[0.75rem] text-muted">{fmtDate(s.started_at)}</td>
-                      <td className="px-5 py-3 text-right font-mono tabular-nums">{s.prompt_count}</td>
-                      <td className="px-5 py-3 text-right font-mono tabular-nums">{fmtNum(s.tool_use_count)}</td>
-                      <td className="px-5 py-3 text-right font-mono tabular-nums">
-                        {fmtNum(
-                          s.input_tokens + s.output_tokens + s.cache_read_tokens + s.cache_creation_tokens,
-                        )}
-                      </td>
-                      <td className="px-5 py-3 text-right font-mono tabular-nums">
-                        {fmtCost(Number(s.estimated_cost_usd))}
-                      </td>
-                      <td className="px-5 py-3 text-right">
-                        {isLive(s) ? (
-                          <Badge color="green" glyph={<LiveDot className="h-1.5 w-1.5" />}>live</Badge>
-                        ) : s.status === "ended" ? (
-                          <Badge color="muted">{fmtDuration(s.started_at, s.ended_at)}</Badge>
-                        ) : (
-                          <Badge color="yellow">idle</Badge>
-                        )}
-                      </td>
+                        <div className="shrink-0">
+                          {isLive(s) ? (
+                            <Badge color="green" glyph={<LiveDot className="h-1.5 w-1.5" />}>live</Badge>
+                          ) : s.status === "ended" ? (
+                            <Badge color="muted">{fmtDuration(s.started_at, s.ended_at)}</Badge>
+                          ) : (
+                            <Badge color="yellow">idle</Badge>
+                          )}
+                        </div>
+                      </div>
+                      <dl className="mt-3 grid grid-cols-4 gap-2 text-[0.6875rem] text-muted">
+                        <div>
+                          <dt className="uppercase tracking-[0.06em]">Prompts</dt>
+                          <dd className="mt-0.5 font-mono tabular-nums text-foreground">{s.prompt_count}</dd>
+                        </div>
+                        <div>
+                          <dt className="uppercase tracking-[0.06em]">Tools</dt>
+                          <dd className="mt-0.5 font-mono tabular-nums text-foreground">{fmtNum(s.tool_use_count)}</dd>
+                        </div>
+                        <div>
+                          <dt className="uppercase tracking-[0.06em]">Tokens</dt>
+                          <dd className="mt-0.5 font-mono tabular-nums text-foreground">{fmtNum(tokens)}</dd>
+                        </div>
+                        <div>
+                          <dt className="uppercase tracking-[0.06em]">Cost</dt>
+                          <dd className="mt-0.5 font-mono tabular-nums text-foreground">
+                            {fmtCost(Number(s.estimated_cost_usd))}
+                          </dd>
+                        </div>
+                      </dl>
+                      <p className="mt-3 font-mono text-[0.6875rem] text-muted">
+                        {s.project_id ? projectMap.get(s.project_id) ?? "" : "no project"}
+                        {"  ·  "}
+                        {fmtDate(s.started_at)}
+                      </p>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              <div className="hidden overflow-x-auto rounded-2xl border border-line bg-panel md:block">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-line text-left text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-muted">
+                      <th className="px-5 py-3">Session</th>
+                      <th className="px-5 py-3">Project</th>
+                      <th className="px-5 py-3">Started</th>
+                      <th className="px-5 py-3 text-right">Prompts</th>
+                      <th className="px-5 py-3 text-right">Tools</th>
+                      <th className="px-5 py-3 text-right">Tokens</th>
+                      <th className="px-5 py-3 text-right">Cost</th>
+                      <th className="px-5 py-3 text-right">Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-line">
+                    {sessions.map((s) => (
+                      <tr
+                        key={s.id}
+                        className="relative transition-colors hover:bg-panel2/60 focus-within:bg-panel2/60"
+                      >
+                        <td className="max-w-[24rem] px-5 py-3">
+                          <Link
+                            href={`/sessions/${s.id}`}
+                            className="relative block truncate hover:text-accent before:absolute before:inset-0 before:z-10 before:content-['']"
+                          >
+                            {truncate(s.title, 60)}
+                          </Link>
+                          <p className="mt-0.5 text-[0.6875rem] text-muted">
+                            {s.model ? s.model.replace("claude-", "") : "no model"}
+                            {s.git_branch ? ` / ${s.git_branch}` : ""}
+                          </p>
+                        </td>
+                        <td className="px-5 py-3 text-muted">
+                          {s.project_id ? projectMap.get(s.project_id) ?? "" : ""}
+                        </td>
+                        <td className="px-5 py-3 font-mono text-[0.75rem] text-muted">{fmtDate(s.started_at)}</td>
+                        <td className="px-5 py-3 text-right font-mono tabular-nums">{s.prompt_count}</td>
+                        <td className="px-5 py-3 text-right font-mono tabular-nums">{fmtNum(s.tool_use_count)}</td>
+                        <td className="px-5 py-3 text-right font-mono tabular-nums">
+                          {fmtNum(
+                            s.input_tokens + s.output_tokens + s.cache_read_tokens + s.cache_creation_tokens,
+                          )}
+                        </td>
+                        <td className="px-5 py-3 text-right font-mono tabular-nums">
+                          {fmtCost(Number(s.estimated_cost_usd))}
+                        </td>
+                        <td className="px-5 py-3 text-right">
+                          {isLive(s) ? (
+                            <Badge color="green" glyph={<LiveDot className="h-1.5 w-1.5" />}>live</Badge>
+                          ) : s.status === "ended" ? (
+                            <Badge color="muted">{fmtDuration(s.started_at, s.ended_at)}</Badge>
+                          ) : (
+                            <Badge color="yellow">idle</Badge>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
 
           <Pager pathname="/sessions" searchParams={params} page={page} totalPages={totalPages} />

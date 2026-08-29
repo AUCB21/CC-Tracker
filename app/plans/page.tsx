@@ -81,8 +81,8 @@ export default async function PlansPage({ searchParams }: { searchParams: Search
         title="Plans"
         sub={`${total} plan${total === 1 ? "" : "s"} match${total === 1 ? "es" : ""} the current filters.`}
         right={
-          <div className="flex items-center gap-2">
-            <code className="rounded-md border border-line bg-panel2 px-3 py-1.5 font-mono text-[0.6875rem] text-muted">
+          <div className="flex max-w-full flex-wrap items-center gap-2">
+            <code className="max-w-full break-all rounded-md border border-line bg-panel2 px-3 py-1.5 font-mono text-[0.6875rem] text-muted">
               cctrack plan add --title &quot;...&quot;
             </code>
             <CopyButton text='cctrack plan add --title "Refactor auth"' label="Copy CLI" />

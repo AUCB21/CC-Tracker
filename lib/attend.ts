@@ -51,13 +51,24 @@ export async function enqueueTaskRun(
   }
 
   const [{ data: project }, { data: plan }] = await Promise.all([
-    db.from("projects").select("name, path").eq("id", task.project_id).maybeSingle(),
+    db.from("projects").select("name, path, per_run_budget_usd").eq("id", task.project_id).maybeSingle(),
     task.plan_id
       ? db.from("plans").select("title").eq("id", task.plan_id).maybeSingle()
       : Promise.resolve({ data: null } as { data: null }),
   ]);
   if (!project?.path) {
     return { error: "project has no path on file", status: 409 };
+  }
+
+  if (project.per_run_budget_usd != null) {
+    const { data: spend } = await db
+      .from("project_daily_spend")
+      .select("spend_usd")
+      .eq("project_id", task.project_id)
+      .maybeSingle();
+    if (Number(spend?.spend_usd ?? 0) > Number(project.per_run_budget_usd)) {
+      return { error: "Daily project budget exceeded; new runs are blocked until tomorrow", status: 429 };
+    }
   }
 
   const prompt = buildAttendPrompt({

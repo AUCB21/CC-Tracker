@@ -25,9 +25,13 @@ import {
 
 type DeckColors = {
   accent: string;
+  accentDim: string;
   blue: string;
+  blueDim: string;
   green: string;
+  greenDim: string;
   yellow: string;
+  yellowDim: string;
   ink: string;
   lift: string;
   hair: string;
@@ -36,15 +40,19 @@ type DeckColors = {
 };
 
 const DEFAULT_COLORS: DeckColors = {
-  accent: "#d97757",
-  blue:   "#6a9fd9",
-  green:  "#7fb069",
-  yellow: "#d9a441",
-  ink:    "#161412",
-  lift:   "#1d1a17",
-  hair:   "#2a2621",
-  bone:   "#ece8e1",
-  dust:   "#9b938a",
+  accent:    "#d97757",
+  accentDim: "#a04d34",
+  blue:      "#6a9fd9",
+  blueDim:   "#3f6c9c",
+  green:     "#7fb069",
+  greenDim:  "#5e864a",
+  yellow:    "#d9a441",
+  yellowDim: "#a0752e",
+  ink:       "#161412",
+  lift:      "#1d1a17",
+  hair:      "#2a2621",
+  bone:      "#ece8e1",
+  dust:      "#9b938a",
 };
 
 function useDeckColors(): DeckColors {
@@ -56,15 +64,19 @@ function useDeckColors(): DeckColors {
       return v || fallback;
     };
     setC({
-      accent: pick("--color-accent", DEFAULT_COLORS.accent),
-      blue:   pick("--color-blue",   DEFAULT_COLORS.blue),
-      green:  pick("--color-green",  DEFAULT_COLORS.green),
-      yellow: pick("--color-yellow", DEFAULT_COLORS.yellow),
-      ink:    pick("--color-panel",   DEFAULT_COLORS.ink),
-      lift:   pick("--color-panel2",  DEFAULT_COLORS.lift),
-      hair:   pick("--color-line",    DEFAULT_COLORS.hair),
-      bone:   pick("--color-foreground", DEFAULT_COLORS.bone),
-      dust:   pick("--color-muted",   DEFAULT_COLORS.dust),
+      accent:    pick("--color-accent",       DEFAULT_COLORS.accent),
+      accentDim: pick("--color-accent-dim",   DEFAULT_COLORS.accentDim),
+      blue:      pick("--color-blue",         DEFAULT_COLORS.blue),
+      blueDim:   pick("--color-blue-dim",     DEFAULT_COLORS.blueDim),
+      green:     pick("--color-green",        DEFAULT_COLORS.green),
+      greenDim:  pick("--color-green-dim",    DEFAULT_COLORS.greenDim),
+      yellow:    pick("--color-yellow",       DEFAULT_COLORS.yellow),
+      yellowDim: pick("--color-yellow-dim",   DEFAULT_COLORS.yellowDim),
+      ink:       pick("--color-panel",        DEFAULT_COLORS.ink),
+      lift:      pick("--color-panel2",       DEFAULT_COLORS.lift),
+      hair:      pick("--color-line",         DEFAULT_COLORS.hair),
+      bone:      pick("--color-foreground",   DEFAULT_COLORS.bone),
+      dust:      pick("--color-muted",        DEFAULT_COLORS.dust),
     });
   }, []);
   return c;
@@ -88,9 +100,13 @@ function useDeckStyles(c: DeckColors) {
       axisLine: false,
     } as const,
     legend: { wrapperStyle: { fontSize: 12, color: c.dust } } as const,
-    palette: [c.accent, c.blue, c.green, c.yellow, "#a04d34", "#3f6c9c", "#5e864a", "#a0752e"],
+    palette: [c.accent, c.blue, c.green, c.yellow, c.accentDim, c.blueDim, c.greenDim, c.yellowDim],
   };
 }
+
+// ponytail: pinned to recharts ^2.15 because 3.x + React 19 leaves
+// ResponsiveContainer stuck at 0x0 (empty wrapper, no SVG). Revisit when
+// recharts ships a v3 that handles React 19 concurrent measurement.
 
 export function ActivityChart({
   data,
@@ -163,7 +179,7 @@ export function TokenCostChart({
         <Legend {...s.legend} />
         <Bar yAxisId="tok" dataKey="input"     name="Input tok"  stackId="t" fill={c.blue} />
         <Bar yAxisId="tok" dataKey="output"    name="Output tok" stackId="t" fill={c.accent} />
-        <Bar yAxisId="tok" dataKey="cacheRead" name="Cache read" stackId="t" fill="#3f6c9c" radius={[3, 3, 0, 0]} />
+        <Bar yAxisId="tok" dataKey="cacheRead" name="Cache read" stackId="t" fill={c.blueDim} radius={[3, 3, 0, 0]} />
         <Line yAxisId="usd" dataKey="cost" name="Cost (USD)" stroke={c.yellow} strokeWidth={2} dot={false} />
       </ComposedChart>
     </ResponsiveContainer>

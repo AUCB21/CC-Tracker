@@ -6,8 +6,10 @@ import { usePathname } from "next/navigation";
 const SECTION_LABEL: Record<string, string> = {
   "": "Overview",
   analytics: "Analytics",
+  live: "Live",
   projects: "Projects",
   plans: "Plans",
+  tasks: "Tasks",
   sessions: "Sessions",
   setup: "Setup",
 };
