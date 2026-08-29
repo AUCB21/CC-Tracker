@@ -152,6 +152,16 @@ alter table public.task_runs add column if not exists exit_code integer;
 alter table public.task_runs add column if not exists total_cost_usd numeric(14,6);
 alter table public.task_runs add column if not exists usage jsonb;
 
+-- Populated by the post-run verifier (Gap 2): after a successful primary run
+-- the runner spawns a second cheap claude -p that reads the git diff and
+-- returns {verdict, reason}. Null when the project is not a git repo, no
+-- code changed, or the verifier itself failed. Task auto-completion is now
+-- gated: only pass / null verdicts flip the task to completed.
+alter table public.task_runs add column if not exists verdict text
+  check (verdict in ('pass','fail','needs_review'));
+alter table public.task_runs add column if not exists verdict_reason text;
+alter table public.task_runs add column if not exists diff_summary jsonb;
+
 -- Note on claude_session_id: originally references sessions(id), but the runner
 -- writes the session UUID as soon as it arrives in the JSON output; the hooks
 -- may not have inserted the sessions row yet. Drop the FK so writes never race.
@@ -177,15 +187,32 @@ end $$;
 drop policy if exists task_runs_anon_read on public.task_runs;
 create policy task_runs_anon_read on public.task_runs for select using (true);
 
+-- ---------- cost/budget guards ----------
+alter table public.projects add column if not exists per_run_budget_usd numeric(10,4);
+alter table public.projects add column if not exists per_run_max_turns  int;
+
 -- ---------- realtime: live-refresh for sessions/plans/tasks/projects ----------
 -- Same pattern as task_runs above: publish + anon-read so the browser can
 -- subscribe to writes and call router.refresh() (see components/live-refresh.tsx).
 -- Single-user localhost app; anon reads are safe here (no PII, secrets stay in .env).
+-- Daily spend per project (last 24 h, successful runs only). Used by the budget
+-- guard in enqueueTaskRun and the PreToolUse hook.
+create or replace view public.project_daily_spend as
+select
+  project_id,
+  coalesce(sum(total_cost_usd), 0) as spend_usd
+from public.task_runs
+where
+  status = 'done'
+  and finished_at >= now() - interval '24 hours'
+  and project_id is not null
+group by project_id;
+
 do $$
 declare
   t text;
 begin
-  foreach t in array array['sessions', 'plans', 'tasks', 'projects'] loop
+  foreach t in array array['sessions', 'plans', 'tasks', 'projects', 'events'] loop
     if not exists (
       select 1 from pg_publication_tables
        where pubname = 'supabase_realtime'

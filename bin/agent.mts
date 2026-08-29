@@ -22,7 +22,12 @@ import { hostname, homedir } from "node:os";
 import { join } from "node:path";
 import { getSupabase } from "../lib/supabase";
 import { parseTrailingJson } from "../lib/agent-parse";
-import type { TaskRun } from "../lib/types";
+import {
+  parseShortstat,
+  parseVerdict,
+  buildVerifyPrompt,
+} from "../lib/agent-verify";
+import type { DiffSummary, TaskRun, TaskRunVerdict } from "../lib/types";
 
 const AGENT_ID = process.env.CC_TRACK_AGENT_ID ?? hostname();
 const POLL_MS = Number(process.env.CC_TRACK_POLL_MS ?? 3000);
@@ -141,10 +146,111 @@ type ClaudeJsonResult = {
   session_id?: string;
   total_cost_usd?: number;
   usage?: Record<string, unknown>;
+  result?: string;
 };
 
-async function execute(run: TaskRun, projectPath: string): Promise<void> {
+// ---------- git helpers for the verifier ----------
+// null on any failure (not a git repo, git not installed, HEAD empty, etc);
+// verifier callers treat null as "skip the verify pass".
+function gitHead(cwd: string): string | null {
+  const r = spawnSync("git", ["rev-parse", "HEAD"], { cwd, encoding: "utf8" });
+  if (r.status !== 0) return null;
+  const head = r.stdout.trim();
+  return head || null;
+}
+
+function gitShortstat(cwd: string, from: string, to: string): DiffSummary | null {
+  const r = spawnSync("git", ["diff", "--shortstat", `${from}..${to}`], { cwd, encoding: "utf8" });
+  if (r.status !== 0) return null;
+  return parseShortstat(r.stdout);
+}
+
+function gitDiffText(cwd: string, from: string, to: string, maxBytes = 64 * 1024): string {
+  const r = spawnSync("git", ["diff", `${from}..${to}`], {
+    cwd, encoding: "utf8", maxBuffer: maxBytes * 4,
+  });
+  if (r.status !== 0) return "";
+  return r.stdout;
+}
+
+// ---------- verifier ----------
+// Spawns a cheap, short-turn claude to grade the diff. Best-effort: any failure
+// leaves verdict null and the caller proceeds as before Gap 2.
+const VERIFIER_BUDGET_USD = 0.10;
+const VERIFIER_MAX_TURNS = 3;
+type VerifyOutcome = {
+  verdict: TaskRunVerdict;
+  reason: string;
+  diffSummary: DiffSummary | null;
+};
+
+async function runVerifier(
+  taskContent: string,
+  taskDescription: string | null,
+  planTitle: string | null,
+  cwd: string,
+  fromCommit: string,
+  toCommit: string,
+): Promise<VerifyOutcome | null> {
+  const diffSummary = gitShortstat(cwd, fromCommit, toCommit);
+  const diff = gitDiffText(cwd, fromCommit, toCommit);
+  // No code changes -> nothing to grade against; caller decides what to do.
+  if (!diffSummary && !diff.trim()) return null;
+
+  const prompt = buildVerifyPrompt({
+    taskContent, taskDescription, planTitle, diffStat: diffSummary, diff,
+  });
+  const args = [
+    "-p", prompt,
+    "--output-format", "json",
+    "--max-turns", String(VERIFIER_MAX_TURNS),
+    "--max-budget-usd", String(VERIFIER_BUDGET_USD),
+  ];
+  if (PERMISSION_MODE) args.push("--permission-mode", PERMISSION_MODE);
+
+  let stdoutFull = "";
+  const spawned = spawnOnce(
+    CLAUDE_BIN, args, cwd,
+    (chunk) => { stdoutFull += chunk; },
+    () => {},
+  );
+  const result = await spawned.promise;
+  if (result.kind !== "exit" || result.code !== 0) return null;
+
+  const parsed = parseTrailingJson(stdoutFull) as ClaudeJsonResult | null;
+  const replyText = typeof parsed?.result === "string" ? parsed.result : "";
+  const verdict = parseVerdict(replyText);
+  if (!verdict) return null;
+  return { ...verdict, diffSummary };
+}
+
+async function planTitleForTask(taskId: string | null): Promise<string | null> {
+  if (!taskId) return null;
+  const { data } = await db!
+    .from("tasks")
+    .select("plan:plans(title)")
+    .eq("id", taskId)
+    .maybeSingle();
+  const plan = (data as { plan: { title: string } | null } | null)?.plan;
+  return plan?.title ?? null;
+}
+
+async function taskContext(taskId: string | null): Promise<{ content: string; description: string | null } | null> {
+  if (!taskId) return null;
+  const { data } = await db!
+    .from("tasks")
+    .select("content, description")
+    .eq("id", taskId)
+    .maybeSingle();
+  if (!data) return null;
+  return data as { content: string; description: string | null };
+}
+
+async function execute(run: TaskRun, projectPath: string, budgetUsd: number | null = null, maxTurns: number | null = null): Promise<void> {
   await patch(run.id, { status: "running" });
+  // Snapshot HEAD before spawning so the verifier can diff against it.
+  // Null when the project is not a git repo; verifier just skips in that case.
+  const parentCommit = gitHead(projectPath);
   let stdoutTail = "";
   // Full stdout: --output-format json emits ONE json blob on stdout at the end.
   // stderr (info/debug lines) is not accumulated here, only in the ui-facing tail.
@@ -174,6 +280,8 @@ async function execute(run: TaskRun, projectPath: string): Promise<void> {
 
   const args = ["-p", run.prompt, "--output-format", "json"];
   if (PERMISSION_MODE) args.push("--permission-mode", PERMISSION_MODE);
+  if (budgetUsd != null) args.push("--max-budget-usd", String(budgetUsd));
+  if (maxTurns != null) args.push("--max-turns", String(maxTurns));
 
   let cancelled = false;
   let currentKill: (() => void) | null = null;
@@ -237,8 +345,44 @@ async function execute(run: TaskRun, projectPath: string): Promise<void> {
     ...(typeof parsed?.total_cost_usd === "number" ? { total_cost_usd: parsed.total_cost_usd } : {}),
     ...(parsed?.usage ? { usage: parsed.usage } : {}),
   });
-  // ponytail: run success => task done. Un-complete via `cctrack task update` if wrong.
-  if (ok && run.task_id) {
+
+  if (!ok) return;
+
+  // Verify pass (Gap 2). Best-effort; any failure leaves verdict null and
+  // the task is still auto-completed as if verifier didn't exist.
+  let verdict: TaskRunVerdict | null = null;
+  if (parentCommit) {
+    const headCommit = gitHead(projectPath);
+    if (headCommit && headCommit === parentCommit) {
+      // The run finished ok but touched nothing tracked. Not "pass" (nothing
+      // to show for it) and not "fail" (may have been read-only investigation).
+      await patch(run.id, {
+        verdict: "needs_review",
+        verdict_reason: "no committed changes since the run started",
+      });
+      verdict = "needs_review";
+    } else if (headCommit) {
+      const ctx = await taskContext(run.task_id);
+      const planTitle = await planTitleForTask(run.task_id);
+      const outcome = ctx
+        ? await runVerifier(ctx.content, ctx.description, planTitle, projectPath, parentCommit, headCommit)
+        : null;
+      if (outcome) {
+        await patch(run.id, {
+          verdict: outcome.verdict,
+          verdict_reason: outcome.reason,
+          diff_summary: outcome.diffSummary,
+        });
+        verdict = outcome.verdict;
+      }
+    }
+  }
+
+  // Auto-complete the task unless the verifier is confident the run didn't
+  // actually do it. `fail` and `needs_review` leave the task where it was so
+  // a human can look at it. Null verdict (non-git project, verifier crash)
+  // keeps the pre-Gap-2 best-effort behaviour.
+  if (run.task_id && verdict !== "fail" && verdict !== "needs_review") {
     await db!
       .from("tasks")
       .update({ status: "completed", completed_at: now, updated_at: now })
@@ -250,7 +394,7 @@ async function tick(): Promise<void> {
   if (busy) return;
   let q = db!
     .from("task_runs")
-    .select("*, project:projects(path)")
+    .select("*, project:projects(path, per_run_budget_usd, per_run_max_turns)")
     .eq("status", "queued")
     .order("requested_at", { ascending: true })
     .limit(5);
@@ -260,16 +404,18 @@ async function tick(): Promise<void> {
     console.error(`[agent] poll error: ${error.message}`);
     return;
   }
-  const rows = (data as (TaskRun & { project: { path: string } | null })[]) ?? [];
+  type ProjectFields = { path: string; per_run_budget_usd: number | null; per_run_max_turns: number | null };
+  const rows = (data as (TaskRun & { project: ProjectFields | null })[]) ?? [];
   for (const row of rows) {
-    const path = row.project?.path;
+    const proj = row.project;
+    const path = proj?.path;
     if (!path || !existsSync(path)) continue;
     const claimed = await claim(row.id);
     if (!claimed) continue;
     busy = true;
     console.log(`[agent] claimed ${claimed.id} (task=${claimed.task_id}) cwd=${path}`);
     try {
-      await execute(claimed, path);
+      await execute(claimed, path, proj?.per_run_budget_usd ?? null, proj?.per_run_max_turns ?? null);
       console.log(`[agent] finished ${claimed.id}`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);

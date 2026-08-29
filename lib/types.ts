@@ -3,6 +3,8 @@ export type Project = {
   name: string;
   path: string;
   repo: string | null;
+  per_run_budget_usd: number | null;
+  per_run_max_turns: number | null;
   created_at: string;
 };
 
@@ -58,6 +60,14 @@ export type Task = {
 
 export type TaskRunStatus = "queued" | "claimed" | "running" | "done" | "error" | "cancelled";
 
+export type TaskRunVerdict = "pass" | "fail" | "needs_review";
+
+export type DiffSummary = {
+  files_changed: number;
+  insertions: number;
+  deletions: number;
+};
+
 export type TaskRun = {
   id: string;
   task_id: string | null;
@@ -71,6 +81,9 @@ export type TaskRun = {
   exit_code: number | null;
   total_cost_usd: number | null;
   usage: Record<string, unknown> | null;
+  verdict: TaskRunVerdict | null;
+  verdict_reason: string | null;
+  diff_summary: DiffSummary | null;
   requested_at: string;
   claimed_at: string | null;
   finished_at: string | null;
