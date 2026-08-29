@@ -4,6 +4,7 @@ import { FilterRail, type Facet } from "@/components/filter-rail";
 import { ActiveFilterBar } from "@/components/active-filters";
 import { CopyButton } from "@/components/copy-button";
 import { Pager } from "@/components/pager";
+import { RenamePlanButton } from "./rename-plan-button";
 import { getPlansPage, getPlanFacetRows, getTasks, getProjects } from "@/lib/queries";
 import { fmtDate, truncate, toList } from "@/lib/format";
 
@@ -121,14 +122,21 @@ export default async function PlansPage({ searchParams }: { searchParams: Search
                             <span className="font-mono">{fmtDate(p.created_at)}</span>
                           </p>
                         </div>
-                        {p.session_id && (
-                          <Link
-                            href={`/sessions/${p.session_id}`}
-                            className="shrink-0 text-[0.6875rem] text-accent hover:underline underline-offset-4"
-                          >
-                            session
-                          </Link>
-                        )}
+                        <div className="flex shrink-0 items-center gap-1">
+                          {p.session_id && (
+                            <Link
+                              href={`/sessions/${p.session_id}`}
+                              className="text-[0.6875rem] text-accent hover:underline underline-offset-4"
+                            >
+                              session
+                            </Link>
+                          )}
+                          <RenamePlanButton
+                            planId={p.id}
+                            initialTitle={p.title}
+                            initialDescription={p.description}
+                          />
+                        </div>
                       </div>
                       {p.description && <p className="mt-3 text-sm text-muted">{p.description}</p>}
                       {pTasks.length > 0 ? (
