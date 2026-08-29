@@ -1,13 +1,9 @@
-import { createHash } from "crypto";
+import { createHash } from "node:crypto";
+// posix.basename because normalizePath always outputs /-separated paths, so
+// posix flavor works on both windows and linux hosts.
+import { posix as pathPosix } from "node:path";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { estimateCost } from "./cost";
-
-const sha1 = (s: string) => createHash("sha1").update(s).digest("hex");
-
-function basename(p: string): string {
-  const parts = p.replace(/[/\\]+$/, "").split(/[/\\]/);
-  return parts[parts.length - 1] || p;
-}
 
 export function normalizePath(p: string): string {
   let normalized = p.trim().replace(/\\/g, "/");
@@ -79,7 +75,7 @@ async function resolveProject(
   if (existing) return existing.id as string;
   const { data: created } = await db
     .from("projects")
-    .insert({ name: basename(cwd), path: cwd, repo: repo ?? null })
+    .insert({ name: pathPosix.basename(cwd), path: cwd, repo: repo ?? null })
     .select("id")
     .single();
   return (created?.id as string) ?? null;
@@ -153,7 +149,7 @@ async function syncTodoWrite(
       : "pending";
     // Project-scoped (falling back to session when there's no project) so the same
     // task text continues as one row across sessions instead of duplicating per session.
-    const dedupeKey = `tw:${projectId ?? sessionId}:${sha1(t.content)}`;
+    const dedupeKey = `tw:${projectId ?? sessionId}:${createHash("sha1").update(t.content).digest("hex")}`;
     const { data: existing } = await db
       .from("tasks")
       .select("id,status")

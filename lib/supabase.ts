@@ -3,10 +3,6 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 let cached: SupabaseClient | null = null;
 
 /**
- * Server-side only. Uses the service-role key, which bypasses RLS.
- * Never import this file from client components.
- */
-/**
  * Server-side Supabase secret. Prefers the modern `SUPABASE_SECRET`
  * (sb_secret_*), falls back to the legacy `SUPABASE_SERVICE_ROLE_KEY` so
  * old clones keep working. Both bypass RLS; keep server-side only.

@@ -1,5 +1,6 @@
 // Pure helpers for the post-run verifier (Gap 2). Split from bin/agent.mts so
 // tests can exercise prompt shape and diff parsing without spawning claude.
+import { parseTrailingJson } from "./agent-parse";
 import type { DiffSummary, TaskRunVerdict } from "./types";
 
 // The final line of `git diff --shortstat` looks like:
@@ -22,34 +23,14 @@ export function parseShortstat(line: string): DiffSummary | null {
 }
 
 // Verdict parser: the verifier's assistant reply should contain a JSON object
-// like {"verdict":"pass","reason":"..."}. Sometimes the model wraps it in a
-// code fence or prose; be forgiving. Uses the same reverse-brace walker
-// pattern as parseTrailingJson.
+// like {"verdict":"pass","reason":"..."}. Delegates the brace walk to
+// parseTrailingJson, then validates the two fields.
 export function parseVerdict(text: string): { verdict: TaskRunVerdict; reason: string } | null {
-  const s = text.trimEnd();
-  if (!s.endsWith("}")) return null;
-  let depth = 0;
-  let start = -1;
-  for (let i = s.length - 1; i >= 0; i--) {
-    const c = s[i];
-    if (c === "}") depth++;
-    else if (c === "{") {
-      depth--;
-      if (depth === 0) { start = i; break; }
-    }
-  }
-  if (start < 0) return null;
-  let obj: Record<string, unknown>;
-  try {
-    const parsed = JSON.parse(s.slice(start));
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
-    obj = parsed as Record<string, unknown>;
-  } catch {
-    return null;
-  }
+  const obj = parseTrailingJson(text);
+  if (!obj) return null;
   const v = obj.verdict;
-  const r = obj.reason;
   if (v !== "pass" && v !== "fail" && v !== "needs_review") return null;
+  const r = obj.reason;
   return { verdict: v, reason: typeof r === "string" ? r : "" };
 }
 
