@@ -141,6 +141,22 @@ create index if not exists task_runs_status_idx  on public.task_runs (status, re
 create index if not exists task_runs_task_idx    on public.task_runs (task_id, requested_at desc);
 create index if not exists task_runs_project_idx on public.task_runs (project_id, requested_at desc);
 
+-- Raw OS exit code from the claude child process (null if spawning itself failed).
+-- Surfaces 0xC0000142 (3221225794) and similar Windows NTSTATUS codes directly.
+alter table public.task_runs add column if not exists exit_code integer;
+
+-- Populated by the runner when it parses `claude -p --output-format json` output.
+-- `total_cost_usd` is claude's own client-side estimate; `usage` holds the raw
+-- per-model token breakdown ({input_tokens, output_tokens, cache_*}). Both null
+-- when parsing failed (child crashed early, JSON malformed, etc).
+alter table public.task_runs add column if not exists total_cost_usd numeric(14,6);
+alter table public.task_runs add column if not exists usage jsonb;
+
+-- Note on claude_session_id: originally references sessions(id), but the runner
+-- writes the session UUID as soon as it arrives in the JSON output; the hooks
+-- may not have inserted the sessions row yet. Drop the FK so writes never race.
+alter table public.task_runs drop constraint if exists task_runs_claude_session_id_fkey;
+
 alter table public.task_runs enable row level security;
 
 -- Realtime: let the browser (anon) subscribe to task_run updates so the Attend

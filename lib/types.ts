@@ -68,6 +68,9 @@ export type TaskRun = {
   claude_session_id: string | null;
   stdout_tail: string | null;
   error: string | null;
+  exit_code: number | null;
+  total_cost_usd: number | null;
+  usage: Record<string, unknown> | null;
   requested_at: string;
   claimed_at: string | null;
   finished_at: string | null;
