@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import {
   ResponsiveContainer,
   BarChart,
@@ -9,19 +9,18 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
-  Legend,
   PieChart,
   Pie,
   Cell,
   ComposedChart,
   Line,
+  Label,
 } from "recharts";
 
 /* Recharts serializes colors to SVG attributes so `var(--...)` is unusable.
    We seed the palette from literals that mirror globals.css, then on mount
    read the live CSS custom properties and self-heal if a maintainer changed
-   a token without touching this file. First paint uses the literal defaults;
-   values coincide with the CSS vars, so there is no visible swap. */
+   a token without touching this file. */
 
 type DeckColors = {
   accent: string;
@@ -35,24 +34,28 @@ type DeckColors = {
   ink: string;
   lift: string;
   hair: string;
+  hairStrong: string;
   bone: string;
   dust: string;
+  dust3: string;
 };
 
 const DEFAULT_COLORS: DeckColors = {
-  accent:    "#d97757",
+  accent:    "#e08a5c",
   accentDim: "#a04d34",
-  blue:      "#6a9fd9",
+  blue:      "#5c8fc8",
   blueDim:   "#3f6c9c",
   green:     "#7fb069",
   greenDim:  "#5e864a",
   yellow:    "#d9a441",
   yellowDim: "#a0752e",
-  ink:       "#161412",
-  lift:      "#1d1a17",
-  hair:      "#2a2621",
-  bone:      "#ece8e1",
-  dust:      "#9b938a",
+  ink:       "#1b1815",
+  lift:      "#1c1916",
+  hair:      "#241f1b",
+  hairStrong:"#3a342c",
+  bone:      "#f6f2ec",
+  dust:      "#a29a8f",
+  dust3:     "#6d655c",
 };
 
 function useDeckColors(): DeckColors {
@@ -64,19 +67,21 @@ function useDeckColors(): DeckColors {
       return v || fallback;
     };
     setC({
-      accent:    pick("--color-accent",       DEFAULT_COLORS.accent),
-      accentDim: pick("--color-accent-dim",   DEFAULT_COLORS.accentDim),
-      blue:      pick("--color-blue",         DEFAULT_COLORS.blue),
-      blueDim:   pick("--color-blue-dim",     DEFAULT_COLORS.blueDim),
-      green:     pick("--color-green",        DEFAULT_COLORS.green),
-      greenDim:  pick("--color-green-dim",    DEFAULT_COLORS.greenDim),
-      yellow:    pick("--color-yellow",       DEFAULT_COLORS.yellow),
-      yellowDim: pick("--color-yellow-dim",   DEFAULT_COLORS.yellowDim),
-      ink:       pick("--color-panel",        DEFAULT_COLORS.ink),
-      lift:      pick("--color-panel2",       DEFAULT_COLORS.lift),
-      hair:      pick("--color-line",         DEFAULT_COLORS.hair),
-      bone:      pick("--color-foreground",   DEFAULT_COLORS.bone),
-      dust:      pick("--color-muted",        DEFAULT_COLORS.dust),
+      accent:    pick("--color-accent-500",     DEFAULT_COLORS.accent),
+      accentDim: pick("--color-accent-dim",     DEFAULT_COLORS.accentDim),
+      blue:      pick("--color-blue",           DEFAULT_COLORS.blue),
+      blueDim:   pick("--color-blue-dim",       DEFAULT_COLORS.blueDim),
+      green:     pick("--color-green",          DEFAULT_COLORS.green),
+      greenDim:  pick("--color-green-dim",      DEFAULT_COLORS.greenDim),
+      yellow:    pick("--color-yellow",         DEFAULT_COLORS.yellow),
+      yellowDim: pick("--color-yellow-dim",     DEFAULT_COLORS.yellowDim),
+      ink:       pick("--color-surface-1a",     DEFAULT_COLORS.ink),
+      lift:      pick("--color-surface-2",      DEFAULT_COLORS.lift),
+      hair:      pick("--color-line",           DEFAULT_COLORS.hair),
+      hairStrong:pick("--color-line-strong",    DEFAULT_COLORS.hairStrong),
+      bone:      pick("--color-foreground",     DEFAULT_COLORS.bone),
+      dust:      pick("--color-muted",          DEFAULT_COLORS.dust),
+      dust3:     pick("--color-muted-3",        DEFAULT_COLORS.dust3),
     });
   }, []);
   return c;
@@ -86,27 +91,45 @@ function useDeckStyles(c: DeckColors) {
   return {
     tooltip: {
       backgroundColor: c.lift,
-      border: `1px solid ${c.hair}`,
-      borderRadius: 8,
+      border: `0.0625rem solid #322c25`,
+      borderRadius: "0.625rem",
       fontSize: 12,
       color: c.bone,
       padding: "0.5rem 0.75rem",
+      boxShadow: "0 1rem 2rem -0.75rem rgb(0 0 0 / 0.8)",
+      fontFamily: "var(--font-mono)",
     } as const,
     axis: {
       stroke: c.hair,
-      fontSize: 11,
-      tick: { fill: c.dust },
+      fontSize: 10,
+      tick: { fill: c.dust3, fontFamily: "var(--font-mono)" },
       tickLine: false,
       axisLine: false,
+      style: { letterSpacing: "0.04em" },
     } as const,
-    legend: { wrapperStyle: { fontSize: 12, color: c.dust } } as const,
     palette: [c.accent, c.blue, c.green, c.yellow, c.accentDim, c.blueDim, c.greenDim, c.yellowDim],
   };
 }
 
-// ponytail: pinned to recharts ^2.15 because 3.x + React 19 leaves
-// ResponsiveContainer stuck at 0x0 (empty wrapper, no SVG). Revisit when
-// recharts ships a v3 that handles React 19 concurrent measurement.
+/** Vertical linear gradient with an accent 0.95 -> 0.34 stop, plus arbitrary color. */
+function vGradient(id: string, color: string, topOp = 0.95, botOp = 0.34) {
+  return (
+    <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stopColor={color} stopOpacity={topOp} />
+      <stop offset="100%" stopColor={color} stopOpacity={botOp} />
+    </linearGradient>
+  );
+}
+
+/** Horizontal gradient for horizontal bar charts. */
+function hGradient(id: string, color: string, leftOp = 0.95, rightOp = 0.34) {
+  return (
+    <linearGradient id={id} x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stopColor={color} stopOpacity={leftOp} />
+      <stop offset="100%" stopColor={color} stopOpacity={rightOp} />
+    </linearGradient>
+  );
+}
 
 export function ActivityChart({
   data,
@@ -115,17 +138,21 @@ export function ActivityChart({
 }) {
   const c = useDeckColors();
   const s = useDeckStyles(c);
+  const uid = useId().replace(/:/g, "");
   return (
     <ResponsiveContainer width="100%" height={280}>
       <ComposedChart data={data} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
-        <CartesianGrid stroke={c.hair} vertical={false} strokeOpacity={0.6} />
+        <defs>
+          {vGradient(`${uid}-prompts`, c.accent)}
+          {vGradient(`${uid}-tool`, c.blue)}
+        </defs>
+        <CartesianGrid stroke="#221e1a" strokeOpacity={0.55} vertical={false} />
         <XAxis dataKey="day" {...s.axis} interval="preserveStartEnd" minTickGap={30} />
         <YAxis {...s.axis} allowDecimals={false} />
         <Tooltip contentStyle={s.tooltip} cursor={{ fill: c.lift, opacity: 0.6 }} />
-        <Legend {...s.legend} />
-        <Bar dataKey="prompts"  name="Prompts"    stackId="a" fill={c.accent} />
-        <Bar dataKey="toolUses" name="Tool calls" stackId="a" fill={c.blue} radius={[3, 3, 0, 0]} />
-        <Line dataKey="sessions" name="Sessions" stroke={c.green} strokeWidth={2} dot={false} />
+        <Bar dataKey="prompts"  name="Prompts"    stackId="a" fill={`url(#${uid}-prompts)`} />
+        <Bar dataKey="toolUses" name="Tool calls" stackId="a" fill={`url(#${uid}-tool)`} radius={[3, 3, 0, 0]} />
+        <Line dataKey="sessions" name="Sessions" stroke={c.green} strokeWidth={1.75} dot={false} strokeLinecap="round" strokeLinejoin="round" />
       </ComposedChart>
     </ResponsiveContainer>
   );
@@ -134,14 +161,18 @@ export function ActivityChart({
 export function ToolUsageChart({ data }: { data: { tool: string; count: number }[] }) {
   const c = useDeckColors();
   const s = useDeckStyles(c);
+  const uid = useId().replace(/:/g, "");
   return (
     <ResponsiveContainer width="100%" height={Math.max(180, data.length * 28 + 20)}>
-      <BarChart data={data} layout="vertical" margin={{ top: 4, right: 24, left: 8, bottom: 4 }}>
-        <CartesianGrid stroke={c.hair} horizontal={false} strokeOpacity={0.6} />
+      <BarChart data={data} layout="vertical" margin={{ top: 4, right: 40, left: 8, bottom: 4 }}>
+        <defs>{hGradient(`${uid}-bar`, c.accent)}</defs>
+        <CartesianGrid stroke="#221e1a" strokeOpacity={0.55} horizontal={false} />
         <XAxis type="number" {...s.axis} allowDecimals={false} />
         <YAxis type="category" dataKey="tool" {...s.axis} width={120} />
         <Tooltip contentStyle={s.tooltip} cursor={{ fill: c.lift, opacity: 0.6 }} />
-        <Bar dataKey="count" name="Calls" fill={c.accent} radius={[0, 4, 4, 0]} barSize={14} />
+        <Bar dataKey="count" name="Calls" fill={`url(#${uid}-bar)`} radius={[0, 4, 4, 0]} barSize={14}>
+          <Label position="right" offset={8} fill={c.dust} fontSize={10} style={{ fontFamily: "var(--font-mono)" }} />
+        </Bar>
       </BarChart>
     </ResponsiveContainer>
   );
@@ -154,10 +185,16 @@ export function TokenCostChart({
 }) {
   const c = useDeckColors();
   const s = useDeckStyles(c);
+  const uid = useId().replace(/:/g, "");
   return (
     <ResponsiveContainer width="100%" height={280}>
       <ComposedChart data={data} margin={{ top: 8, right: 0, left: -14, bottom: 0 }}>
-        <CartesianGrid stroke={c.hair} vertical={false} strokeOpacity={0.6} />
+        <defs>
+          {vGradient(`${uid}-in`, c.blue)}
+          {vGradient(`${uid}-out`, c.accent)}
+          {vGradient(`${uid}-cache`, c.blueDim)}
+        </defs>
+        <CartesianGrid stroke="#221e1a" strokeOpacity={0.55} vertical={false} />
         <XAxis dataKey="day" {...s.axis} interval="preserveStartEnd" minTickGap={30} />
         <YAxis
           yAxisId="tok"
@@ -176,11 +213,10 @@ export function TokenCostChart({
               : [Number(value).toLocaleString(), name]
           }
         />
-        <Legend {...s.legend} />
-        <Bar yAxisId="tok" dataKey="input"     name="Input tok"  stackId="t" fill={c.blue} />
-        <Bar yAxisId="tok" dataKey="output"    name="Output tok" stackId="t" fill={c.accent} />
-        <Bar yAxisId="tok" dataKey="cacheRead" name="Cache read" stackId="t" fill={c.blueDim} radius={[3, 3, 0, 0]} />
-        <Line yAxisId="usd" dataKey="cost" name="Cost (USD)" stroke={c.yellow} strokeWidth={2} dot={false} />
+        <Bar yAxisId="tok" dataKey="input"     name="Input tok"  stackId="t" fill={`url(#${uid}-in)`} />
+        <Bar yAxisId="tok" dataKey="output"    name="Output tok" stackId="t" fill={`url(#${uid}-out)`} />
+        <Bar yAxisId="tok" dataKey="cacheRead" name="Cache read" stackId="t" fill={`url(#${uid}-cache)`} radius={[3, 3, 0, 0]} />
+        <Line yAxisId="usd" dataKey="cost" name="Cost (USD)" stroke={c.yellow} strokeWidth={1.75} dot={false} strokeLinecap="round" strokeLinejoin="round" />
       </ComposedChart>
     </ResponsiveContainer>
   );
@@ -189,27 +225,68 @@ export function TokenCostChart({
 export function DonutChart({ data }: { data: { name: string; value: number }[] }) {
   const c = useDeckColors();
   const s = useDeckStyles(c);
+  const total = data.reduce((a, d) => a + d.value, 0);
   return (
-    <ResponsiveContainer width="100%" height={220}>
-      <PieChart>
-        <Pie
-          data={data}
-          dataKey="value"
-          nameKey="name"
-          innerRadius={58}
-          outerRadius={92}
-          paddingAngle={2}
-          stroke={c.ink}
-          strokeWidth={2}
+    <div className="relative">
+      <ResponsiveContainer width="100%" height={220}>
+        <PieChart>
+          <Pie
+            data={data}
+            dataKey="value"
+            nameKey="name"
+            innerRadius={62}
+            outerRadius={94}
+            paddingAngle={3}
+            stroke="none"
+          >
+            {data.map((_, i) => (
+              <Cell key={i} fill={s.palette[i % s.palette.length]} />
+            ))}
+          </Pie>
+          <Tooltip contentStyle={s.tooltip} />
+        </PieChart>
+      </ResponsiveContainer>
+      {/* Center readout */}
+      <div
+        className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center"
+        style={{ transform: "translateY(-0.25rem)" }}
+      >
+        <span
+          className="tabular-nums"
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: "1.625rem",
+            color: "var(--color-foreground)",
+            letterSpacing: "-0.02em",
+          }}
         >
-          {data.map((_, i) => (
-            <Cell key={i} fill={s.palette[i % s.palette.length]} />
-          ))}
-        </Pie>
-        <Tooltip contentStyle={s.tooltip} />
-        <Legend {...s.legend} />
-      </PieChart>
-    </ResponsiveContainer>
+          {total.toLocaleString()}
+        </span>
+        <span
+          className="uppercase"
+          style={{
+            fontSize: "0.5625rem",
+            letterSpacing: "0.16em",
+            color: "var(--color-muted-3)",
+          }}
+        >
+          Total
+        </span>
+      </div>
+      {/* Inline chip legend */}
+      <div className="mt-2 flex flex-wrap justify-center gap-3">
+        {data.map((d, i) => (
+          <span key={d.name} className="inline-flex items-center gap-1.5" style={{ fontSize: "0.6875rem", color: "var(--color-muted-3)" }}>
+            <span
+              aria-hidden
+              className="inline-block h-2 w-2 rounded-[0.125rem]"
+              style={{ background: s.palette[i % s.palette.length] }}
+            />
+            {d.name}
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -228,14 +305,21 @@ export function SimpleBarChart({
 }) {
   const c = useDeckColors();
   const s = useDeckStyles(c);
+  const uid = useId().replace(/:/g, "");
+  const fill = color ?? c.accent;
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
-        <CartesianGrid stroke={c.hair} vertical={false} strokeOpacity={0.6} />
-        <XAxis dataKey={xKey} {...s.axis} />
+        <defs>{vGradient(`${uid}-simple`, fill)}</defs>
+        <CartesianGrid stroke="#221e1a" strokeOpacity={0.55} vertical={false} />
+        <XAxis
+          dataKey={xKey}
+          {...s.axis}
+          tickFormatter={(v) => (typeof v === "string" ? v.replace(/h$/, "") : v)}
+        />
         <YAxis {...s.axis} allowDecimals={false} />
         <Tooltip contentStyle={s.tooltip} cursor={{ fill: c.lift, opacity: 0.6 }} />
-        <Bar dataKey={yKey} fill={color ?? c.accent} radius={[4, 4, 0, 0]} barSize={28} />
+        <Bar dataKey={yKey} fill={`url(#${uid}-simple)`} radius={[4, 4, 0, 0]} barSize={28} />
       </BarChart>
     </ResponsiveContainer>
   );

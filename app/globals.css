@@ -1,40 +1,74 @@
 @import "tailwindcss";
 
 @theme inline {
-  /* Warm graphite palette (Command Deck) */
-  --color-background: #0c0b0a;      /* Deep Slate */
-  --color-foreground: #ece8e1;      /* Bone Cream */
-  --color-panel: #161412;           /* Ink Slate */
-  --color-panel2: #1d1a17;          /* Lifted Slate */
-  --color-line: #2a2621;            /* Hairline Char */
-  --color-muted: #9b938a;           /* Dust */
-  --color-muted-2: #57504a;         /* Ash */
+  /* Canvas + surfaces (warm graphite, deepened) */
+  --color-background:     #0b0a09;
+  --color-surface-1a:     #1b1815;   /* card gradient top */
+  --color-surface-1b:     #141211;   /* card gradient bottom */
+  --color-surface-2:      #1c1916;   /* hover / raised */
+  --color-surface-cell-a: #1f1b18;   /* list-cell gradient top */
+  --color-surface-cell-b: #171513;   /* list-cell gradient bottom */
 
-  /* One signal + three roles */
-  --color-accent: #d97757;          /* Terracotta Signal */
-  --color-accent-soft: #d9775733;
-  --color-accent-ring: #d9775780;
-  --color-green: #7fb069;           /* Sage Signal (done) */
-  --color-yellow: #d9a441;          /* Ember Signal (in-flight) */
-  --color-blue: #6a9fd9;            /* Indigo Signal (reference) */
-  --color-red: #d95757;             /* Alert Signal (over budget) */
+  /* Back-compat aliases so existing utilities (bg-panel, bg-panel2) keep working. */
+  --color-panel:  var(--color-surface-1a);
+  --color-panel2: var(--color-surface-2);
 
-  /* Chart dim variants for stacked bars and extended palette slots */
-  --color-accent-dim: #a04d34;
-  --color-blue-dim: #3f6c9c;
-  --color-green-dim: #5e864a;
-  --color-yellow-dim: #a0752e;
+  /* Hairlines */
+  --color-line:        #241f1b;
+  --color-line-soft:   #1f1b18;
+  --color-line-strong: #3a342c;
 
-  /* Type stacks */
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Foreground ramp */
+  --color-foreground: #f6f2ec;
+  --color-text:       #ece7df;
+  --color-muted:      #a29a8f;
+  --color-muted-2:    #8e867c;
+  --color-muted-3:    #6d655c;
+  --color-muted-4:    #554e46;
 
-  /* Motion */
+  /* Accent ramp - terracotta, hue 46 */
+  --color-accent-50:  oklch(0.96 0.020 46);
+  --color-accent-100: oklch(0.92 0.036 46);
+  --color-accent-200: oklch(0.86 0.058 46);
+  --color-accent-300: oklch(0.81 0.078 46);
+  --color-accent-400: oklch(0.76 0.092 46);
+  --color-accent-500: #e08a5c;                /* anchor */
+  --color-accent-600: oklch(0.66 0.108 44);
+  --color-accent-700: oklch(0.56 0.100 42);
+  --color-accent-800: oklch(0.44 0.082 40);
+  --color-accent-900: oklch(0.32 0.062 38);
+  --color-accent: var(--color-accent-500);
+  --color-accent-soft: oklch(0.44 0.082 40 / 0.14);
+  --color-accent-ring: oklch(0.56 0.100 42 / 0.6);
+
+  /* Signals - harmonised to one chroma/lightness band */
+  --color-green:        oklch(0.74 0.10 142);
+  --color-green-bright: oklch(0.82 0.09 142);
+  --color-yellow:       oklch(0.79 0.11 85);
+  --color-blue:         oklch(0.72 0.10 248);
+  --color-blue-deep:    oklch(0.55 0.09 250);
+  --color-red:          oklch(0.66 0.16 25);
+
+  /* Chart dim variants (kept from the pre-refresh charts.tsx palette) */
+  --color-accent-dim:  var(--color-accent-800);
+  --color-blue-dim:    var(--color-blue-deep);
+  --color-green-dim:   oklch(0.58 0.09 142);
+  --color-yellow-dim:  oklch(0.63 0.09 85);
+
+  /* Type */
+  --font-display: var(--font-familjen),   ui-sans-serif, system-ui, sans-serif;
+  --font-sans:    var(--font-public-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Motion - noticeable, up from the old 120/150ms cap */
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
-  --duration-fast: 120ms;
-  --duration-max: 150ms;
+  --duration-fast:  200ms;
+  --duration-base:  220ms;
+  --duration-slow:  320ms;
+  --duration-enter: 520ms;
 }
+
+*, *::before, *::after { box-sizing: border-box; }
 
 html {
   font-size: 18px; /* ponytail: bumps every Tailwind rem-based size uniformly (default 16px). */
@@ -42,35 +76,35 @@ html {
 
 body {
   background: var(--color-background);
-  color: var(--color-foreground);
+  color: var(--color-text);
   font-feature-settings: "ss01", "cv11";
+  font-optical-sizing: auto;
 }
 
 ::selection {
-  background: var(--color-accent-ring);
-  color: var(--color-background);
+  background: var(--color-accent-800);
+  color: var(--color-text);
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-line) transparent;
+  scrollbar-color: #332d26 transparent;
 }
-
 *::-webkit-scrollbar {
   width: 0.5rem;
   height: 0.5rem;
 }
 *::-webkit-scrollbar-track { background: transparent; }
 *::-webkit-scrollbar-thumb {
-  background: var(--color-line);
+  background: #332d26;
   border-radius: 9999px;
 }
-*::-webkit-scrollbar-thumb:hover { background: var(--color-muted-2); }
+*::-webkit-scrollbar-thumb:hover { background: var(--color-line-strong); }
 
 /* Focus ring: keyboard only */
 :focus-visible {
   outline: none;
-  box-shadow: 0 0 0 0.125rem var(--color-accent-ring);
+  box-shadow: 0 0 0 0.125rem var(--color-accent-700);
   border-radius: 0.375rem;
 }
 
@@ -96,6 +130,16 @@ body {
   transform: translateY(0);
 }
 
+/* Keyframes - authored moments for the refresh */
+@keyframes rise    { from { opacity: 0; transform: translateY(0.75rem); } to { opacity: 1; transform: none; } }
+@keyframes fillbar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes halo    { 0%, 100% { opacity: 0.55; transform: scale(1); } 50% { opacity: 0.9; transform: scale(1.06); } }
+@keyframes beacon  { 0% { transform: scale(1); opacity: 0.6; } 70%, 100% { transform: scale(2.6); opacity: 0; } }
+@keyframes veil    { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lift    { from { opacity: 0; transform: translateY(1.25rem) scale(0.97); } to { opacity: 1; transform: none; } }
+@keyframes slidein { from { opacity: 0; transform: translateX(1.5rem); } to { opacity: 1; transform: none; } }
+@keyframes draw    { from { stroke-dashoffset: 1200; } to { stroke-dashoffset: 0; } }
+
 /* Respect prefers-reduced-motion: preserve state change, kill animation.
    The `.motion-safe-pulse` opt-out keeps liveness indicators animating so
    reduced-motion users still see "this is happening now". */
@@ -108,7 +152,6 @@ body {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  /* Soften the pulse instead of pinging aggressively */
   .motion-safe-pulse {
     animation-duration: 1.6s !important;
   }
@@ -117,4 +160,9 @@ body {
 /* Tabular numerals everywhere digits share a column */
 .tabular-nums, table, .stat-value, .data {
   font-variant-numeric: tabular-nums;
+}
+
+/* Multi-line paragraphs read better balanced */
+p, .prose {
+  text-wrap: pretty;
 }

@@ -5,25 +5,15 @@ import { useEffect, useRef } from "react";
 /**
  * Shared modal primitive built on the native <dialog> element.
  *
- * `dialog.showModal()` gives us for free:
- *   - top-layer stacking (always above app content, no z-index war)
- *   - built-in focus trap
- *   - ESC to close
- *   - initial focus on the first focusable child
- *
- * We add:
- *   - controlled `open` / `onClose` API so parent React owns state
- *   - click-outside-to-close on the ::backdrop
- *   - body scroll lock (dialog does not lock scroll on iOS Safari)
- *
- * ponytail: no portal, no third-party lib. If a specific caller ever needs
- * to opt out of backdrop-click-close, add a `dismissible={false}` prop then,
- * not now.
+ * From the platform: top-layer stacking, focus trap, ESC to close, initial
+ * focus. Added: controlled `open`/`onClose`, backdrop-click close, body
+ * scroll lock (iOS Safari), and the veil + lift entrance from HANDOFF §6.
  */
 export function Modal({
   open,
   onClose,
   title,
+  eyebrow,
   children,
   footer,
   size = "md",
@@ -31,13 +21,13 @@ export function Modal({
   open: boolean;
   onClose: () => void;
   title: string;
+  eyebrow?: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
   size?: "sm" | "md" | "lg";
 }) {
   const ref = useRef<HTMLDialogElement>(null);
 
-  // Sync React `open` prop with the native dialog state.
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -45,8 +35,6 @@ export function Modal({
     else if (!open && el.open) el.close();
   }, [open]);
 
-  // Body scroll lock while open. dialog handles the trap but Safari still
-  // scrolls the body underneath the backdrop without this.
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -56,36 +44,84 @@ export function Modal({
     };
   }, [open]);
 
-  const maxW =
-    size === "sm" ? "max-w-sm" : size === "lg" ? "max-w-2xl" : "max-w-md";
+  const maxWidth = size === "sm" ? "25rem" : size === "lg" ? "38rem" : "32rem";
 
   return (
     <dialog
       ref={ref}
       onClose={onClose}
       onClick={(e) => {
-        // Click on the ::backdrop bubbles as a click on the <dialog> itself
-        // with target === dialog. Clicks inside land on <form>/children.
         if (e.target === ref.current) onClose();
       }}
-      className={`w-[calc(100%-2rem)] ${maxW} rounded-2xl border border-line bg-panel p-0 text-foreground shadow-2xl backdrop:bg-background/70 backdrop:backdrop-blur-sm open:animate-in`}
+      style={{
+        width: "calc(100% - 2rem)",
+        maxWidth,
+        maxHeight: "82vh",
+        overflow: "auto",
+        border: "0.0625rem solid #322c25",
+        borderRadius: "1.25rem",
+        padding: 0,
+        background: "linear-gradient(180deg, #201c19, #151312)",
+        color: "var(--color-text)",
+        boxShadow:
+          "inset 0 0.0625rem 0 rgb(255 255 255 / 0.06), 0 2.5rem 5rem -1rem rgb(0 0 0 / 0.9)",
+        animation: "lift 320ms var(--ease-standard) both",
+      }}
+      className="[&::backdrop]:bg-[rgb(6_5_5_/_0.72)] [&::backdrop]:backdrop-blur-sm [&::backdrop]:animate-[veil_240ms_var(--ease-standard)_both]"
     >
-      <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
-        <h2 className="text-base font-semibold tracking-tight">{title}</h2>
+      <div
+        className="flex items-start justify-between gap-4 px-6 pt-5 pb-4"
+        style={{ borderBottom: "0.0625rem solid var(--color-line-soft)" }}
+      >
+        <div className="min-w-0">
+          {eyebrow && (
+            <p
+              className="mb-1 uppercase"
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "0.625rem",
+                letterSpacing: "0.16em",
+                color: "var(--color-muted-3)",
+              }}
+            >
+              {eyebrow}
+            </p>
+          )}
+          <h2
+            className="font-display font-semibold"
+            style={{
+              margin: 0,
+              fontSize: "1.5rem",
+              lineHeight: 1.1,
+              letterSpacing: "-0.025em",
+              color: "var(--color-foreground)",
+            }}
+          >
+            {title}
+          </h2>
+        </div>
         <button
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-panel2 hover:text-foreground"
+          className="inline-flex shrink-0 items-center justify-center rounded-[0.625rem] transition-colors hover:bg-[var(--color-surface-2)] hover:text-foreground"
+          style={{
+            height: "2.25rem",
+            width: "2.25rem",
+            color: "var(--color-muted-2)",
+          }}
         >
           <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden>
             <path d="M5 5L15 15M15 5L5 15" />
           </svg>
         </button>
       </div>
-      <div className="px-5 py-4">{children}</div>
+      <div className="px-6 py-5">{children}</div>
       {footer && (
-        <div className="flex items-center justify-end gap-2 border-t border-line px-5 py-3">
+        <div
+          className="flex items-center justify-end gap-2 px-6 py-4"
+          style={{ borderTop: "0.0625rem solid var(--color-line-soft)" }}
+        >
           {footer}
         </div>
       )}

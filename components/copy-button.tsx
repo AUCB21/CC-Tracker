@@ -32,15 +32,23 @@ export function CopyButton({
       type="button"
       onClick={handleCopy}
       title={copied ? "Copied to clipboard!" : `Copy ${label ?? text}`}
-      className={`inline-flex items-center justify-center gap-1.5 rounded-md border border-line bg-panel2/80 px-2.5 py-1 text-[0.6875rem] font-medium leading-none text-muted transition-all hover:border-accent/50 hover:bg-panel2 hover:text-foreground focus-visible:ring-1 focus-visible:ring-accent active:scale-95 ${className}`}
+      className={`inline-flex items-center justify-center gap-1.5 rounded-md border px-2.5 py-1 text-[0.6875rem] font-medium leading-none transition-all hover:bg-[var(--color-surface-2)] focus-visible:ring-1 focus-visible:ring-accent active:scale-[0.96] ${className}`}
+      style={{
+        borderColor: copied ? "var(--color-green)" : "var(--color-line-strong)",
+        background: copied ? "oklch(0.74 0.10 142 / 0.14)" : "var(--color-surface-1a)",
+        color: copied ? "var(--color-green-bright)" : "var(--color-muted-2)",
+      }}
     >
       {copied ? (
-        <>
-          <svg className="h-3.5 w-3.5 text-[color:var(--color-green)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <span
+          className="inline-flex items-center gap-1.5"
+          style={{ animation: "lift 260ms var(--ease-standard) both" }}
+        >
+          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
           </svg>
-          {!iconOnly && <span className="text-[color:var(--color-green)] font-semibold">Copied!</span>}
-        </>
+          {!iconOnly && <span className="font-semibold">Copied</span>}
+        </span>
       ) : (
         <>
           <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
