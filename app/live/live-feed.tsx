@@ -6,20 +6,29 @@ import Link from "next/link";
 import type { TaskRun, EventRow, Project } from "@/lib/types";
 import { getBrowserSupabase } from "@/lib/supabase-browser";
 import { fmtCost, fmtRelative, truncate } from "@/lib/format";
-import { LiveDot } from "@/components/ui";
+import { Badge, CELL_STYLE, LiveDot } from "@/components/ui";
 
-// ---- colour helpers -------------------------------------------------------
+const LANE_PANEL: React.CSSProperties = {
+  borderRadius: "1.125rem",
+  border: "0.0625rem solid var(--color-line)",
+  background:
+    "linear-gradient(180deg, var(--color-surface-1a), var(--color-surface-1b))",
+  boxShadow:
+    "inset 0 0.0625rem 0 rgb(255 255 255 / 0.045), 0 1rem 2rem -1.25rem rgb(0 0 0 / 0.8)",
+};
 
-function runStatusColor(status: TaskRun["status"]): string {
-  if (status === "done") return "text-[color:var(--color-green)]";
-  if (status === "error" || status === "cancelled") return "text-[color:var(--color-yellow)]";
-  return "text-accent";
+type BadgeColor = "green" | "yellow" | "blue" | "accent" | "muted" | "red";
+
+function runStatusBadge(status: TaskRun["status"]): BadgeColor {
+  if (status === "done") return "green";
+  if (status === "error" || status === "cancelled") return "yellow";
+  return "accent";
 }
 
-function verdictColor(v: NonNullable<TaskRun["verdict"]>): string {
-  if (v === "pass") return "text-[color:var(--color-green)]";
-  if (v === "fail") return "text-[color:var(--color-red)]";
-  return "text-[color:var(--color-yellow)]";
+function verdictBadge(v: NonNullable<TaskRun["verdict"]>): BadgeColor {
+  if (v === "pass") return "green";
+  if (v === "fail") return "red";
+  return "yellow";
 }
 
 function eventTone(type: string): string {
@@ -41,18 +50,18 @@ function RunCard({ run }: { run: TaskRun }) {
   const hasOutput = !!(run.stdout_tail || run.error);
 
   return (
-    <li className="rounded-xl border border-line bg-panel2 p-4">
+    <li className="p-4" style={CELL_STYLE}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-[0.75rem] leading-relaxed text-foreground">
             {truncate(run.prompt, 140)}
           </p>
           <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.6875rem] text-muted">
-            <span className="font-mono">{run.id.slice(0, 8)}</span>
+            <span className="font-mono tabular-nums">{run.id.slice(0, 8)}</span>
             <span>{fmtRelative(run.requested_at)}</span>
             {run.agent_id && <span className="font-mono">{run.agent_id}</span>}
             {run.total_cost_usd != null && (
-              <span className="text-[color:var(--color-green)]">
+              <span className="font-mono tabular-nums text-[color:var(--color-green)]">
                 {fmtCost(Number(run.total_cost_usd))}
               </span>
             )}
@@ -67,18 +76,24 @@ function RunCard({ run }: { run: TaskRun }) {
           </div>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1.5">
-          <span className={`font-mono text-[0.6875rem] font-semibold ${runStatusColor(run.status)}`}>
-            {live && (
-              <span aria-hidden className="motion-safe-pulse mr-1 inline-block h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
-            )}
+          <Badge
+            color={runStatusBadge(run.status)}
+            glyph={
+              live ? (
+                <span
+                  aria-hidden
+                  className="motion-safe-pulse inline-block h-1.5 w-1.5 rounded-full bg-current animate-pulse"
+                />
+              ) : undefined
+            }
+          >
             {run.status}
-          </span>
+          </Badge>
           {run.verdict && (
-            <span
-              className={`font-mono text-[0.6875rem] ${verdictColor(run.verdict)}`}
-              title={run.verdict_reason ?? undefined}
-            >
-              {run.verdict.replace("_", " ")}
+            <span title={run.verdict_reason ?? undefined}>
+              <Badge color={verdictBadge(run.verdict)}>
+                {run.verdict.replace("_", " ")}
+              </Badge>
             </span>
           )}
           {hasOutput && (
@@ -296,7 +311,7 @@ export function LiveFeed({
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[3fr_2fr]">
 
         {/* Task Runs lane */}
-        <section className="flex flex-col rounded-2xl border border-line bg-panel overflow-hidden">
+        <section className="flex flex-col overflow-hidden" style={LANE_PANEL}>
           <LaneHeader label="Task Runs" paused={pausedRuns} onToggle={toggleRuns} />
           <div className={`${LANE_H} overflow-y-auto px-5 pb-5`}>
             {runs.length === 0 ? (
@@ -311,7 +326,7 @@ export function LiveFeed({
         </section>
 
         {/* Events lane */}
-        <section className="flex flex-col rounded-2xl border border-line bg-panel overflow-hidden">
+        <section className="flex flex-col overflow-hidden" style={LANE_PANEL}>
           <LaneHeader label="Events" count={events.length} paused={pausedEvents} onToggle={toggleEvents} />
           <div className={`${LANE_H} overflow-y-auto px-5 pb-5`}>
             {events.length === 0 ? (
@@ -336,7 +351,7 @@ export function LiveFeed({
                     <span className="w-16 shrink-0 font-mono text-[0.6875rem] text-muted/60 leading-[1.6] truncate">
                       {e.session_id?.slice(0, 8)}
                     </span>
-                    <span className="min-w-0 flex-1 break-all">
+                    <span className="min-w-0 flex-1 break-words">
                       <span className="text-muted">{e.type === "tool_use" ? e.tool_name : e.type}</span>
                       {e.type === "prompt" &&
                         typeof (e.data as { prompt?: string })?.prompt === "string" && (
