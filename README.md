@@ -51,69 +51,56 @@ This writes `~/.cc-track/config.json` and prints a snippet to merge into
 {
   "hooks": {
     "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node /ABS/PATH/cc-track/hooks/claude-tracker.mjs"
-          }
-        ]
-      }
+      { "hooks": [ { "type": "command", "command": "node /ABS/PATH/cc-track/hooks/claude-tracker.mjs", "async": true } ] }
     ],
     "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node /ABS/PATH/cc-track/hooks/claude-tracker.mjs"
-          }
-        ]
-      }
+      { "hooks": [ { "type": "command", "command": "node /ABS/PATH/cc-track/hooks/claude-tracker.mjs", "async": true } ] }
     ],
     "PostToolUse": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node /ABS/PATH/cc-track/hooks/claude-tracker.mjs"
-          }
-        ]
-      }
+      { "matcher": "*", "hooks": [ { "type": "command", "command": "node /ABS/PATH/cc-track/hooks/claude-tracker.mjs", "async": true } ] }
     ],
     "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node /ABS/PATH/cc-track/hooks/claude-tracker.mjs"
-          }
-        ]
-      }
+      { "hooks": [ { "type": "command", "command": "node /ABS/PATH/cc-track/hooks/claude-tracker.mjs", "async": true } ] }
+    ],
+    "StopFailure": [
+      { "hooks": [ { "type": "command", "command": "node /ABS/PATH/cc-track/hooks/claude-tracker.mjs", "async": true } ] }
+    ],
+    "SubagentStart": [
+      { "hooks": [ { "type": "command", "command": "node /ABS/PATH/cc-track/hooks/claude-tracker.mjs", "async": true } ] }
+    ],
+    "SubagentStop": [
+      { "hooks": [ { "type": "command", "command": "node /ABS/PATH/cc-track/hooks/claude-tracker.mjs", "async": true } ] }
+    ],
+    "Notification": [
+      { "hooks": [ { "type": "command", "command": "node /ABS/PATH/cc-track/hooks/claude-tracker.mjs", "async": true } ] }
     ],
     "SessionEnd": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node /ABS/PATH/cc-track/hooks/claude-tracker.mjs"
-          }
-        ]
-      }
+      { "hooks": [ { "type": "command", "command": "node /ABS/PATH/cc-track/hooks/claude-tracker.mjs", "async": true } ] }
     ]
   }
 }
 ```
 
+This is exactly what `node hooks/install.mjs` prints, so running the installer
+(above) is the recommended way to get this snippet, rather than copying it
+from here by hand. All nine events are wired by default (`async: true` so
+none of them block Claude Code), and every one is written to the `events`
+table. Any hook event not in the table below (or a future one Claude Code
+adds) still gets logged, generically, through a catch-all case.
+
 What gets captured automatically:
 
-| Hook               | Captured                                                                                      |
-| ------------------ | --------------------------------------------------------------------------------------------- |
-| `SessionStart`     | new session row, project (from cwd), git branch + remote                                      |
-| `UserPromptSubmit` | prompt count, session title, raw prompt event                                                 |
-| `PostToolUse`      | every tool call (name + trimmed input), tool breakdown; **TodoWrite lists sync into `tasks`** |
-| `Stop`             | transcript summary: model, tokens (in/out/cache), tool counts, estimated cost                 |
-| `SessionEnd`       | marks the session ended                                                                       |
+| Hook               | Captured                                                                                                                          |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `SessionStart`     | new session row, project (from cwd), source (startup/resume/clear), git branch, repo written onto the project                     |
+| `UserPromptSubmit` | prompt count incremented, session title set from the first prompt, raw prompt event (truncated to 4000 chars)                     |
+| `PostToolUse`      | every tool call (name + trimmed input/response + tool_use_id), running tool-use count and per-tool breakdown; **TodoWrite calls sync into `tasks` instead of being logged as a plain tool event** |
+| `Stop`             | transcript summary: model, input/output/cache-read/cache-creation tokens, tool-use count + breakdown, estimated cost, last assistant message (truncated), session marked ended            |
+| `StopFailure`      | error type + message, recorded both as the session's last error and as a `stop_failure` event                                     |
+| `SubagentStart`    | agent_type and agent_id of the spawned subagent                                                                                    |
+| `SubagentStop`     | agent_type, agent_id, and the subagent's last assistant message (truncated to 4000 chars)                                        |
+| `Notification`     | notification type and message text                                                                                                 |
+| `SessionEnd`       | session status set to ended, ended_at timestamp, end reason                                                                        |
 
 The hook script fails silently and exits 0; it can never block Claude Code.
 
