@@ -290,6 +290,7 @@ export function LiveFeed({
       {/* Filter bar */}
       <div className="flex flex-wrap items-center gap-3">
         <select
+          aria-label="Filter by project"
           value={filterProject ?? ""}
           onChange={(e) => setFilter("project", e.target.value)}
           className="max-w-full flex-1 min-w-0 rounded-md border border-line bg-panel2 px-3 py-1.5 text-[0.75rem] text-foreground focus:border-accent focus:outline-none sm:flex-none"
@@ -300,6 +301,7 @@ export function LiveFeed({
           ))}
         </select>
         <select
+          aria-label="Filter by session"
           value={filterSession ?? ""}
           onChange={(e) => setFilter("session", e.target.value)}
           className="max-w-full flex-1 min-w-0 rounded-md border border-line bg-panel2 px-3 py-1.5 text-[0.75rem] text-foreground focus:border-accent focus:outline-none sm:flex-none"
@@ -353,7 +355,7 @@ export function LiveFeed({
                         second: "2-digit",
                       })}
                     </span>
-                    <span className="w-16 shrink-0 font-mono text-[0.6875rem] text-muted/60 leading-[1.6] truncate">
+                    <span className="w-16 shrink-0 font-mono text-[0.6875rem] text-muted leading-[1.6] truncate">
                       {e.session_id?.slice(0, 8)}
                     </span>
                     <span className="min-w-0 flex-1 break-words">
