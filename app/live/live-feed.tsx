@@ -184,6 +184,22 @@ export function LiveFeed({
   const [pausedRuns, setPausedRuns] = useState(false);
   const [pausedEvents, setPausedEvents] = useState(false);
 
+  // Task Runs lane: collapse to the latest run per task_id (a task can have
+  // several rows, one per Attend click / retry). Rows with no task_id pass
+  // through unchanged. Filtering (not re-sorting) preserves the array's
+  // existing newest-at-top order.
+  const displayRuns = useMemo(() => {
+    const latestByTask = new Map<string, TaskRun>();
+    for (const r of runs) {
+      if (!r.task_id) continue;
+      const cur = latestByTask.get(r.task_id);
+      if (!cur || new Date(r.requested_at) > new Date(cur.requested_at)) {
+        latestByTask.set(r.task_id, r);
+      }
+    }
+    return runs.filter((r) => !r.task_id || latestByTask.get(r.task_id) === r);
+  }, [runs]);
+
   // Distinct session ids present in the current event tail, most recent first,
   // for the session filter dropdown. If the current filter isn't in the list
   // (e.g. URL param points to a session not in the tail), keep it as an option
@@ -321,7 +337,7 @@ export function LiveFeed({
             ) : (
               <ul className="space-y-3">
                 <div ref={runsTopRef} />
-                {runs.map((r) => <RunCard key={r.id} run={r} />)}
+                {displayRuns.map((r) => <RunCard key={r.id} run={r} />)}
               </ul>
             )}
           </div>
