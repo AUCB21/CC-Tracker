@@ -107,28 +107,28 @@ export async function getSession(id: string): Promise<Session | null> {
   return (data as Session) ?? null;
 }
 
-export async function getPlans(opts: { projectId?: string; sessionId?: string } = {}): Promise<Plan[] | null> {
+export async function getPlans(opts: { projectId?: string; sessionId?: string; columns?: string } = {}): Promise<Plan[] | null> {
   const db = getSupabase();
   if (!db) return null;
-  let q = db.from("plans").select("*").order("created_at", { ascending: false });
+  let q = db.from("plans").select(opts.columns ?? "*").order("created_at", { ascending: false });
   if (opts.projectId) q = q.eq("project_id", opts.projectId);
   if (opts.sessionId) q = q.eq("session_id", opts.sessionId);
   const { data } = await q;
-  return (data as Plan[]) ?? [];
+  return (data as unknown as Plan[]) ?? [];
 }
 
 export async function getTasks(
-  opts: { projectId?: string; projectIds?: string[]; sessionId?: string; planId?: string } = {},
+  opts: { projectId?: string; projectIds?: string[]; sessionId?: string; planId?: string; columns?: string } = {},
 ): Promise<Task[] | null> {
   const db = getSupabase();
   if (!db) return null;
-  let q = db.from("tasks").select("*").order("created_at", { ascending: true });
+  let q = db.from("tasks").select(opts.columns ?? "*").order("created_at", { ascending: true });
   if (opts.projectId) q = q.eq("project_id", opts.projectId);
   if (opts.projectIds && opts.projectIds.length > 0) q = q.in("project_id", opts.projectIds);
   if (opts.sessionId) q = q.eq("session_id", opts.sessionId);
   if (opts.planId) q = q.eq("plan_id", opts.planId);
   const { data } = await q;
-  return (data as Task[]) ?? [];
+  return (data as unknown as Task[]) ?? [];
 }
 
 export async function getEvents(
@@ -280,12 +280,17 @@ export async function getSessionsPage(opts: {
   return { rows: (data as Session[]) ?? [], total: count ?? 0 };
 }
 
-export async function getSessionFacetRows(): Promise<Pick<Session, "project_id" | "model">[]> {
+async function fetchSessionFacetRows(): Promise<Pick<Session, "project_id" | "model">[]> {
   const db = getSupabase();
   if (!db) return [];
   const { data } = await db.from("sessions").select("project_id,model");
   return (data as Pick<Session, "project_id" | "model">[]) ?? [];
 }
+export const getSessionFacetRows: () => Promise<Pick<Session, "project_id" | "model">[]> = unstable_cache(
+  fetchSessionFacetRows,
+  ["cc-track:session-facet-rows:v1"],
+  { revalidate: 15, tags: ["sessions"] },
+);
 
 export async function getTasksPage(opts: {
   page: number;
@@ -302,12 +307,17 @@ export async function getTasksPage(opts: {
   return { rows: (data as Task[]) ?? [], total: count ?? 0 };
 }
 
-export async function getTaskFacetRows(): Promise<Pick<Task, "project_id" | "status">[]> {
+async function fetchTaskFacetRows(): Promise<Pick<Task, "project_id" | "status">[]> {
   const db = getSupabase();
   if (!db) return [];
   const { data } = await db.from("tasks").select("project_id,status");
   return (data as Pick<Task, "project_id" | "status">[]) ?? [];
 }
+export const getTaskFacetRows: () => Promise<Pick<Task, "project_id" | "status">[]> = unstable_cache(
+  fetchTaskFacetRows,
+  ["cc-track:task-facet-rows:v1"],
+  { revalidate: 15, tags: ["tasks"] },
+);
 
 export async function getPlansPage(opts: {
   page: number;
@@ -324,12 +334,17 @@ export async function getPlansPage(opts: {
   return { rows: (data as Plan[]) ?? [], total: count ?? 0 };
 }
 
-export async function getPlanFacetRows(): Promise<Pick<Plan, "project_id" | "status">[]> {
+async function fetchPlanFacetRows(): Promise<Pick<Plan, "project_id" | "status">[]> {
   const db = getSupabase();
   if (!db) return [];
   const { data } = await db.from("plans").select("project_id,status");
   return (data as Pick<Plan, "project_id" | "status">[]) ?? [];
 }
+export const getPlanFacetRows: () => Promise<Pick<Plan, "project_id" | "status">[]> = unstable_cache(
+  fetchPlanFacetRows,
+  ["cc-track:plan-facet-rows:v1"],
+  { revalidate: 15, tags: ["plans"] },
+);
 
 export async function getProjectsPage(opts: {
   page: number;

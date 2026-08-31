@@ -57,10 +57,9 @@ export function AttendButton({
   }, [initialRun?.id]);
 
   // Live subscription per current run. Postgres UPDATE events flip the pill
-  // as the local agent moves the row (queued → claimed → running → done/error).
-  // Belt-and-suspenders: also poll every 6s in case Realtime isn't wired
-  // (publication missing task_runs, dropped websocket, etc.) — polling is a
-  // no-op when nothing changed, so real-time still gets the sub-second UX.
+  // as the local agent moves the row (queued -> claimed -> running -> done/error).
+  // Fall back to 6s polling only when Realtime isn't available (publication
+  // missing task_runs, dropped websocket, etc.).
   useEffect(() => {
     if (!run || TASK_RUN_TERMINAL.includes(run.status)) return;
     const runId = run.id;
@@ -76,17 +75,17 @@ export function AttendButton({
           (payload) => setRun(payload.new as TaskRun),
         )
         .subscribe();
+    } else {
+      pollTimer.current = setInterval(async () => {
+        const updated = await pollRun(runId);
+        if (!updated) return;
+        setRun(updated);
+        if (TASK_RUN_TERMINAL.includes(updated.status)) {
+          if (pollTimer.current) clearInterval(pollTimer.current);
+          pollTimer.current = null;
+        }
+      }, 6000);
     }
-
-    pollTimer.current = setInterval(async () => {
-      const updated = await pollRun(runId);
-      if (!updated) return;
-      setRun(updated);
-      if (TASK_RUN_TERMINAL.includes(updated.status)) {
-        if (pollTimer.current) clearInterval(pollTimer.current);
-        pollTimer.current = null;
-      }
-    }, 6000);
 
     return () => {
       if (ch && client) client.removeChannel(ch);

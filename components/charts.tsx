@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useId } from "react";
 import {
   ResponsiveContainer,
   BarChart,
@@ -18,9 +18,7 @@ import {
 } from "recharts";
 
 /* Recharts serializes colors to SVG attributes so `var(--...)` is unusable.
-   We seed the palette from literals that mirror globals.css, then on mount
-   read the live CSS custom properties and self-heal if a maintainer changed
-   a token without touching this file. */
+   The palette is literals that mirror globals.css. */
 
 type DeckColors = {
   accent: string;
@@ -57,35 +55,6 @@ const DEFAULT_COLORS: DeckColors = {
   dust:      "#a29a8f",
   dust3:     "#6d655c",
 };
-
-function useDeckColors(): DeckColors {
-  const [c, setC] = useState<DeckColors>(DEFAULT_COLORS);
-  useEffect(() => {
-    const cs = getComputedStyle(document.documentElement);
-    const pick = (name: string, fallback: string) => {
-      const v = cs.getPropertyValue(name).trim();
-      return v || fallback;
-    };
-    setC({
-      accent:    pick("--color-accent-500",     DEFAULT_COLORS.accent),
-      accentDim: pick("--color-accent-dim",     DEFAULT_COLORS.accentDim),
-      blue:      pick("--color-blue",           DEFAULT_COLORS.blue),
-      blueDim:   pick("--color-blue-dim",       DEFAULT_COLORS.blueDim),
-      green:     pick("--color-green",          DEFAULT_COLORS.green),
-      greenDim:  pick("--color-green-dim",      DEFAULT_COLORS.greenDim),
-      yellow:    pick("--color-yellow",         DEFAULT_COLORS.yellow),
-      yellowDim: pick("--color-yellow-dim",     DEFAULT_COLORS.yellowDim),
-      ink:       pick("--color-surface-1a",     DEFAULT_COLORS.ink),
-      lift:      pick("--color-surface-2",      DEFAULT_COLORS.lift),
-      hair:      pick("--color-line",           DEFAULT_COLORS.hair),
-      hairStrong:pick("--color-line-strong",    DEFAULT_COLORS.hairStrong),
-      bone:      pick("--color-foreground",     DEFAULT_COLORS.bone),
-      dust:      pick("--color-muted",          DEFAULT_COLORS.dust),
-      dust3:     pick("--color-muted-3",        DEFAULT_COLORS.dust3),
-    });
-  }, []);
-  return c;
-}
 
 function useDeckStyles(c: DeckColors) {
   return {
@@ -136,7 +105,7 @@ export function ActivityChart({
 }: {
   data: { day: string; prompts: number; toolUses: number; sessions: number }[];
 }) {
-  const c = useDeckColors();
+  const c = DEFAULT_COLORS;
   const s = useDeckStyles(c);
   const uid = useId().replace(/:/g, "");
   return (
@@ -159,7 +128,7 @@ export function ActivityChart({
 }
 
 export function ToolUsageChart({ data }: { data: { tool: string; count: number }[] }) {
-  const c = useDeckColors();
+  const c = DEFAULT_COLORS;
   const s = useDeckStyles(c);
   const uid = useId().replace(/:/g, "");
   return (
@@ -183,7 +152,7 @@ export function TokenCostChart({
 }: {
   data: { day: string; input: number; output: number; cacheRead: number; cost: number }[];
 }) {
-  const c = useDeckColors();
+  const c = DEFAULT_COLORS;
   const s = useDeckStyles(c);
   const uid = useId().replace(/:/g, "");
   return (
@@ -223,7 +192,7 @@ export function TokenCostChart({
 }
 
 export function DonutChart({ data }: { data: { name: string; value: number }[] }) {
-  const c = useDeckColors();
+  const c = DEFAULT_COLORS;
   const s = useDeckStyles(c);
   const total = data.reduce((a, d) => a + d.value, 0);
   return (
@@ -303,7 +272,7 @@ export function SimpleBarChart({
   color?: string;
   height?: number;
 }) {
-  const c = useDeckColors();
+  const c = DEFAULT_COLORS;
   const s = useDeckStyles(c);
   const uid = useId().replace(/:/g, "");
   const fill = color ?? c.accent;

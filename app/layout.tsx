@@ -3,7 +3,6 @@ import { Familjen_Grotesk, Public_Sans, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { DeckRail, DeckRailMobile } from "@/components/deck-rail";
 import { DeckShelf } from "@/components/deck-shelf";
-import { LiveRefresh } from "@/components/live-refresh";
 import { isDbConfigured, ingestionKeyConfigured } from "@/lib/supabase";
 import "./globals.css";
 
@@ -32,7 +31,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             "radial-gradient(120% 80% at 78% -10%, oklch(0.32 0.062 38 / 0.28), transparent 62%), var(--color-background)",
         }}
       >
-        <LiveRefresh />
         <a href="#main" className="skip-link">Skip to content</a>
         <div className="flex min-h-screen">
           <aside

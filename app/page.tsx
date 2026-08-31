@@ -57,8 +57,8 @@ export default async function OverviewPage() {
   const [recentSessions, sessionStarts30, tasks, plans, projects, events30] = await Promise.all([
     getRecentSessions(8),
     getSessionStartsSince(since30),
-    getTasks(),
-    getPlans(),
+    getTasks({ columns: "id,status,content,plan_id" }),
+    getPlans({ columns: "id,status,title,session_id" }),
     getProjects(),
     getRecentActivityEventsCached(30, ["prompt", "tool_use", "tasks_synced"]),
   ]);

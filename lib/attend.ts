@@ -106,10 +106,10 @@ export async function getLatestRunsByTask(
   if (taskIds.length === 0) return out;
   const { data } = await db
     .from("task_runs")
-    .select("*")
+    .select("id,task_id,status,verdict,verdict_reason,error,stdout_tail,diff_summary,requested_at")
     .in("task_id", taskIds)
     .order("requested_at", { ascending: false });
-  for (const r of (data as TaskRun[] | null) ?? []) {
+  for (const r of (data as unknown as TaskRun[] | null) ?? []) {
     if (!r.task_id || out.has(r.task_id)) continue;
     out.set(r.task_id, r);
   }

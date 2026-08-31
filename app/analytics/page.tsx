@@ -26,7 +26,7 @@ export default async function AnalyticsPage() {
   const [stats, sessions, tasks, events] = await Promise.all([
     getStats(),
     getAllSessions(),
-    getTasks(),
+    getTasks({ columns: "status" }),
     getRecentActivityEventsCached(DAYS, ["prompt", "tool_use", "tasks_synced"]),
   ]);
 
