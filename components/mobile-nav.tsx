@@ -8,11 +8,16 @@ const DRAWER_ID = "mobile-nav-drawer";
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
   const pathname = usePathname();
   const toggleRef = useRef<HTMLButtonElement | null>(null);
   const drawerRef = useRef<HTMLDivElement | null>(null);
 
   const close = useCallback(() => setOpen(false), []);
+
+  useEffect(() => {
+    setReduceMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  }, []);
 
   // Close on route change.
   useEffect(() => {
@@ -73,7 +78,7 @@ export function MobileNav() {
           background: "rgb(13 12 11 / 0.6)",
           opacity: open ? 1 : 0,
           pointerEvents: open ? "auto" : "none",
-          transition: "opacity var(--duration-base) var(--ease-standard)",
+          transition: reduceMotion ? "none" : "opacity var(--duration-base) var(--ease-standard)",
         }}
       />
 
@@ -91,7 +96,7 @@ export function MobileNav() {
           background:
             "linear-gradient(180deg, #17141200 0%, #0e0d0c 100%), #131110",
           transform: open ? "translateX(0)" : "translateX(-100%)",
-          transition: "transform var(--duration-base) var(--ease-standard)",
+          transition: reduceMotion ? "none" : "transform var(--duration-base) var(--ease-standard)",
         }}
       >
         <DeckRail onNavigate={close} />
