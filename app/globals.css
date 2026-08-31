@@ -23,8 +23,8 @@
   --color-text:       #ece7df;
   --color-muted:      #a29a8f;
   --color-muted-2:    #8e867c;
-  --color-muted-3:    #6d655c;
-  --color-muted-4:    #554e46;
+  --color-muted-3:    #8a8177;
+  --color-muted-4:    #827970;
 
   /* Accent ramp - terracotta, hue 46 */
   --color-accent-50:  oklch(0.96 0.020 46);
@@ -71,7 +71,7 @@
 *, *::before, *::after { box-sizing: border-box; }
 
 html {
-  font-size: 18px; /* ponytail: bumps every Tailwind rem-based size uniformly (default 16px). */
+  font-size: 112.5%; /* ponytail: bumps every Tailwind rem-based size uniformly (18/16). */
 }
 
 body {
@@ -88,7 +88,7 @@ body {
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #332d26 transparent;
+  scrollbar-color: var(--color-line-strong) transparent;
 }
 *::-webkit-scrollbar {
   width: 0.5rem;
@@ -96,10 +96,9 @@ body {
 }
 *::-webkit-scrollbar-track { background: transparent; }
 *::-webkit-scrollbar-thumb {
-  background: #332d26;
+  background: var(--color-line-strong);
   border-radius: 9999px;
 }
-*::-webkit-scrollbar-thumb:hover { background: var(--color-line-strong); }
 
 /* Focus ring: keyboard only */
 :focus-visible {
