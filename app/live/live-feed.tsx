@@ -206,12 +206,16 @@ export function LiveFeed({
   const pausedRunsRef = useRef(false);
   const pausedEventsRef = useRef(false);
   const runsBottomRef = useRef<HTMLDivElement>(null);
-  const eventsBottomRef = useRef<HTMLDivElement>(null);
+  const eventsTopRef = useRef<HTMLDivElement>(null);
 
   const router = useRouter();
 
   function scrollBottom(ref: React.RefObject<HTMLDivElement | null>) {
     ref.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }
+
+  function scrollTop(ref: React.RefObject<HTMLDivElement | null>) {
+    ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   // Realtime: one channel, both tables.
@@ -247,9 +251,9 @@ export function LiveFeed({
         (payload) => {
           const row = payload.new as EventRow;
           if (filterSession && row.session_id !== filterSession) return;
-          setEvents((prev) => [...prev, row].slice(-500));
+          setEvents((prev) => [row, ...prev].slice(0, 500));
           if (!pausedEventsRef.current) {
-            setTimeout(() => scrollBottom(eventsBottomRef), 50);
+            setTimeout(() => scrollTop(eventsTopRef), 50);
           }
         },
       )
@@ -270,7 +274,7 @@ export function LiveFeed({
     const next = !pausedEvents;
     pausedEventsRef.current = next;
     setPausedEvents(next);
-    if (!next) setTimeout(() => scrollBottom(eventsBottomRef), 50);
+    if (!next) setTimeout(() => scrollTop(eventsTopRef), 50);
   }
 
   function setFilter(key: string, value: string) {
@@ -333,6 +337,7 @@ export function LiveFeed({
               <p className="py-12 text-center text-sm text-muted">No events in the last 30 minutes.</p>
             ) : (
               <ul className="space-y-0.5">
+                <div ref={eventsTopRef} />
                 {events.map((e) => (
                   <li
                     key={e.id}
@@ -368,7 +373,6 @@ export function LiveFeed({
                     </span>
                   </li>
                 ))}
-                <div ref={eventsBottomRef} />
               </ul>
             )}
           </div>

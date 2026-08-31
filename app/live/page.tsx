@@ -37,7 +37,7 @@ export default async function LivePage({ searchParams }: { searchParams: Search 
       />
       <LiveFeed
         initialRuns={(runs ?? []).toReversed()}
-        initialEvents={(events ?? []).toReversed()}
+        initialEvents={events ?? []}
         projects={projects ?? []}
         filterProject={projectId}
         filterSession={sessionId}
