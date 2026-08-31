@@ -1,11 +1,5 @@
 import { Card, PageHeader } from "@/components/ui";
 import { CopyButton } from "@/components/copy-button";
-import {
-  CredentialsProvider,
-  CredentialsMaster,
-  CredentialsField,
-  CredentialsSheetSurface,
-} from "@/components/credentials-sheet";
 import { isDbConfigured, ingestionKeyConfigured } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +32,23 @@ curl -s -X POST http://localhost:3000/api/ingest/hook \\
   -H "x-api-key: $CC_TRACKER_API_KEY" \\
   -d '{"hook_event_name":"SessionStart","session_id":"'$(uuidgen)'","cwd":"/tmp/demo","source":"startup"}'`;
 
+function EnvRow({ label, configured }: { label: string; configured: boolean }) {
+  return (
+    <div className="flex w-full items-center justify-between gap-3 rounded-lg border border-line bg-panel2 px-3 py-2.5">
+      <code className="min-w-0 flex-1 truncate font-mono text-[0.75rem] text-foreground">{label}</code>
+      <span
+        className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-[0.125rem] text-[0.6875rem] font-semibold uppercase tracking-[0.06em] ${
+          configured
+            ? "bg-[color:var(--color-green)] text-background"
+            : "bg-[color:var(--color-yellow)] text-background"
+        }`}
+      >
+        {configured ? "configured" : "missing"}
+      </span>
+    </div>
+  );
+}
+
 export default function SetupPage() {
   const dbOk = isDbConfigured();
   const keyOk = ingestionKeyConfigured();
@@ -46,25 +57,22 @@ export default function SetupPage() {
   const readyCount = [urlOk, svcOk, keyOk].filter(Boolean).length;
 
   return (
-    <CredentialsProvider initial={{ url: urlOk, serviceRole: svcOk, apiKey: keyOk }}>
+    <>
       <PageHeader
         title="Setup"
         sub="One-time wiring between Claude Code, this app, and Supabase."
         right={
-          <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-2 rounded-full border border-line bg-panel px-3 py-1.5 text-[0.6875rem] uppercase tracking-[0.06em] text-muted">
-              <span
-                aria-hidden
-                className={`inline-block h-2 w-2 rounded-full ${
-                  readyCount === 3
-                    ? "bg-[color:var(--color-green)]"
-                    : "bg-[color:var(--color-yellow)]"
-                }`}
-              />
-              <span className="font-mono tabular-nums text-foreground">{readyCount}/3</span> ready
-            </span>
-            <CredentialsMaster />
-          </div>
+          <span className="inline-flex items-center gap-2 rounded-full border border-line bg-panel px-3 py-1.5 text-[0.6875rem] uppercase tracking-[0.06em] text-muted">
+            <span
+              aria-hidden
+              className={`inline-block h-2 w-2 rounded-full ${
+                readyCount === 3
+                  ? "bg-[color:var(--color-green)]"
+                  : "bg-[color:var(--color-yellow)]"
+              }`}
+            />
+            <span className="font-mono tabular-nums text-foreground">{readyCount}/3</span> ready
+          </span>
         }
       />
 
@@ -73,13 +81,13 @@ export default function SetupPage() {
         <aside className="min-w-0 space-y-6 xl:sticky xl:top-16 xl:self-start">
           <Card title="Environment">
             <div className="space-y-2">
-              <CredentialsField envKey="url" label="NEXT_PUBLIC_SUPABASE_URL" />
-              <CredentialsField envKey="serviceRoleKey" label="SUPABASE_SECRET" />
-              <CredentialsField envKey="apiKey" label="CC_TRACKER_API_KEY" />
+              <EnvRow label="NEXT_PUBLIC_SUPABASE_URL" configured={urlOk} />
+              <EnvRow label="SUPABASE_SECRET" configured={svcOk} />
+              <EnvRow label="CC_TRACKER_API_KEY" configured={keyOk} />
               <p className="pt-2 text-[0.75rem] leading-relaxed text-muted">
                 {dbOk
                   ? "Supabase connection is configured. If tables are missing, run supabase/schema.sql in the SQL editor."
-                  : "Click any row above to paste that value, or use Connect Supabase to fill all three at once."}
+                  : "Set these in .env.local (copy .env.example as a starting point), then restart the dev server."}
               </p>
             </div>
           </Card>
@@ -160,8 +168,6 @@ cctrack session end`}
           </Card>
         </div>
       </div>
-
-      <CredentialsSheetSurface />
-    </CredentialsProvider>
+    </>
   );
 }
