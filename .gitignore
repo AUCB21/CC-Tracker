@@ -42,6 +42,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local working docs (regenerated per session, not for the public repo)
+HANDOFF.md
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

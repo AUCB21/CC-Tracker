@@ -1,6 +1,6 @@
 # CC·Track — Claude Code session, plan & task tracker
 
-A **Next.js 15 + Supabase** app that records everything you do in Claude Code:
+A **Next.js 16 + Supabase** app that records everything you do in Claude Code:
 every session, the project it ran in, the plans you create, the tasks that get
 executed, tool usage, prompts, tokens and estimated cost — plus workflow
 analytics over all of it.
@@ -24,7 +24,8 @@ every route, in more depth than the quick-start below.
 
 1. Create (or open) a Supabase project.
 2. SQL Editor → New query → paste `supabase/schema.sql` → **Run**.
-3. Settings → API: copy the **Project URL** and the **service_role** key.
+3. Settings → API: copy the **Project URL** and the secret key (`sb_secret_...`,
+   labeled **service_role** on older projects).
 
 ## 2 · Configure & run the app
 
@@ -148,8 +149,9 @@ of work and keep task statuses updated as it executes them.
 
 ## Security notes (single-user setup)
 
-- All DB access is server-side with the **service_role** key; RLS is enabled
-  with no policies, so the anon key can't read anything.
+- All DB access is server-side with the **SUPABASE_SECRET** key (the legacy
+  **service_role** key also works, as a fallback); RLS is enabled with no
+  policies, so the anon key can't read anything.
 - `/api/ingest/*` requires `x-api-key: $CC_TRACKER_API_KEY`.
 - If you expose this app beyond localhost, put it behind auth/VPN — there are
   no login screens by design.
@@ -161,3 +163,7 @@ npm run test:hooks   # transcript parser unit tests (node)
 npx tsx tests/lib.test.mts   # aggregation helper tests
 npm run build        # typecheck + production build
 ```
+
+## License
+
+Licensed under the Apache License 2.0. See [LICENSE](LICENSE).
