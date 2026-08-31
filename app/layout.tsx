@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Familjen_Grotesk, Public_Sans, Geist_Mono } from "next/font/google";
 import Link from "next/link";
-import { DeckRail, DeckRailMobile } from "@/components/deck-rail";
+import { DeckRail } from "@/components/deck-rail";
+import { MobileNav } from "@/components/mobile-nav";
 import { DeckShelf } from "@/components/deck-shelf";
 import { isDbConfigured, ingestionKeyConfigured } from "@/lib/supabase";
 import "./globals.css";
@@ -133,7 +134,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                 />
               </span>
             </Link>
-            <DeckRailMobile />
+            <MobileNav />
           </header>
 
           <div className="w-full flex-1 min-w-0 md:ml-[14rem]">
