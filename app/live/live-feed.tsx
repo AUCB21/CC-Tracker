@@ -205,14 +205,10 @@ export function LiveFeed({
   // Refs so realtime callbacks read current pause state without re-subscribing.
   const pausedRunsRef = useRef(false);
   const pausedEventsRef = useRef(false);
-  const runsBottomRef = useRef<HTMLDivElement>(null);
+  const runsTopRef = useRef<HTMLDivElement>(null);
   const eventsTopRef = useRef<HTMLDivElement>(null);
 
   const router = useRouter();
-
-  function scrollBottom(ref: React.RefObject<HTMLDivElement | null>) {
-    ref.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }
 
   function scrollTop(ref: React.RefObject<HTMLDivElement | null>) {
     ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -238,10 +234,10 @@ export function LiveFeed({
               next[idx] = row;
               return next;
             }
-            return [...prev, row].slice(-100);
+            return [row, ...prev].slice(0, 100);
           });
           if (payload.eventType === "INSERT" && !pausedRunsRef.current) {
-            setTimeout(() => scrollBottom(runsBottomRef), 50);
+            setTimeout(() => scrollTop(runsTopRef), 50);
           }
         },
       )
@@ -267,7 +263,7 @@ export function LiveFeed({
     const next = !pausedRuns;
     pausedRunsRef.current = next;
     setPausedRuns(next);
-    if (!next) setTimeout(() => scrollBottom(runsBottomRef), 50);
+    if (!next) setTimeout(() => scrollTop(runsTopRef), 50);
   }
 
   function toggleEvents() {
@@ -324,8 +320,8 @@ export function LiveFeed({
               <p className="py-12 text-center text-sm text-muted">No task runs yet.</p>
             ) : (
               <ul className="space-y-3">
+                <div ref={runsTopRef} />
                 {runs.map((r) => <RunCard key={r.id} run={r} />)}
-                <div ref={runsBottomRef} />
               </ul>
             )}
           </div>

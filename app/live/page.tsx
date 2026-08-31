@@ -36,7 +36,7 @@ export default async function LivePage({ searchParams }: { searchParams: Search 
         sub="Remote task runs and session events in real time."
       />
       <LiveFeed
-        initialRuns={(runs ?? []).toReversed()}
+        initialRuns={runs ?? []}
         initialEvents={events ?? []}
         projects={projects ?? []}
         filterProject={projectId}
