@@ -97,11 +97,11 @@ export function MobileNav() {
               aria-label="Navigation"
               tabIndex={-1}
               inert={!open}
-              className="fixed inset-y-0 left-0 z-40 flex w-[18rem] max-w-[85vw] flex-col overflow-y-auto border-r border-line outline-none"
+              className="fixed inset-y-0 right-0 z-40 flex w-[18rem] max-w-[85vw] flex-col overflow-y-auto border-l border-line outline-none"
               style={{
                 background:
                   "linear-gradient(180deg, #17141200 0%, #0e0d0c 100%), #131110",
-                transform: open ? "translateX(0)" : "translateX(-100%)",
+                transform: open ? "translateX(0)" : "translateX(100%)",
                 transition: reduceMotion ? "none" : "transform var(--duration-base) var(--ease-standard)",
               }}
             >
