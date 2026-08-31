@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { DeckRail } from "@/components/deck-rail";
 
@@ -9,6 +10,7 @@ const DRAWER_ID = "mobile-nav-drawer";
 export function MobileNav() {
   const [open, setOpen] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const toggleRef = useRef<HTMLButtonElement | null>(null);
   const drawerRef = useRef<HTMLDivElement | null>(null);
@@ -16,6 +18,7 @@ export function MobileNav() {
   const close = useCallback(() => setOpen(false), []);
 
   useEffect(() => {
+    setMounted(true);
     setReduceMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   }, []);
 
@@ -69,38 +72,44 @@ export function MobileNav() {
         </svg>
       </button>
 
-      {/* Scrim */}
-      <div
-        aria-hidden
-        onClick={close}
-        className="fixed inset-0 z-30"
-        style={{
-          background: "rgb(13 12 11 / 0.6)",
-          opacity: open ? 1 : 0,
-          pointerEvents: open ? "auto" : "none",
-          transition: reduceMotion ? "none" : "opacity var(--duration-base) var(--ease-standard)",
-        }}
-      />
+      {mounted &&
+        createPortal(
+          <>
+            {/* Scrim */}
+            <div
+              aria-hidden
+              onClick={close}
+              className="fixed inset-0 z-30"
+              style={{
+                background: "rgb(13 12 11 / 0.6)",
+                opacity: open ? 1 : 0,
+                pointerEvents: open ? "auto" : "none",
+                transition: reduceMotion ? "none" : "opacity var(--duration-base) var(--ease-standard)",
+              }}
+            />
 
-      {/* Drawer */}
-      <div
-        id={DRAWER_ID}
-        ref={drawerRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Navigation"
-        tabIndex={-1}
-        inert={!open}
-        className="fixed inset-y-0 left-0 z-40 flex w-[18rem] max-w-[85vw] flex-col overflow-y-auto border-r border-line outline-none"
-        style={{
-          background:
-            "linear-gradient(180deg, #17141200 0%, #0e0d0c 100%), #131110",
-          transform: open ? "translateX(0)" : "translateX(-100%)",
-          transition: reduceMotion ? "none" : "transform var(--duration-base) var(--ease-standard)",
-        }}
-      >
-        <DeckRail onNavigate={close} />
-      </div>
+            {/* Drawer */}
+            <div
+              id={DRAWER_ID}
+              ref={drawerRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Navigation"
+              tabIndex={-1}
+              inert={!open}
+              className="fixed inset-y-0 left-0 z-40 flex w-[18rem] max-w-[85vw] flex-col overflow-y-auto border-r border-line outline-none"
+              style={{
+                background:
+                  "linear-gradient(180deg, #17141200 0%, #0e0d0c 100%), #131110",
+                transform: open ? "translateX(0)" : "translateX(-100%)",
+                transition: reduceMotion ? "none" : "transform var(--duration-base) var(--ease-standard)",
+              }}
+            >
+              <DeckRail onNavigate={close} />
+            </div>
+          </>,
+          document.body,
+        )}
     </div>
   );
 }
