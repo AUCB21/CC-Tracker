@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { RailIcons } from "@/components/ui";
@@ -45,10 +44,19 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function NavRow({ item, active }: { item: NavItem; active: boolean }) {
+function NavRow({
+  item,
+  active,
+  onNavigate,
+}: {
+  item: NavItem;
+  active: boolean;
+  onNavigate?: () => void;
+}) {
   return (
     <Link
       href={item.href}
+      onClick={onNavigate}
       aria-current={active ? "page" : undefined}
       className="group relative flex items-center gap-3 rounded-[0.5rem] px-3 py-2.5"
       style={{
@@ -96,7 +104,7 @@ function NavRow({ item, active }: { item: NavItem; active: boolean }) {
   );
 }
 
-export function DeckRail() {
+export function DeckRail({ onNavigate }: { onNavigate?: () => void } = {}) {
   const pathname = usePathname();
   return (
     <nav className="flex-1 space-y-7 px-3 py-5" aria-label="Primary">
@@ -116,46 +124,16 @@ export function DeckRail() {
           <ul className="space-y-0.5">
             {group.items.map((item) => (
               <li key={item.href}>
-                <NavRow item={item} active={isActive(pathname, item.href)} />
+                <NavRow
+                  item={item}
+                  active={isActive(pathname, item.href)}
+                  onNavigate={onNavigate}
+                />
               </li>
             ))}
           </ul>
         </div>
       ))}
-    </nav>
-  );
-}
-
-export function DeckRailMobile() {
-  const pathname = usePathname();
-  const flat = NAV.flatMap((g) => g.items);
-  const activeRef = useRef<HTMLAnchorElement | null>(null);
-  // ponytail: scroll the active item into center on mount so users on small
-  // viewports notice items that would otherwise be scrolled off-screen.
-  useEffect(() => {
-    activeRef.current?.scrollIntoView({ inline: "center", block: "nearest" });
-  }, [pathname]);
-  return (
-    <nav className="ml-auto flex items-center gap-1 overflow-x-auto" aria-label="Primary">
-      {flat.map((item) => {
-        const active = isActive(pathname, item.href);
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            ref={active ? activeRef : undefined}
-            aria-label={item.label}
-            aria-current={active ? "page" : undefined}
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md transition-colors"
-            style={{
-              background: active ? "var(--color-surface-2)" : "transparent",
-              color: active ? "var(--color-accent-400)" : "var(--color-muted-2)",
-            }}
-          >
-            {item.icon}
-          </Link>
-        );
-      })}
     </nav>
   );
 }
