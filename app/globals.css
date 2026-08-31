@@ -60,10 +60,10 @@
   --font-sans:    var(--font-public-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono:    var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* Motion - noticeable, up from the old 120/150ms cap */
+  /* Motion */
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
-  --duration-fast:  200ms;
-  --duration-base:  220ms;
+  --duration-fast:  120ms;
+  --duration-base:  150ms;
   --duration-slow:  320ms;
   --duration-enter: 520ms;
 }
@@ -132,7 +132,6 @@ body {
 /* Keyframes - authored moments for the refresh */
 @keyframes rise    { from { opacity: 0; transform: translateY(0.75rem); } to { opacity: 1; transform: none; } }
 @keyframes fillbar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-@keyframes halo    { 0%, 100% { opacity: 0.55; transform: scale(1); } 50% { opacity: 0.9; transform: scale(1.06); } }
 @keyframes beacon  { 0% { transform: scale(1); opacity: 0.6; } 70%, 100% { transform: scale(2.6); opacity: 0; } }
 @keyframes veil    { from { opacity: 0; } to { opacity: 1; } }
 @keyframes lift    { from { opacity: 0; transform: translateY(1.25rem) scale(0.97); } to { opacity: 1; transform: none; } }

@@ -116,7 +116,6 @@ export function Stat({
               "radial-gradient(circle, var(--color-accent-600) 0%, transparent 68%)",
             opacity: 0.5,
             filter: "blur(0.5rem)",
-            animation: "halo 5s var(--ease-standard) infinite",
           }}
         />
       )}
