@@ -1,8 +1,8 @@
-# CC·Track — Claude Code session, plan & task tracker
+# CC·Track: Claude Code session, plan & task tracker
 
 A **Next.js 16 + Supabase** app that records everything you do in Claude Code:
 every session, the project it ran in, the plans you create, the tasks that get
-executed, tool usage, prompts, tokens and estimated cost — plus workflow
+executed, tool usage, prompts, tokens and estimated cost, plus workflow
 analytics over all of it.
 
 ```
@@ -12,7 +12,7 @@ analytics over all of it.
 └────────────────┘                           └──────────────┘
 ```
 
-**Data model** — `projects` (auto-created per working directory) → `sessions`
+**Data model**: `projects` (auto-created per working directory) → `sessions`
 (PK = Claude's session UUID) → `plans` → `tasks`, plus a raw `events` log
 (prompts, tool calls, TodoWrite syncs) used for the analytics.
 
@@ -35,7 +35,7 @@ npm install
 npm run dev                  # http://localhost:3000
 ```
 
-Check `http://localhost:3000/api/health` — both flags should be `true`.
+Check `http://localhost:3000/api/health`: both flags should be `true`.
 The `/setup` page shows live status + all instructions in-app.
 
 ## 3 · Wire Claude Code (auto ingestion)
@@ -115,9 +115,9 @@ What gets captured automatically:
 | `Stop`             | transcript summary: model, tokens (in/out/cache), tool counts, estimated cost                 |
 | `SessionEnd`       | marks the session ended                                                                       |
 
-The hook script fails silently and exits 0 — it can never block Claude Code.
+The hook script fails silently and exits 0; it can never block Claude Code.
 
-## 4 · Plans & tasks — `cctrack` CLI
+## 4 · Plans & tasks: `cctrack` CLI
 
 ```bash
 npm link        # exposes `cctrack` globally (from this folder)
@@ -140,12 +140,12 @@ of work and keep task statuses updated as it executes them.
 
 ## 5 · The dashboard
 
-- **Overview** — totals (sessions, plans, tasks, prompts, tokens, cost), 30-day activity, recent sessions, active plans, open tasks
-- **Projects** — auto-detected from cwd; per-project sessions, tokens, cost, task progress
-- **Plans** — grouped by status with task checklists and progress bars
-- **Sessions** — table of every session; detail view has tool usage chart, plan/task lists and a full event timeline
-- **Analytics** — activity, tokens & cost per day, tool usage ranking, task completion, sessions by model, session durations, hour-of-day prompting
-- **Setup** — live env status + copy-paste instructions
+- **Overview**: totals (sessions, plans, tasks, prompts, tokens, cost), 30-day activity, recent sessions, active plans, open tasks
+- **Projects**: auto-detected from cwd; per-project sessions, tokens, cost, task progress
+- **Plans**: grouped by status with task checklists and progress bars
+- **Sessions**: table of every session; detail view has tool usage chart, plan/task lists and a full event timeline
+- **Analytics**: activity, tokens & cost per day, tool usage ranking, task completion, sessions by model, session durations, hour-of-day prompting
+- **Setup**: live env status + copy-paste instructions
 
 ## Security notes (single-user setup)
 
@@ -153,7 +153,7 @@ of work and keep task statuses updated as it executes them.
   **service_role** key also works, as a fallback); RLS is enabled with no
   policies, so the anon key can't read anything.
 - `/api/ingest/*` requires `x-api-key: $CC_TRACKER_API_KEY`.
-- If you expose this app beyond localhost, put it behind auth/VPN — there are
+- If you expose this app beyond localhost, put it behind auth/VPN; there are
   no login screens by design.
 
 ## Development
