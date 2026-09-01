@@ -35,7 +35,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <a href="#main" className="skip-link">Skip to content</a>
         <div className="flex min-h-screen">
           <aside
-            className="fixed inset-y-0 left-0 z-20 hidden w-[14rem] flex-col border-r border-line md:flex"
+            className="fixed inset-y-0 left-0 z-20 hidden w-[clamp(12rem,14vw,15rem)] flex-col border-r border-line md:flex"
             style={{
               background:
                 "linear-gradient(180deg, #17141200 0%, #0e0d0c 100%), #131110",
@@ -137,7 +137,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <MobileNav />
           </header>
 
-          <div className="w-full flex-1 min-w-0 md:ml-[14rem]">
+          <div className="w-full flex-1 min-w-0 md:ml-[clamp(12rem,14vw,15rem)]">
             <DeckShelf connected={connected} />
 
             <main id="main" className="px-6 pb-16 pt-20 md:px-10 md:pt-8 md:pb-16">
