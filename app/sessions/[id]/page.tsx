@@ -15,6 +15,9 @@ const EVENT_TYPE_LABEL: Record<string, string> = {
   tasks_synced: "TodoWrite sync",
   session_start: "Session start",
   session_end: "Session end",
+  subagent_dispatch: "Subagent dispatched",
+  subagent_kill: "Subagent killed",
+  subagent_poll: "Subagent polled",
 };
 
 type Search = Promise<{ [key: string]: string | string[] | undefined }>;

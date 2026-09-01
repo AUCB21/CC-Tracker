@@ -11,6 +11,9 @@ const EVENT_MARK: Record<string, string> = {
   tasks_synced: "S",
   session_start: "▶",
   session_end: "■",
+  subagent_dispatch: "→",
+  subagent_kill: "×",
+  subagent_poll: "?",
 };
 
 function eventTone(type: string): string {
@@ -19,6 +22,9 @@ function eventTone(type: string): string {
   if (type === "tasks_synced") return "text-[color:var(--color-green)]";
   if (type === "session_start") return "text-[color:var(--color-green)]";
   if (type === "session_end") return "text-muted";
+  if (type === "subagent_dispatch") return "text-[color:var(--color-green)]";
+  if (type === "subagent_kill") return "text-[color:var(--color-red)]";
+  if (type === "subagent_poll") return "text-[color:var(--color-blue)]";
   return "text-muted";
 }
 
@@ -162,6 +168,40 @@ export function LiveTimeline({
                           {truncate((e.data as { input: string }).input, 70)}
                         </span>
                       )}
+                    {e.type === "subagent_dispatch" && (() => {
+                      const d = e.data as { subagent_type?: string; description?: string; agent_id?: string };
+                      const text = d.description
+                        ? `${d.subagent_type ?? "?"} · ${d.description}`
+                        : d.agent_id ?? "";
+                      return text ? (
+                        <span className="ml-2 text-foreground">{truncate(text, 90)}</span>
+                      ) : null;
+                    })()}
+                    {e.type === "subagent_kill" && (() => {
+                      const d = e.data as { task_id?: string; command?: string };
+                      const text = [d.task_id, d.command ? truncate(d.command, 70) : undefined]
+                        .filter(Boolean)
+                        .join(" · ");
+                      return text ? (
+                        <span className="ml-2 font-mono text-muted">{text}</span>
+                      ) : null;
+                    })()}
+                    {e.type === "subagent_poll" && (() => {
+                      const d = e.data as { to?: string; summary?: string; message?: string; task_id?: string };
+                      if (d.to) {
+                        const detail = d.summary ?? d.message;
+                        return (
+                          <span className="ml-2 text-foreground">
+                            {`→ ${d.to}`}
+                            {detail ? ` · ${truncate(detail, 70)}` : ""}
+                          </span>
+                        );
+                      }
+                      if (d.task_id) {
+                        return <span className="ml-2 font-mono text-muted">{d.task_id}</span>;
+                      }
+                      return null;
+                    })()}
                   </span>
                 </li>
               );
