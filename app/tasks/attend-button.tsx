@@ -227,7 +227,7 @@ export function AttendButton({
           value={override}
           onChange={(e) => setOverride(e.target.value)}
           placeholder="Extra instructions for Claude (optional)"
-          className="w-[24rem] resize-y rounded-md border border-line bg-panel2 p-2 text-[0.75rem] text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none"
+          className="w-full min-w-0 max-w-[24rem] resize-y rounded-md border border-line bg-panel2 p-2 text-[0.75rem] text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none"
           rows={3}
         />
       )}
