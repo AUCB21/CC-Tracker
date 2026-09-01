@@ -78,6 +78,11 @@ when `IDLE_TIMEOUT` is reached. If your Git for Windows lives somewhere other
 than `C:\Program Files\Git\`, edit the one path inside the `.vbs`. To stop it
 manually before it idles out, kill the `node.exe` process in Task Manager.
 
+**Note on tab behavior.** When the server exits the browser tab stays open
+(browsers block page JS from closing user-opened tabs, by design); you'll
+just see `ERR_CONNECTION_REFUSED` on the next request. Re-run `./start.sh`
+or double-click the `.vbs` and refresh.
+
 ## 3 · Wire Claude Code (auto ingestion)
 
 ```bash

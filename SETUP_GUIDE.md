@@ -79,6 +79,39 @@ Visit `http://localhost:3000/api/health`. Both `db_configured` and
 `/setup` page in the app (see the route tour below) shows exactly which
 value is missing and lets you paste it in.
 
+### Optional: run the prod build with auto-shutdown
+
+`npm run dev` is fine for active development, but if you want the app
+running in the background without babysitting a terminal, use `./start.sh`:
+
+```bash
+npm run build
+./start.sh                       # uses IDLE_TIMEOUT from .env.local, default 60s
+IDLE_TIMEOUT=300 ./start.sh      # per-run override wins over .env.local
+```
+
+`./start.sh` runs `next start` and shuts the server down after
+`IDLE_TIMEOUT` seconds with no open+visible browser tab. The root layout
+pings `/api/heartbeat` every 10s while `document.visibilityState === "visible"`,
+so closing a tab, switching to another tab, minimizing the window, or
+locking the machine all count as idle and eventually stop the server.
+
+Set the default in `.env.local` with `IDLE_TIMEOUT=60` (see `.env.example`);
+any value passed on the command line wins over that.
+
+**Windows: double-click to run with no console window.** `start-hidden.vbs`
+launches `./start.sh` through Git for Windows' `bash.exe` with a hidden
+window (that's the `0` in the `Run(..., 0, False)` call). Double-click it,
+pin it to the taskbar, or drop a shortcut on the Desktop; the server runs
+invisibly and shuts itself down on idle. If Git for Windows isn't at
+`C:\Program Files\Git\`, edit the one path inside the `.vbs`. To kill it
+manually before it idles out, end the `node.exe` process in Task Manager.
+
+**About the tab after shutdown**: the browser tab stays open when the
+server exits (browsers block page JS from closing user-opened tabs, by
+design). You'll get `ERR_CONNECTION_REFUSED` on the next request; re-run
+`./start.sh` or double-click the `.vbs` and refresh.
+
 ## 7. Wire up Claude Code (so sessions get captured automatically)
 
 ```bash
