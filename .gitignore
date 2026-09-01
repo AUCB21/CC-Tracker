@@ -49,6 +49,9 @@ HANDOFF.md
 *.tsbuildinfo
 next-env.d.ts
 
+# start.sh idle timestamp
+/.heartbeat
+
 # impeccable-live-ignore-start
 .impeccable/hook.cache.json
 .impeccable/hook.pending.json

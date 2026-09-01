@@ -145,6 +145,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             </main>
           </div>
         </div>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var p=function(){if(document.visibilityState==="visible")fetch("/api/heartbeat",{method:"POST",keepalive:true}).catch(function(){})};p();setInterval(p,10000);document.addEventListener("visibilitychange",p)})();`,
+          }}
+        />
       </body>
     </html>
   );

@@ -55,6 +55,22 @@ npm run dev                  # http://localhost:3000
 Check `http://localhost:3000/api/health`: both flags should be `true`.
 The `/setup` page shows live status + all instructions in-app.
 
+### Prod server with auto-shutdown (`./start.sh`)
+
+If you'd rather not leave a dev server running, `./start.sh` runs
+`next start` and shuts it down when no open+visible browser tab has been seen
+for `IDLE_TIMEOUT` seconds. The root layout pings `/api/heartbeat` every 10s
+while `document.visibilityState === "visible"`, so a closed tab, a switched-away
+tab, or a minimized window all count as idle.
+
+```bash
+npm run build
+./start.sh                       # uses IDLE_TIMEOUT from .env.local, default 60s
+IDLE_TIMEOUT=300 ./start.sh      # per-run override wins over .env.local
+```
+
+Set `IDLE_TIMEOUT` in `.env.local` (see `.env.example`) to change the default.
+
 ## 3 · Wire Claude Code (auto ingestion)
 
 ```bash
