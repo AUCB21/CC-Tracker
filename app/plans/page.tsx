@@ -91,7 +91,7 @@ export default async function PlansPage({ searchParams }: { searchParams: Search
         }
       />
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_18rem]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_clamp(15rem,18vw,20rem)]">
         <div className="min-w-0 space-y-6">
           <ActiveFilterBar facets={facets} />
           <FilterRail facets={facets} variant="drawer" className="xl:hidden" />

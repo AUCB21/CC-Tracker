@@ -190,7 +190,7 @@ export default async function SessionDetailPage({
         </Card>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_18rem]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_clamp(15rem,18vw,20rem)]">
         <div className="min-w-0 grid gap-6 lg:grid-cols-2 xl:grid-cols-2">
           <Card title="Tool usage">
             {toolData.length === 0 ? <Empty>No tool calls recorded.</Empty> : <ToolUsageChart data={toolData} />}

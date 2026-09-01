@@ -87,7 +87,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
         sub={`${total} task${total === 1 ? "" : "s"} match${total === 1 ? "es" : ""} the current filters.`}
       />
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_18rem]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_clamp(15rem,18vw,20rem)]">
         <div className="min-w-0 space-y-4">
           <ActiveFilterBar facets={facets} />
           <FilterRail facets={facets} variant="drawer" className="xl:hidden" />
