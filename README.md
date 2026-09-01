@@ -16,6 +16,23 @@ analytics over all of it.
 (PK = Claude's session UUID) → `plans` → `tasks`, plus a raw `events` log
 (prompts, tool calls, TodoWrite syncs) used for the analytics.
 
+## Screenshots
+
+**Overview** — totals, 30-day activity, recent sessions, active plans and open tasks at a glance.
+![Overview dashboard](docs/screenshots/overview.png)
+
+**Tasks** — filter by project/status; the **Attend** button queues a remote run for the local agent to pick up.
+![Tasks page](docs/screenshots/tasks.png)
+
+**Live** — real-time feed of task runs and session events, two lanes, filterable and pausable.
+![Live feed](docs/screenshots/live.png)
+
+**Analytics** — activity, tokens & cost per day, tool usage, session durations, hour-of-day prompting.
+![Analytics](docs/screenshots/analytics.png)
+
+**Sessions** — every session captured by the hooks, with tokens, cost and status.
+![Sessions list](docs/screenshots/sessions.png)
+
 Setting this up on a new machine? [SETUP_GUIDE.md](SETUP_GUIDE.md) walks
 through Supabase, the three required keys, running the app and a tour of
 every route, in more depth than the quick-start below.
