@@ -71,7 +71,7 @@
 *, *::before, *::after { box-sizing: border-box; }
 
 html {
-  font-size: 112.5%; /* ponytail: bumps every Tailwind rem-based size uniformly (18/16). */
+  font-size: clamp(100%, 4.5vw, 112.5%); /* ponytail: bumps every Tailwind rem-based size uniformly, up to 18/16, scaling down to 16px on narrow viewports. */
 }
 
 body {
