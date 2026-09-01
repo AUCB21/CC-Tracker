@@ -254,29 +254,99 @@ export async function processHook(
         })
         .eq("id", sessionId);
 
-      if (toolName === "TodoWrite") {
-        const todos = (payload.tool_input as { todos?: unknown[] })?.todos;
-        if (Array.isArray(todos)) {
-          await syncTodoWrite(
-            db,
-            sessionId,
-            projectId,
-            todos as { content: string; status: string; activeForm?: string }[]
-          );
-          await addEvent(db, sessionId, "tasks_synced", {
+      const asRecord = (v: unknown): Record<string, unknown> =>
+        v && typeof v === "object" ? (v as Record<string, unknown>) : {};
+      const truncField = (v: unknown, n: number): string | null =>
+        typeof v === "string" ? v.slice(0, n) : null;
+      const input = asRecord(payload.tool_input);
+      const response = asRecord(payload.tool_response);
+
+      switch (toolName) {
+        case "TodoWrite": {
+          const todos = (input as { todos?: unknown[] }).todos;
+          if (Array.isArray(todos)) {
+            await syncTodoWrite(
+              db,
+              sessionId,
+              projectId,
+              todos as { content: string; status: string; activeForm?: string }[]
+            );
+            await addEvent(db, sessionId, "tasks_synced", {
+              tool_name: toolName,
+              data: withPid({ count: todos.length }),
+            });
+          }
+          break;
+        }
+
+        case "Agent": {
+          await addEvent(db, sessionId, "subagent_dispatch", {
             tool_name: toolName,
-            data: withPid({ count: todos.length }),
+            data: withPid({
+              agent_id: response.agentId ?? null,
+              subagent_type: input.subagent_type ?? null,
+              description: input.description ?? null,
+              model: response.resolvedModel ?? null,
+              is_async: response.isAsync ?? null,
+              status: response.status ?? null,
+              prompt: truncField(input.prompt, 2000),
+            }),
+          });
+          break;
+        }
+
+        case "TaskStop": {
+          await addEvent(db, sessionId, "subagent_kill", {
+            tool_name: toolName,
+            data: withPid({
+              task_id: response.task_id ?? null,
+              task_type: response.task_type ?? null,
+              command: truncField(response.command, 500),
+            }),
+          });
+          break;
+        }
+
+        case "SendMessage": {
+          await addEvent(db, sessionId, "subagent_poll", {
+            tool_name: toolName,
+            data: withPid({
+              to: input.to ?? null,
+              summary: input.summary ?? null,
+              msg_id: response.msg_id ?? null,
+              success: response.success ?? null,
+              message: truncField(input.message, 500),
+            }),
+          });
+          break;
+        }
+
+        case "TaskGet": {
+          await addEvent(db, sessionId, "subagent_poll", {
+            tool_name: toolName,
+            data: withPid({ task_id: input.task_id ?? null }),
+          });
+          break;
+        }
+
+        case "TaskOutput": {
+          await addEvent(db, sessionId, "subagent_poll", {
+            tool_name: toolName,
+            data: withPid({ task_id: input.task_id ?? null }),
+          });
+          break;
+        }
+
+        default: {
+          await addEvent(db, sessionId, "tool_use", {
+            tool_name: toolName,
+            data: withPid({
+              input: truncStr(payload.tool_input),
+              response: truncStr(payload.tool_response),
+              tool_use_id: payload.tool_use_id ?? null,
+            }),
           });
         }
-      } else {
-        await addEvent(db, sessionId, "tool_use", {
-          tool_name: toolName,
-          data: withPid({
-            input: truncStr(payload.tool_input),
-            response: truncStr(payload.tool_response),
-            tool_use_id: payload.tool_use_id ?? null,
-          }),
-        });
       }
       break;
     }
