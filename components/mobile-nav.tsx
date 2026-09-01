@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { DeckRail } from "@/components/deck-rail";
 
@@ -9,46 +8,24 @@ const DRAWER_ID = "mobile-nav-drawer";
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
-  const [reduceMotion, setReduceMotion] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
-  const toggleRef = useRef<HTMLButtonElement | null>(null);
-  const drawerRef = useRef<HTMLDivElement | null>(null);
+  const ref = useRef<HTMLDialogElement>(null);
 
-  const close = useCallback(() => setOpen(false), []);
+  const close = () => setOpen(false);
 
   useEffect(() => {
-    setMounted(true);
-    setReduceMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  }, []);
+    const el = ref.current;
+    if (!el) return;
+    if (open && !el.open) el.showModal();
+    else if (!open && el.open) el.close();
+  }, [open]);
 
   // Close on route change.
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
-
-  // While open: lock body scroll, close on Escape, move focus into the drawer,
-  // and return focus to the toggle when it closes.
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("keydown", onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    drawerRef.current?.focus();
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
-      toggleRef.current?.focus();
-    };
-  }, [open]);
+  useEffect(() => setOpen(false), [pathname]);
 
   return (
     <div className="ml-auto md:hidden">
       <button
-        ref={toggleRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label="Menu"
@@ -72,44 +49,40 @@ export function MobileNav() {
         </svg>
       </button>
 
-      {mounted &&
-        createPortal(
-          <>
-            {/* Scrim */}
-            <div
-              aria-hidden
-              onClick={close}
-              className="fixed inset-0 z-30"
-              style={{
-                background: "rgb(13 12 11 / 0.6)",
-                opacity: open ? 1 : 0,
-                pointerEvents: open ? "auto" : "none",
-                transition: reduceMotion ? "none" : "opacity var(--duration-base) var(--ease-standard)",
-              }}
-            />
-
-            {/* Drawer */}
-            <div
-              id={DRAWER_ID}
-              ref={drawerRef}
-              role="dialog"
-              aria-modal="true"
-              aria-label="Navigation"
-              tabIndex={-1}
-              inert={!open}
-              className="fixed inset-y-0 right-0 z-40 flex w-[18rem] max-w-[85vw] flex-col overflow-y-auto border-l border-line outline-none"
-              style={{
-                background:
-                  "linear-gradient(180deg, #17141200 0%, #0e0d0c 100%), #131110",
-                transform: open ? "translateX(0)" : "translateX(100%)",
-                transition: reduceMotion ? "none" : "transform var(--duration-base) var(--ease-standard)",
-              }}
-            >
-              <DeckRail onNavigate={close} />
-            </div>
-          </>,
-          document.body,
-        )}
+      <dialog
+        id={DRAWER_ID}
+        ref={ref}
+        aria-label="Navigation"
+        onClose={close}
+        onClick={(e) => {
+          if (e.target === ref.current) close();
+        }}
+        className="mobile-nav-drawer [&::backdrop]:bg-[rgb(13_12_11_/_0.6)]"
+        style={{
+          position: "fixed",
+          inset: "0 0 0 auto",
+          margin: 0,
+          width: "18rem",
+          maxWidth: "85vw",
+          maxHeight: "100dvh",
+          padding: 0,
+          border: 0,
+          borderLeft: "0.0625rem solid var(--color-line)",
+          background: "linear-gradient(180deg, #17141200 0%, #0e0d0c 100%), #131110",
+          color: "var(--color-text)",
+          overflowY: "auto",
+        }}
+      >
+        <DeckRail onNavigate={close} />
+      </dialog>
+      <style>{`
+        .mobile-nav-drawer[open] { animation: drawerIn var(--duration-base) var(--ease-standard) both; }
+        .mobile-nav-drawer[open]::backdrop { animation: veil var(--duration-base) var(--ease-standard) both; }
+        @keyframes drawerIn { from { transform: translateX(100%); } to { transform: none; } }
+        @media (prefers-reduced-motion: reduce) {
+          .mobile-nav-drawer[open], .mobile-nav-drawer[open]::backdrop { animation: none; }
+        }
+      `}</style>
     </div>
   );
 }
