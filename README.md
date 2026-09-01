@@ -71,6 +71,13 @@ IDLE_TIMEOUT=300 ./start.sh      # per-run override wins over .env.local
 
 Set `IDLE_TIMEOUT` in `.env.local` (see `.env.example`) to change the default.
 
+**Windows: double-click to run invisibly.** `start-hidden.vbs` launches
+`./start.sh` through Git Bash with no window at all. Double-click it (or
+pin/shortcut it) and the server runs in the background; it exits on its own
+when `IDLE_TIMEOUT` is reached. If your Git for Windows lives somewhere other
+than `C:\Program Files\Git\`, edit the one path inside the `.vbs`. To stop it
+manually before it idles out, kill the `node.exe` process in Task Manager.
+
 ## 3 · Wire Claude Code (auto ingestion)
 
 ```bash
