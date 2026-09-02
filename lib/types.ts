@@ -5,7 +5,6 @@ export type Project = {
   repo: string | null;
   per_run_budget_usd: number | null;
   per_run_max_turns: number | null;
-  allowed_tools: string[] | null;
   created_at: string;
 };
 

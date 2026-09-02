@@ -308,7 +308,6 @@ async function execute(
   projectPath: string,
   budgetUsd: number | null = null,
   maxTurns: number | null = null,
-  allowedTools: string[] | null = null,
 ): Promise<void> {
   await patch(run.id, { status: "running" });
   // Snapshot HEAD before spawning so the verifier can diff against it.
@@ -352,9 +351,6 @@ async function execute(
   if (PERMISSION_MODE) args.push("--permission-mode", PERMISSION_MODE);
   if (budgetUsd != null) args.push("--max-budget-usd", String(budgetUsd));
   if (maxTurns != null) args.push("--max-turns", String(maxTurns));
-  if (allowedTools && allowedTools.length > 0) {
-    args.push("--allowedTools", allowedTools.join(","));
-  }
 
   let cancelled = false;
   let currentKill: (() => void) | null = null;
@@ -471,7 +467,7 @@ async function tick(): Promise<void> {
   if (busy) return;
   let q = db!
     .from("task_runs")
-    .select("*, project:projects(path, per_run_budget_usd, per_run_max_turns, allowed_tools)")
+    .select("*, project:projects(path, per_run_budget_usd, per_run_max_turns)")
     .eq("status", "queued")
     .order("requested_at", { ascending: true })
     .limit(5);
@@ -485,7 +481,6 @@ async function tick(): Promise<void> {
     path: string;
     per_run_budget_usd: number | null;
     per_run_max_turns: number | null;
-    allowed_tools: string[] | null;
   };
   const rows = (data as (TaskRun & { project: ProjectFields | null })[]) ?? [];
   for (const row of rows) {
@@ -502,7 +497,6 @@ async function tick(): Promise<void> {
         path,
         proj?.per_run_budget_usd ?? null,
         proj?.per_run_max_turns ?? null,
-        proj?.allowed_tools ?? null,
       );
       console.log(`[agent] finished ${claimed.id}`);
     } catch (e) {
