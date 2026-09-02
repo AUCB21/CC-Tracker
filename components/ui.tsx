@@ -205,6 +205,46 @@ export function Stat({
   );
 }
 
+/** Square 2.75rem icon-only button. Hits WCAG AAA touch-target size
+ *  even when the SVG inside is 14-16px. `intent="danger"` swaps the
+ *  hover color to Red for destructive actions. */
+export function IconButton({
+  onClick,
+  ariaLabel,
+  title,
+  children,
+  className = "",
+  intent = "default",
+  type = "button",
+  disabled,
+}: {
+  onClick?: () => void;
+  ariaLabel: string;
+  title?: string;
+  children: React.ReactNode;
+  className?: string;
+  intent?: "default" | "danger";
+  type?: "button" | "submit";
+  disabled?: boolean;
+}) {
+  const hover =
+    intent === "danger"
+      ? "hover:text-[color:var(--color-red)]"
+      : "hover:text-accent";
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      aria-label={ariaLabel}
+      title={title ?? ariaLabel}
+      disabled={disabled}
+      className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-panel2 ${hover} disabled:opacity-40 ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
+
 /** Red-tinted role=alert block. Per DESIGN.md's Alarm-Is-Terminal Rule,
  *  Red belongs on failures; use this for surfaced errors, not Ember. */
 export function ErrorAlert({
