@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Project, Plan, Task, TaskRun } from "./types";
+import type { Project, Plan, Task, TaskRun, RunLineage } from "./types";
 
 /**
  * Build the prompt Claude Code will receive when the user hits "Attend" on a task.
@@ -106,12 +106,64 @@ export async function getLatestRunsByTask(
   if (taskIds.length === 0) return out;
   const { data } = await db
     .from("task_runs")
-    .select("id,task_id,status,verdict,verdict_reason,error,stdout_tail,diff_summary,requested_at")
+    .select("id,task_id,status,verdict,verdict_reason,error,stdout_tail,diff_summary,parent_run_id,trigger,requested_at")
     .in("task_id", taskIds)
     .order("requested_at", { ascending: false });
   for (const r of (data as unknown as TaskRun[] | null) ?? []) {
     if (!r.task_id || out.has(r.task_id)) continue;
     out.set(r.task_id, r);
+  }
+  return out;
+}
+
+/**
+ * Attempt N of M per task. `n` = depth of the LATEST run (walking parent_run_id
+ * from that row up to a null parent). `m` = max depth over every run of the
+ * same task (so re-Attending after a 3-deep chain reads "1/3" until the fresh
+ * lineage grows). Only tasks whose latest run is part of a lineage (has a
+ * parent or something above depth 1) appear in the returned map.
+ */
+export async function getLineageStatsByTask(
+  db: SupabaseClient,
+  taskIds: string[],
+): Promise<Map<string, RunLineage>> {
+  const out = new Map<string, RunLineage>();
+  if (taskIds.length === 0) return out;
+  const { data } = await db
+    .from("task_runs")
+    .select("id,task_id,parent_run_id,requested_at")
+    .in("task_id", taskIds)
+    .order("requested_at", { ascending: false });
+  type Row = { id: string; task_id: string | null; parent_run_id: string | null; requested_at: string };
+  const rows = (data as Row[] | null) ?? [];
+
+  const byTask = new Map<string, Row[]>();
+  for (const r of rows) {
+    if (!r.task_id) continue;
+    const list = byTask.get(r.task_id) ?? [];
+    list.push(r);
+    byTask.set(r.task_id, list);
+  }
+
+  for (const [taskId, taskRuns] of byTask) {
+    const parentOf = new Map<string, string | null>();
+    for (const r of taskRuns) parentOf.set(r.id, r.parent_run_id);
+    const depthOf = (id: string): number => {
+      let d = 1;
+      const seen = new Set<string>([id]);
+      let cur = parentOf.get(id) ?? null;
+      while (cur && parentOf.has(cur) && !seen.has(cur)) {
+        seen.add(cur);
+        d += 1;
+        cur = parentOf.get(cur) ?? null;
+      }
+      return d;
+    };
+    const latest = taskRuns[0]; // ordered requested_at desc
+    const n = depthOf(latest.id);
+    let m = n;
+    for (const r of taskRuns) m = Math.max(m, depthOf(r.id));
+    if (n > 1 || m > 1 || latest.parent_run_id) out.set(taskId, { n, m });
   }
   return out;
 }

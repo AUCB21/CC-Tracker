@@ -1,8 +1,8 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
-import { queueAttend, pollRun, cancelRun } from "./actions";
+import { useState, useEffect, useRef, useTransition } from "react";
+import { queueAttend, pollRun, cancelRun, followUp } from "./actions";
 import { TASK_RUN_TERMINAL } from "@/lib/types";
-import type { TaskRun } from "@/lib/types";
+import type { TaskRun, RunLineage } from "@/lib/types";
 import { getBrowserSupabase } from "@/lib/supabase-browser";
 
 // Chip aesthetic to match active-filters: soft accent-tinted pill.
@@ -30,9 +30,11 @@ function verdictChipClass(verdict: NonNullable<TaskRun["verdict"]>): string {
 export function AttendButton({
   taskId,
   initialRun = null,
+  lineage = null,
 }: {
   taskId: string;
   initialRun?: TaskRun | null;
+  lineage?: RunLineage | null;
 }) {
   const [run, setRun] = useState<TaskRun | null>(initialRun);
   const [err, setErr] = useState<string | null>(null);
@@ -41,11 +43,17 @@ export function AttendButton({
   const [showOverride, setShowOverride] = useState(false);
   const [override, setOverride] = useState("");
   const [showDetails, setShowDetails] = useState(false);
+  const [followupText, setFollowupText] = useState("");
+  const [followupErr, setFollowupErr] = useState<string | null>(null);
+  const [followupQueued, setFollowupQueued] = useState(false);
+  const [followupPending, startFollowup] = useTransition();
   const pollTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const queuedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(
     () => () => {
       if (pollTimer.current) clearInterval(pollTimer.current);
+      if (queuedTimer.current) clearTimeout(queuedTimer.current);
     },
     [],
   );
@@ -154,6 +162,11 @@ export function AttendButton({
               <span className="font-mono">{run.verdict.replace("_", " ")}</span>
             </span>
           )}
+          {lineage && (lineage.m > 1 || run.parent_run_id) && (
+            <span className={CHIP_TINY} title="attempt within retry / follow-up chain">
+              <span className="font-mono">attempt {lineage.n}/{lineage.m}</span>
+            </span>
+          )}
           {live && (
             <button
               onClick={handleCancel}
@@ -197,6 +210,61 @@ export function AttendButton({
             )}
             {run.stdout_tail?.slice(-800) ?? ""}
           </pre>
+        )}
+        {terminal && (
+          <div className="flex flex-col items-end gap-1">
+            <label
+              htmlFor={`followup-${run.id}`}
+              className="text-[0.625rem] font-semibold uppercase tracking-[0.06em] text-muted"
+            >
+              Follow-up
+            </label>
+            <form
+              action={(fd: FormData) => {
+                const text = String(fd.get("text") ?? "");
+                if (!text.trim()) return;
+                startFollowup(async () => {
+                  setFollowupErr(null);
+                  const res = await followUp(run.id, text);
+                  if (!res.ok) {
+                    setFollowupErr(res.error);
+                    return;
+                  }
+                  setFollowupText("");
+                  setFollowupQueued(true);
+                  if (queuedTimer.current) clearTimeout(queuedTimer.current);
+                  queuedTimer.current = setTimeout(() => setFollowupQueued(false), 2000);
+                });
+              }}
+              className="flex items-start gap-1.5"
+            >
+              <textarea
+                id={`followup-${run.id}`}
+                name="text"
+                value={followupText}
+                onChange={(e) => setFollowupText(e.target.value)}
+                placeholder="follow up…"
+                rows={1}
+                className="w-full max-w-[20rem] min-w-0 max-h-16 min-h-[1.75rem] resize-y rounded-md border border-line bg-panel2 px-2 py-1 text-[0.6875rem] leading-relaxed text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none"
+              />
+              <button
+                type="submit"
+                disabled={followupPending || !followupText.trim()}
+                className={`${CHIP_TINY} disabled:opacity-40`}
+                title="Resume the finished session with this prompt"
+              >
+                {followupPending ? "…" : "send"}
+              </button>
+            </form>
+            {followupQueued && (
+              <p role="status" className="text-[0.6875rem] text-[color:var(--color-green)]">
+                Queued
+              </p>
+            )}
+          </div>
+        )}
+        {followupErr && (
+          <span className="text-[0.6875rem] text-[color:var(--color-yellow)]">{followupErr}</span>
         )}
       </div>
     );

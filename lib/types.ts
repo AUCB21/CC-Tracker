@@ -8,6 +8,18 @@ export type Project = {
   created_at: string;
 };
 
+export type PromptKind = "system" | "template";
+
+export type PromptRow = {
+  id: string;
+  project_id: string | null;
+  kind: PromptKind;
+  name: string;
+  body: string;
+  version: number;
+  created_at: string;
+};
+
 export type Session = {
   id: string;
   project_id: string | null;
@@ -84,10 +96,20 @@ export type TaskRun = {
   verdict: TaskRunVerdict | null;
   verdict_reason: string | null;
   diff_summary: DiffSummary | null;
+  parent_run_id: string | null;
+  trigger: string | null;
   requested_at: string;
   claimed_at: string | null;
   finished_at: string | null;
 };
+
+/**
+ * Lineage stats for a task_run within its retry/followup chain.
+ * `n` = this run's position (root = 1); `m` = max position seen across
+ * every run of the same task (so a fresh manual attend after a 3-deep
+ * chain reads as "1/3" until it grows its own tail).
+ */
+export type RunLineage = { n: number; m: number };
 
 export const TASK_RUN_TERMINAL: TaskRunStatus[] = ["done", "error", "cancelled"];
 

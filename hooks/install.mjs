@@ -25,18 +25,32 @@ if (!key) {
 
 const dir = join(homedir(), ".cc-track");
 mkdirSync(dir, { recursive: true });
-writeFileSync(join(dir, "config.json"), JSON.stringify({ url, key }, null, 2));
+// hitl_fail_closed: true -- once this file exists, a matcher firing while the
+// tracker is unreachable denies the tool call instead of silently allowing
+// it (see hooks/hitl.mjs). Safer default now that the tracker auto-shuts
+// down after 60s idle.
+writeFileSync(
+  join(dir, "config.json"),
+  JSON.stringify({ url, key, hitl_fail_closed: true }, null, 2),
+);
 console.log(`✔ wrote ${join(dir, "config.json")}`);
 
-const hookPath = join(dirname(fileURLToPath(import.meta.url)), "claude-tracker.mjs");
+const here = dirname(fileURLToPath(import.meta.url));
+const hookPath = join(here, "claude-tracker.mjs");
+const hitlPath = join(here, "hitl.mjs");
 // async: true → Claude Code fires the hook without waiting for it. The tracker
 // still self-bounds (fetch timeout 1500ms + gitInfo 1500ms) so a stuck tracker
 // never accumulates work.
 const cmd = { type: "command", command: `node ${hookPath}`, async: true };
+// HITL PreToolUse hook: must run synchronously so its exit code can gate the
+// tool call. It self-bounds via CC_TRACK_HITL_TIMEOUT_MS (default 60s) and
+// fails open when no matchers are configured or the tracker is unreachable.
+const hitlCmd = { type: "command", command: `node ${hitlPath}` };
 const snippet = {
   hooks: {
     SessionStart: [{ hooks: [cmd] }],
     UserPromptSubmit: [{ hooks: [cmd] }],
+    PreToolUse: [{ matcher: "*", hooks: [hitlCmd] }],
     PostToolUse: [{ matcher: "*", hooks: [cmd] }],
     Stop: [{ hooks: [cmd] }],
     StopFailure: [{ hooks: [cmd] }],

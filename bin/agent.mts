@@ -246,11 +246,78 @@ async function taskContext(taskId: string | null): Promise<{ content: string; de
   return data as { content: string; description: string | null };
 }
 
-async function execute(run: TaskRun, projectPath: string, budgetUsd: number | null = null, maxTurns: number | null = null): Promise<void> {
+// Triggers whose child rows resume the parent's claude session via --resume.
+// "chain" was speculative -- nothing ever inserts trigger: "chain" -- so it's
+// not included here.
+const RESUME_TRIGGERS = new Set(["followup", "retry_on_fail"]);
+const MAX_RETRIES_PER_LINEAGE = 2;
+
+async function resumeSessionFor(run: TaskRun): Promise<string | null> {
+  if (!run.parent_run_id || !run.trigger || !RESUME_TRIGGERS.has(run.trigger)) return null;
+  const { data } = await db!
+    .from("task_runs")
+    .select("claude_session_id")
+    .eq("id", run.parent_run_id)
+    .maybeSingle();
+  const sid = (data as { claude_session_id: string | null } | null)?.claude_session_id;
+  return sid ?? null;
+}
+
+// Walk parent_run_id upward from `run` (exclusive) and count how many
+// ancestors were themselves retry_on_fail rows. Used to cap retries per
+// lineage rather than per task, so a task's retry budget doesn't reset when a
+// new manual Attend starts a fresh chain.
+//
+// One round trip for the whole task's run history, then walk the parent
+// chain in memory -- avoids a DB call per ancestor on long retry chains.
+async function countAncestorRetries(run: TaskRun): Promise<number> {
+  if (!run.task_id) return 0;
+  type Row = { id: string; parent_run_id: string | null; trigger: string | null };
+  const { data } = await db!
+    .from("task_runs")
+    .select("id,parent_run_id,trigger")
+    .eq("task_id", run.task_id);
+  const byId = new Map<string, Row>();
+  for (const r of (data as Row[] | null) ?? []) byId.set(r.id, r);
+
+  let count = 0;
+  const seen = new Set<string>([run.id]);
+  let cur = run.parent_run_id;
+  while (cur && !seen.has(cur)) {
+    seen.add(cur);
+    const row = byId.get(cur);
+    if (!row) break;
+    if (row.trigger === "retry_on_fail") count += 1;
+    cur = row.parent_run_id;
+  }
+  return count;
+}
+
+async function enqueueRetry(run: TaskRun): Promise<void> {
+  const priorRetries = await countAncestorRetries(run);
+  if (priorRetries >= MAX_RETRIES_PER_LINEAGE) return;
+  const { error } = await db!.from("task_runs").insert({
+    task_id: run.task_id,
+    project_id: run.project_id,
+    prompt: run.prompt,
+    status: "queued",
+    parent_run_id: run.id,
+    trigger: "retry_on_fail",
+  });
+  if (error) console.error(`[agent] retry enqueue failed for ${run.id}: ${error.message}`);
+}
+
+async function execute(
+  run: TaskRun,
+  projectPath: string,
+  budgetUsd: number | null = null,
+  maxTurns: number | null = null,
+): Promise<void> {
   await patch(run.id, { status: "running" });
   // Snapshot HEAD before spawning so the verifier can diff against it.
   // Null when the project is not a git repo; verifier just skips in that case.
   const parentCommit = gitHead(projectPath);
+  const resumeSessionId = await resumeSessionFor(run);
   let stdoutTail = "";
   // Full stdout: --output-format json emits ONE json blob on stdout at the end.
   // stderr (info/debug lines) is not accumulated here, only in the ui-facing tail.
@@ -278,7 +345,13 @@ async function execute(run: TaskRun, projectPath: string, budgetUsd: number | nu
     void flushIfDue();
   };
 
-  const args = ["-p", run.prompt, "--output-format", "json"];
+  // Followup / retry_on_fail inherit the parent's claude session when
+  // it's known, so context (files read, prior reasoning) is preserved. Falls
+  // back to a fresh session when the parent finished before we captured its
+  // session id.
+  const args = resumeSessionId
+    ? ["-p", "--resume", resumeSessionId, run.prompt, "--output-format", "json"]
+    : ["-p", run.prompt, "--output-format", "json"];
   if (PERMISSION_MODE) args.push("--permission-mode", PERMISSION_MODE);
   if (budgetUsd != null) args.push("--max-budget-usd", String(budgetUsd));
   if (maxTurns != null) args.push("--max-turns", String(maxTurns));
@@ -329,6 +402,7 @@ async function execute(run: TaskRun, projectPath: string, budgetUsd: number | nu
       stdout_tail: stdoutTail,
       finished_at: now,
     });
+    await enqueueRetry(run);
     return;
   }
   const code = result.code;
@@ -346,7 +420,10 @@ async function execute(run: TaskRun, projectPath: string, budgetUsd: number | nu
     ...(parsed?.usage ? { usage: parsed.usage } : {}),
   });
 
-  if (!ok) return;
+  if (!ok) {
+    await enqueueRetry(run);
+    return;
+  }
 
   // Verify pass (Gap 2). Best-effort; any failure leaves verdict null and
   // the task is still auto-completed as if verifier didn't exist.
@@ -404,7 +481,11 @@ async function tick(): Promise<void> {
     console.error(`[agent] poll error: ${error.message}`);
     return;
   }
-  type ProjectFields = { path: string; per_run_budget_usd: number | null; per_run_max_turns: number | null };
+  type ProjectFields = {
+    path: string;
+    per_run_budget_usd: number | null;
+    per_run_max_turns: number | null;
+  };
   const rows = (data as (TaskRun & { project: ProjectFields | null })[]) ?? [];
   for (const row of rows) {
     const proj = row.project;
@@ -415,7 +496,12 @@ async function tick(): Promise<void> {
     busy = true;
     console.log(`[agent] claimed ${claimed.id} (task=${claimed.task_id}) cwd=${path}`);
     try {
-      await execute(claimed, path, proj?.per_run_budget_usd ?? null, proj?.per_run_max_turns ?? null);
+      await execute(
+        claimed,
+        path,
+        proj?.per_run_budget_usd ?? null,
+        proj?.per_run_max_turns ?? null,
+      );
       console.log(`[agent] finished ${claimed.id}`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
