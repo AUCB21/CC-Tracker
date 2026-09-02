@@ -228,6 +228,30 @@ end $$;
 drop policy if exists hitl_approvals_anon_read on public.hitl_approvals;
 create policy hitl_approvals_anon_read on public.hitl_approvals for select using (true);
 
+-- ---------- prompts (Gap 5) ----------
+-- Immutable versioned prompt/template rows. A "new version" is a new row
+-- with version = max(existing) + 1; rows are never updated in place. Left
+-- unassociated to a project when project_id is null (a global library entry).
+create table if not exists public.prompts (
+  id          uuid primary key default gen_random_uuid(),
+  project_id  uuid references public.projects(id) on delete cascade,
+  kind        text not null default 'template'
+              check (kind in ('system','template')),
+  name        text not null,
+  body        text not null,
+  version     int not null default 1,
+  created_at  timestamptz not null default now()
+);
+
+create index if not exists prompts_project_idx on public.prompts (project_id, name, version desc);
+create index if not exists prompts_created_idx on public.prompts (created_at desc);
+
+alter table public.prompts enable row level security;
+
+-- Per-project tool allow-list. Passed as `--allowedTools` on every runner
+-- invocation. Null (or an empty array) means "no CLI restriction".
+alter table public.projects add column if not exists allowed_tools text[];
+
 -- ---------- realtime: live-refresh for sessions/plans/tasks/projects ----------
 -- Same pattern as task_runs above: publish + anon-read so the browser can
 -- subscribe to writes and call router.refresh() (see components/live-refresh.tsx).

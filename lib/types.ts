@@ -5,6 +5,19 @@ export type Project = {
   repo: string | null;
   per_run_budget_usd: number | null;
   per_run_max_turns: number | null;
+  allowed_tools: string[] | null;
+  created_at: string;
+};
+
+export type PromptKind = "system" | "template";
+
+export type PromptRow = {
+  id: string;
+  project_id: string | null;
+  kind: PromptKind;
+  name: string;
+  body: string;
+  version: number;
   created_at: string;
 };
 
