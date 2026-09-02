@@ -231,7 +231,7 @@ export function AttendButton({
               onChange={(e) => setFollowupText(e.target.value)}
               placeholder="follow up…"
               rows={1}
-              className="w-[20rem] max-h-16 min-h-[1.75rem] resize-y rounded-md border border-line bg-panel2 px-2 py-1 text-[0.6875rem] leading-relaxed text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none"
+              className="w-full max-w-[20rem] min-w-0 max-h-16 min-h-[1.75rem] resize-y rounded-md border border-line bg-panel2 px-2 py-1 text-[0.6875rem] leading-relaxed text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none"
             />
             <button
               type="submit"
