@@ -115,7 +115,7 @@ export function ActivityChart({
           {vGradient(`${uid}-prompts`, c.accent)}
           {vGradient(`${uid}-tool`, c.blue)}
         </defs>
-        <CartesianGrid stroke="#221e1a" strokeOpacity={0.55} vertical={false} />
+        <CartesianGrid stroke={c.hair} strokeOpacity={0.55} vertical={false} />
         <XAxis dataKey="day" {...s.axis} interval="preserveStartEnd" minTickGap={30} />
         <YAxis {...s.axis} allowDecimals={false} />
         <Tooltip contentStyle={s.tooltip} cursor={{ fill: c.lift, opacity: 0.6 }} />
@@ -135,7 +135,7 @@ export function ToolUsageChart({ data }: { data: { tool: string; count: number }
     <ResponsiveContainer width="100%" height={Math.max(180, data.length * 28 + 20)}>
       <BarChart data={data} layout="vertical" margin={{ top: 4, right: 40, left: 8, bottom: 4 }}>
         <defs>{hGradient(`${uid}-bar`, c.accent)}</defs>
-        <CartesianGrid stroke="#221e1a" strokeOpacity={0.55} horizontal={false} />
+        <CartesianGrid stroke={c.hair} strokeOpacity={0.55} horizontal={false} />
         <XAxis type="number" {...s.axis} allowDecimals={false} />
         <YAxis type="category" dataKey="tool" {...s.axis} width={120} />
         <Tooltip contentStyle={s.tooltip} cursor={{ fill: c.lift, opacity: 0.6 }} />
@@ -163,7 +163,7 @@ export function TokenCostChart({
           {vGradient(`${uid}-out`, c.accent)}
           {vGradient(`${uid}-cache`, c.blueDim)}
         </defs>
-        <CartesianGrid stroke="#221e1a" strokeOpacity={0.55} vertical={false} />
+        <CartesianGrid stroke={c.hair} strokeOpacity={0.55} vertical={false} />
         <XAxis dataKey="day" {...s.axis} interval="preserveStartEnd" minTickGap={30} />
         <YAxis
           yAxisId="tok"
@@ -280,7 +280,7 @@ export function SimpleBarChart({
     <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
         <defs>{vGradient(`${uid}-simple`, fill)}</defs>
-        <CartesianGrid stroke="#221e1a" strokeOpacity={0.55} vertical={false} />
+        <CartesianGrid stroke={c.hair} strokeOpacity={0.55} vertical={false} />
         <XAxis
           dataKey={xKey}
           {...s.axis}
