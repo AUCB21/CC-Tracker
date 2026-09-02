@@ -100,11 +100,10 @@ body {
   border-radius: 9999px;
 }
 
-/* Focus ring: keyboard only */
+/* Focus ring: keyboard only; each element keeps its own radius */
 :focus-visible {
   outline: none;
   box-shadow: 0 0 0 0.125rem var(--color-accent-700);
-  border-radius: 0.375rem;
 }
 
 /* Skip-to-content link: visible on focus */
