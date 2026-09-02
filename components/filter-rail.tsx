@@ -66,8 +66,9 @@ export function FilterRail({
 
   const clearAll = () => router.replace(pathname, { scroll: false });
 
-  // Drawer rows are touch targets on mobile; sidebar stays dense for mouse/hover use.
-  const rowPad = variant === "drawer" ? "py-2.5" : "py-1";
+  // Drawer rows are touch targets on mobile (WCAG AAA 2.75rem min);
+  // sidebar stays dense for mouse/hover use.
+  const rowPad = variant === "drawer" ? "py-2.5 min-h-11" : "py-1";
 
   const content = (
     <>

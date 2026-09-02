@@ -26,9 +26,10 @@ export function Pager({
 }) {
   if (totalPages <= 1) return null;
 
-  const navClass =
-    "font-mono text-[0.75rem] uppercase tracking-[0.06em] text-accent hover:underline underline-offset-4";
-  const disabledClass = "font-mono text-[0.75rem] uppercase tracking-[0.06em] text-muted-2";
+  const linkBase =
+    "inline-flex min-h-11 items-center px-2 font-mono text-[0.75rem] uppercase tracking-[0.06em]";
+  const navClass = `${linkBase} text-accent hover:underline underline-offset-4`;
+  const disabledClass = `${linkBase} text-muted-2`;
 
   return (
     <nav

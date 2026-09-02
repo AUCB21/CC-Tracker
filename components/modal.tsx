@@ -104,12 +104,7 @@ export function Modal({
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="inline-flex shrink-0 items-center justify-center rounded-[0.625rem] transition-colors hover:bg-[var(--color-surface-2)] hover:text-foreground"
-          style={{
-            height: "2.25rem",
-            width: "2.25rem",
-            color: "var(--color-muted-2)",
-          }}
+          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.625rem] text-[color:var(--color-muted-2)] transition-colors hover:bg-[color:var(--color-surface-2)] hover:text-foreground"
         >
           <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden>
             <path d="M5 5L15 15M15 5L5 15" />
