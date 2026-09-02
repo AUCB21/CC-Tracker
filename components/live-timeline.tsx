@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import type { EventRow } from "@/lib/types";
 import { Empty, ErrorAlert, LiveDot } from "@/components/ui";
 import { truncate } from "@/lib/format";
@@ -29,6 +29,84 @@ function eventTone(type: string): string {
 }
 
 type Filters = { type: string[]; tool: string[] };
+
+// Memoised row: rendered inside a 500-row .map that grows on every poll.
+// Without this, one insert re-renders the whole tail.
+const TimelineRow = memo(function TimelineRow({
+  e,
+  isNew,
+}: {
+  e: EventRow;
+  isNew: boolean;
+}) {
+  return (
+    <li
+      data-new={isNew ? "1" : undefined}
+      className="flex items-start gap-3 rounded-md px-2 py-1 text-[0.75rem] transition-colors hover:bg-panel2/60"
+    >
+      <span className={`w-4 shrink-0 text-center font-mono ${eventTone(e.type)}`}>
+        {EVENT_MARK[e.type] ?? "."}
+      </span>
+      <span className="w-14 shrink-0 font-mono tabular-nums text-muted">
+        {new Date(e.created_at).toLocaleTimeString("en-GB", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="text-muted">
+          {e.type === "tool_use" ? e.tool_name : e.type}
+        </span>
+        {e.type === "prompt" &&
+          typeof (e.data as { prompt?: string })?.prompt === "string" && (
+            <span className="ml-2 text-foreground">
+              {truncate((e.data as { prompt: string }).prompt, 90)}
+            </span>
+          )}
+        {e.type === "tool_use" &&
+          typeof (e.data as { input?: string })?.input === "string" && (
+            <span className="ml-2 font-mono text-muted">
+              {truncate((e.data as { input: string }).input, 70)}
+            </span>
+          )}
+        {e.type === "subagent_dispatch" && (() => {
+          const d = e.data as { subagent_type?: string; description?: string; agent_id?: string };
+          const text = d.description
+            ? `${d.subagent_type ?? "?"} · ${d.description}`
+            : d.agent_id ?? "";
+          return text ? (
+            <span className="ml-2 text-foreground">{truncate(text, 90)}</span>
+          ) : null;
+        })()}
+        {e.type === "subagent_kill" && (() => {
+          const d = e.data as { task_id?: string; command?: string };
+          const text = [d.task_id, d.command ? truncate(d.command, 70) : undefined]
+            .filter(Boolean)
+            .join(" · ");
+          return text ? (
+            <span className="ml-2 font-mono text-muted">{text}</span>
+          ) : null;
+        })()}
+        {e.type === "subagent_poll" && (() => {
+          const d = e.data as { to?: string; summary?: string; message?: string; task_id?: string };
+          if (d.to) {
+            const detail = d.summary ?? d.message;
+            return (
+              <span className="ml-2 text-foreground">
+                {`→ ${d.to}`}
+                {detail ? ` · ${truncate(detail, 70)}` : ""}
+              </span>
+            );
+          }
+          if (d.task_id) {
+            return <span className="ml-2 font-mono text-muted">{d.task_id}</span>;
+          }
+          return null;
+        })()}
+      </span>
+    </li>
+  );
+});
 
 export function LiveTimeline({
   sessionId,
@@ -135,77 +213,9 @@ export function LiveTimeline({
           <Empty>No events match the current filters.</Empty>
         ) : (
           <ul className="deck-timeline max-h-[32rem] space-y-1 overflow-y-auto pr-1">
-            {events.map((e) => {
-              const isNew = e.id > initialMax;
-              return (
-                <li
-                  key={e.id}
-                  data-new={isNew ? "1" : undefined}
-                  className="flex items-start gap-3 rounded-md px-2 py-1 text-[0.75rem] transition-colors hover:bg-panel2/60"
-                >
-                  <span className={`w-4 shrink-0 text-center font-mono ${eventTone(e.type)}`}>
-                    {EVENT_MARK[e.type] ?? "."}
-                  </span>
-                  <span className="w-14 shrink-0 font-mono tabular-nums text-muted">
-                    {new Date(e.created_at).toLocaleTimeString("en-GB", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="text-muted">
-                      {e.type === "tool_use" ? e.tool_name : e.type}
-                    </span>
-                    {e.type === "prompt" &&
-                      typeof (e.data as { prompt?: string })?.prompt === "string" && (
-                        <span className="ml-2 text-foreground">
-                          {truncate((e.data as { prompt: string }).prompt, 90)}
-                        </span>
-                      )}
-                    {e.type === "tool_use" &&
-                      typeof (e.data as { input?: string })?.input === "string" && (
-                        <span className="ml-2 font-mono text-muted">
-                          {truncate((e.data as { input: string }).input, 70)}
-                        </span>
-                      )}
-                    {e.type === "subagent_dispatch" && (() => {
-                      const d = e.data as { subagent_type?: string; description?: string; agent_id?: string };
-                      const text = d.description
-                        ? `${d.subagent_type ?? "?"} · ${d.description}`
-                        : d.agent_id ?? "";
-                      return text ? (
-                        <span className="ml-2 text-foreground">{truncate(text, 90)}</span>
-                      ) : null;
-                    })()}
-                    {e.type === "subagent_kill" && (() => {
-                      const d = e.data as { task_id?: string; command?: string };
-                      const text = [d.task_id, d.command ? truncate(d.command, 70) : undefined]
-                        .filter(Boolean)
-                        .join(" · ");
-                      return text ? (
-                        <span className="ml-2 font-mono text-muted">{text}</span>
-                      ) : null;
-                    })()}
-                    {e.type === "subagent_poll" && (() => {
-                      const d = e.data as { to?: string; summary?: string; message?: string; task_id?: string };
-                      if (d.to) {
-                        const detail = d.summary ?? d.message;
-                        return (
-                          <span className="ml-2 text-foreground">
-                            {`→ ${d.to}`}
-                            {detail ? ` · ${truncate(detail, 70)}` : ""}
-                          </span>
-                        );
-                      }
-                      if (d.task_id) {
-                        return <span className="ml-2 font-mono text-muted">{d.task_id}</span>;
-                      }
-                      return null;
-                    })()}
-                  </span>
-                </li>
-              );
-            })}
+            {events.map((e) => (
+              <TimelineRow key={e.id} e={e} isNew={e.id > initialMax} />
+            ))}
           </ul>
         )}
       </div>

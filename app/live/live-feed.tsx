@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { TaskRun, EventRow, Project } from "@/lib/types";
@@ -75,7 +75,7 @@ function computeLineageMap(runs: TaskRun[]): Map<string, { n: number; m: number 
 
 // ---- run card -------------------------------------------------------------
 
-function RunCard({ run, lineage }: { run: TaskRun; lineage?: { n: number; m: number } | null }) {
+function RunCardImpl({ run, lineage }: { run: TaskRun; lineage?: { n: number; m: number } | null }) {
   const [expanded, setExpanded] = useState(false);
   const live = !["done", "error", "cancelled"].includes(run.status);
   const hasOutput = !!(run.stdout_tail || run.error);
@@ -157,6 +157,89 @@ function RunCard({ run, lineage }: { run: TaskRun; lineage?: { n: number; m: num
     </li>
   );
 }
+
+// Custom compare: `lineage` is recomputed as a fresh object each realtime
+// insert; shallow compare would miss the fact that its {n,m} are unchanged
+// for unaffected rows. Comparing the two numeric fields keeps sibling
+// RunCards from re-rendering when one row's status flips.
+const RunCard = memo(
+  RunCardImpl,
+  (a, b) =>
+    a.run === b.run &&
+    (a.lineage?.n ?? -1) === (b.lineage?.n ?? -1) &&
+    (a.lineage?.m ?? -1) === (b.lineage?.m ?? -1),
+);
+
+// ---- event row (memoised so a single insert doesn't rerender the tail) ----
+
+const FeedEventRow = memo(function FeedEventRow({ e }: { e: EventRow }) {
+  return (
+    <li className="flex items-start gap-2 rounded-md px-2 py-1 text-[0.75rem] hover:bg-panel2/60">
+      <span className={`w-4 shrink-0 text-center font-mono ${eventTone(e.type)}`}>
+        {EVENT_MARK[e.type] ?? "."}
+      </span>
+      <span className="w-16 shrink-0 font-mono tabular-nums text-muted text-[0.6875rem] leading-[1.6]">
+        {new Date(e.created_at).toLocaleTimeString("en-GB", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })}
+      </span>
+      <span className="w-16 shrink-0 font-mono text-[0.6875rem] text-muted leading-[1.6] truncate">
+        {e.session_id?.slice(0, 8)}
+      </span>
+      <span className="min-w-0 flex-1 break-words">
+        <span className="text-muted">{e.type === "tool_use" ? e.tool_name : e.type}</span>
+        {e.type === "prompt" &&
+          typeof (e.data as { prompt?: string })?.prompt === "string" && (
+            <span className="ml-2 text-foreground">
+              {truncate((e.data as { prompt: string }).prompt, 70)}
+            </span>
+          )}
+        {e.type === "tool_use" &&
+          typeof (e.data as { input?: string })?.input === "string" && (
+            <span className="ml-2 font-mono text-muted">
+              {truncate((e.data as { input: string }).input, 50)}
+            </span>
+          )}
+        {e.type === "subagent_dispatch" && (() => {
+          const d = e.data as { subagent_type?: string; description?: string; agent_id?: string };
+          const text = d.description
+            ? `${d.subagent_type ?? "?"} · ${d.description}`
+            : d.agent_id ?? "";
+          return text ? (
+            <span className="ml-2 text-foreground">{truncate(text, 70)}</span>
+          ) : null;
+        })()}
+        {e.type === "subagent_kill" && (() => {
+          const d = e.data as { task_id?: string; command?: string };
+          const text = [d.task_id, d.command ? truncate(d.command, 60) : undefined]
+            .filter(Boolean)
+            .join(" · ");
+          return text ? (
+            <span className="ml-2 font-mono text-muted">{text}</span>
+          ) : null;
+        })()}
+        {e.type === "subagent_poll" && (() => {
+          const d = e.data as { to?: string; summary?: string; message?: string; task_id?: string };
+          if (d.to) {
+            const detail = d.summary ?? d.message;
+            return (
+              <span className="ml-2 text-foreground">
+                {`→ ${d.to}`}
+                {detail ? ` · ${truncate(detail, 60)}` : ""}
+              </span>
+            );
+          }
+          if (d.task_id) {
+            return <span className="ml-2 font-mono text-muted">{d.task_id}</span>;
+          }
+          return null;
+        })()}
+      </span>
+    </li>
+  );
+});
 
 // ---- feed (two-column tail) -----------------------------------------------
 
@@ -397,73 +480,7 @@ export function LiveFeed({
               <ul className="space-y-0.5">
                 <div ref={eventsTopRef} />
                 {events.map((e) => (
-                  <li
-                    key={e.id}
-                    className="flex items-start gap-2 rounded-md px-2 py-1 text-[0.75rem] hover:bg-panel2/60"
-                  >
-                    <span className={`w-4 shrink-0 text-center font-mono ${eventTone(e.type)}`}>
-                      {EVENT_MARK[e.type] ?? "."}
-                    </span>
-                    <span className="w-16 shrink-0 font-mono tabular-nums text-muted text-[0.6875rem] leading-[1.6]">
-                      {new Date(e.created_at).toLocaleTimeString("en-GB", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        second: "2-digit",
-                      })}
-                    </span>
-                    <span className="w-16 shrink-0 font-mono text-[0.6875rem] text-muted leading-[1.6] truncate">
-                      {e.session_id?.slice(0, 8)}
-                    </span>
-                    <span className="min-w-0 flex-1 break-words">
-                      <span className="text-muted">{e.type === "tool_use" ? e.tool_name : e.type}</span>
-                      {e.type === "prompt" &&
-                        typeof (e.data as { prompt?: string })?.prompt === "string" && (
-                          <span className="ml-2 text-foreground">
-                            {truncate((e.data as { prompt: string }).prompt, 70)}
-                          </span>
-                        )}
-                      {e.type === "tool_use" &&
-                        typeof (e.data as { input?: string })?.input === "string" && (
-                          <span className="ml-2 font-mono text-muted">
-                            {truncate((e.data as { input: string }).input, 50)}
-                          </span>
-                        )}
-                      {e.type === "subagent_dispatch" && (() => {
-                        const d = e.data as { subagent_type?: string; description?: string; agent_id?: string };
-                        const text = d.description
-                          ? `${d.subagent_type ?? "?"} · ${d.description}`
-                          : d.agent_id ?? "";
-                        return text ? (
-                          <span className="ml-2 text-foreground">{truncate(text, 70)}</span>
-                        ) : null;
-                      })()}
-                      {e.type === "subagent_kill" && (() => {
-                        const d = e.data as { task_id?: string; command?: string };
-                        const text = [d.task_id, d.command ? truncate(d.command, 60) : undefined]
-                          .filter(Boolean)
-                          .join(" · ");
-                        return text ? (
-                          <span className="ml-2 font-mono text-muted">{text}</span>
-                        ) : null;
-                      })()}
-                      {e.type === "subagent_poll" && (() => {
-                        const d = e.data as { to?: string; summary?: string; message?: string; task_id?: string };
-                        if (d.to) {
-                          const detail = d.summary ?? d.message;
-                          return (
-                            <span className="ml-2 text-foreground">
-                              {`→ ${d.to}`}
-                              {detail ? ` · ${truncate(detail, 60)}` : ""}
-                            </span>
-                          );
-                        }
-                        if (d.task_id) {
-                          return <span className="ml-2 font-mono text-muted">{d.task_id}</span>;
-                        }
-                        return null;
-                      })()}
-                    </span>
-                  </li>
+                  <FeedEventRow key={e.id} e={e} />
                 ))}
               </ul>
             )}
