@@ -50,6 +50,8 @@ export function LiveTimeline({
   useEffect(() => {
     if (!live) return;
     let cancelled = false;
+    let delay = 3000;
+    let timer: ReturnType<typeof setTimeout>;
 
     async function fetchNew() {
       try {
@@ -71,16 +73,19 @@ export function LiveTimeline({
           });
         }
         setPollError(null);
+        delay = 3000;
       } catch (e) {
         if (!cancelled) setPollError(e instanceof Error ? e.message : "poll error");
+        delay = Math.min(delay * 2, 30000);
+      } finally {
+        if (!cancelled) timer = setTimeout(fetchNew, delay);
       }
     }
 
     fetchNew();
-    const iv = setInterval(fetchNew, 3000);
     return () => {
       cancelled = true;
-      clearInterval(iv);
+      clearTimeout(timer);
     };
   }, [live, sessionId, filters]);
 
@@ -127,7 +132,7 @@ export function LiveTimeline({
             role="alert"
             className="mb-3 rounded-lg border border-[color:var(--color-yellow)]/40 bg-[color:var(--color-yellow)]/10 px-3 py-2 text-[0.6875rem] text-[color:var(--color-yellow)]"
           >
-            {pollError}. Retrying every 3 seconds.
+            {pollError}. Retrying...
           </div>
         )}
 
