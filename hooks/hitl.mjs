@@ -18,7 +18,12 @@
 //
 // Timeout: env CC_TRACK_HITL_TIMEOUT_MS or config.hitl_timeout_ms; default 60s.
 //
-// Fail-open: any tracker/network error exits 0 so the hook never wedges Claude.
+// Fail-open by default: a tracker/network error exits 0 so the hook never
+// wedges Claude when HITL isn't intentionally set up (no config file at all).
+// Once a config.json exists with `hitl_fail_closed: true`, a tracker error
+// AFTER a matcher has actually fired denies the tool call instead -- an
+// unreachable tracker (e.g. the auto-shutdown idle server) must not silently
+// turn HITL into a no-op. Matchers that never fire are unaffected either way.
 
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -26,11 +31,14 @@ import { join } from "node:path";
 
 const STATE_DIR = join(homedir(), ".cc-track");
 
+// Distinguishes "no config file" (HITL never set up -> always fail open) from
+// "config file present" (fail-closed opt-in is meaningful).
 function loadConfig() {
   try {
-    return JSON.parse(readFileSync(join(STATE_DIR, "config.json"), "utf8"));
+    const raw = readFileSync(join(STATE_DIR, "config.json"), "utf8");
+    return { data: JSON.parse(raw), exists: true };
   } catch {
-    return {};
+    return { data: {}, exists: false };
   }
 }
 
@@ -58,6 +66,18 @@ function deny(msg) {
   process.exit(2);
 }
 
+// Called only after a matcher has fired and the tracker call itself errored
+// or timed out (as opposed to a genuine pending->timeout after real polling,
+// which already denies on its own). `failClosed` reflects config.json's
+// explicit opt-in; anything else preserves the old fail-open contract.
+function trackerUnavailable(failClosed) {
+  if (failClosed) {
+    deny("[hitl] tracker unreachable, denying to be safe (set hitl_fail_closed=false in config to allow)");
+  }
+  process.stderr.write("[hitl] tracker unreachable, allowing (fail-open)\n");
+  ok();
+}
+
 async function main() {
   let raw;
   try {
@@ -67,7 +87,8 @@ async function main() {
   try { payload = JSON.parse(raw); } catch { ok(); }
   if (!payload || typeof payload !== "object") ok();
 
-  const file = loadConfig();
+  const { data: file, exists: configExists } = loadConfig();
+  const failClosed = configExists && file.hitl_fail_closed === true;
   const url = process.env.CC_TRACK_URL ?? file.url;
   const key = process.env.CC_TRACK_KEY ?? file.key;
   const matchers = process.env.CC_TRACK_HITL_MATCHERS
@@ -99,11 +120,11 @@ async function main() {
       }),
       signal: AbortSignal.timeout(5000),
     });
-    if (!res.ok) ok();
+    if (!res.ok) trackerUnavailable(failClosed);
     const body = await res.json();
     approvalId = body?.id;
-  } catch { ok(); }
-  if (!approvalId) ok();
+  } catch { trackerUnavailable(failClosed); }
+  if (!approvalId) trackerUnavailable(failClosed);
 
   const start = Date.now();
   const pollMs = 1000;

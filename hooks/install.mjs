@@ -25,7 +25,14 @@ if (!key) {
 
 const dir = join(homedir(), ".cc-track");
 mkdirSync(dir, { recursive: true });
-writeFileSync(join(dir, "config.json"), JSON.stringify({ url, key }, null, 2));
+// hitl_fail_closed: true -- once this file exists, a matcher firing while the
+// tracker is unreachable denies the tool call instead of silently allowing
+// it (see hooks/hitl.mjs). Safer default now that the tracker auto-shuts
+// down after 60s idle.
+writeFileSync(
+  join(dir, "config.json"),
+  JSON.stringify({ url, key, hitl_fail_closed: true }, null, 2),
+);
 console.log(`✔ wrote ${join(dir, "config.json")}`);
 
 const here = dirname(fileURLToPath(import.meta.url));
