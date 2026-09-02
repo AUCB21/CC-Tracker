@@ -136,9 +136,11 @@ function RunCard({ run, lineage }: { run: TaskRun; lineage?: { n: number; m: num
             </span>
           )}
           {lineage && (
-            <Badge color="muted">
-              attempt {lineage.n}/{lineage.m}
-            </Badge>
+            <span title="attempt within retry / follow-up chain">
+              <Badge color="muted">
+                attempt {lineage.n}/{lineage.m}
+              </Badge>
+            </span>
           )}
           {hasOutput && (
             <button
