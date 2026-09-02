@@ -30,7 +30,8 @@ export function RenameSessionButton({
     setErr(null);
   }
 
-  function submit() {
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
     setErr(null);
     startTransition(async () => {
       try {
@@ -77,8 +78,8 @@ export function RenameSessionButton({
               Cancel
             </button>
             <button
-              type="button"
-              onClick={submit}
+              type="submit"
+              form="rename-session-form"
               disabled={pending || !title.trim()}
               className="rounded-md bg-accent px-4 py-2 text-[0.75rem] font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-50"
             >
@@ -87,7 +88,7 @@ export function RenameSessionButton({
           </>
         }
       >
-        <div className="space-y-4">
+        <form id="rename-session-form" onSubmit={submit} className="space-y-4">
           <div>
             <label htmlFor="session-title" className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-muted">
               Title
@@ -106,7 +107,7 @@ export function RenameSessionButton({
               {err}
             </p>
           )}
-        </div>
+        </form>
       </Modal>
     </>
   );

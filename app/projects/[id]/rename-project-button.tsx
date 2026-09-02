@@ -30,7 +30,8 @@ export function RenameProjectButton({
     setErr(null);
   }
 
-  function submit() {
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
     setErr(null);
     startTransition(async () => {
       try {
@@ -77,8 +78,8 @@ export function RenameProjectButton({
               Cancel
             </button>
             <button
-              type="button"
-              onClick={submit}
+              type="submit"
+              form="rename-project-form"
               disabled={pending || !name.trim()}
               className="rounded-md bg-accent px-4 py-2 text-[0.75rem] font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-50"
             >
@@ -87,7 +88,7 @@ export function RenameProjectButton({
           </>
         }
       >
-        <div className="space-y-4">
+        <form id="rename-project-form" onSubmit={submit} className="space-y-4">
           <div>
             <label htmlFor="project-name" className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-muted">
               Name
@@ -106,7 +107,7 @@ export function RenameProjectButton({
               {err}
             </p>
           )}
-        </div>
+        </form>
       </Modal>
     </>
   );
