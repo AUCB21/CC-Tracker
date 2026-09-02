@@ -167,6 +167,14 @@ alter table public.task_runs add column if not exists diff_summary jsonb;
 -- may not have inserted the sessions row yet. Drop the FK so writes never race.
 alter table public.task_runs drop constraint if exists task_runs_claude_session_id_fkey;
 
+-- Lineage: retry_on_fail / chain / followup create child rows that point back to
+-- their parent. `trigger` records how the row got created. No CHECK constraint;
+-- values used today are 'manual' | 'retry_on_fail' | 'chain' | 'followup'.
+alter table public.task_runs add column if not exists parent_run_id uuid
+  references public.task_runs(id) on delete set null;
+alter table public.task_runs add column if not exists trigger text;
+create index if not exists task_runs_parent_idx on public.task_runs (parent_run_id);
+
 alter table public.task_runs enable row level security;
 
 -- Realtime: let the browser (anon) subscribe to task_run updates so the Attend

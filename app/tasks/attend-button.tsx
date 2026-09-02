@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { queueAttend, pollRun, cancelRun } from "./actions";
 import { TASK_RUN_TERMINAL } from "@/lib/types";
-import type { TaskRun } from "@/lib/types";
+import type { TaskRun, RunLineage } from "@/lib/types";
 import { getBrowserSupabase } from "@/lib/supabase-browser";
 
 // Chip aesthetic to match active-filters: soft accent-tinted pill.
@@ -30,9 +30,11 @@ function verdictChipClass(verdict: NonNullable<TaskRun["verdict"]>): string {
 export function AttendButton({
   taskId,
   initialRun = null,
+  lineage = null,
 }: {
   taskId: string;
   initialRun?: TaskRun | null;
+  lineage?: RunLineage | null;
 }) {
   const [run, setRun] = useState<TaskRun | null>(initialRun);
   const [err, setErr] = useState<string | null>(null);
@@ -152,6 +154,11 @@ export function AttendButton({
               title={run.verdict_reason ?? undefined}
             >
               <span className="font-mono">{run.verdict.replace("_", " ")}</span>
+            </span>
+          )}
+          {lineage && (lineage.m > 1 || run.parent_run_id) && (
+            <span className={CHIP_TINY} title="attempt within retry / follow-up chain">
+              <span className="font-mono">attempt {lineage.n}/{lineage.m}</span>
             </span>
           )}
           {live && (

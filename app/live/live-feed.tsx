@@ -46,9 +46,44 @@ const EVENT_MARK: Record<string, string> = {
   subagent_dispatch: "→", subagent_kill: "×", subagent_poll: "?",
 };
 
+// Depth of `id` within the parent chain restricted to runs currently loaded
+// in the feed. When the row's parent_run_id isn't loaded (older than the tail)
+// we still know depth ≥ 2, so the chip won't lie about being a retry.
+function computeLineageMap(runs: TaskRun[]): Map<string, { n: number; m: number }> {
+  const byId = new Map<string, TaskRun>();
+  for (const r of runs) byId.set(r.id, r);
+  const cache = new Map<string, number>();
+  const depth = (id: string): number => {
+    const cached = cache.get(id);
+    if (cached != null) return cached;
+    const r = byId.get(id);
+    if (!r) return 1;
+    let d = 1;
+    if (r.parent_run_id) {
+      d = byId.has(r.parent_run_id) ? depth(r.parent_run_id) + 1 : 2;
+    }
+    cache.set(id, d);
+    return d;
+  };
+  const maxByTask = new Map<string, number>();
+  for (const r of runs) {
+    if (!r.task_id) continue;
+    const d = depth(r.id);
+    maxByTask.set(r.task_id, Math.max(maxByTask.get(r.task_id) ?? 0, d));
+  }
+  const out = new Map<string, { n: number; m: number }>();
+  for (const r of runs) {
+    if (!r.task_id) continue;
+    const n = depth(r.id);
+    const m = maxByTask.get(r.task_id) ?? n;
+    if (n > 1 || m > 1 || r.parent_run_id) out.set(r.id, { n, m });
+  }
+  return out;
+}
+
 // ---- run card -------------------------------------------------------------
 
-function RunCard({ run }: { run: TaskRun }) {
+function RunCard({ run, lineage }: { run: TaskRun; lineage?: { n: number; m: number } | null }) {
   const [expanded, setExpanded] = useState(false);
   const live = !["done", "error", "cancelled"].includes(run.status);
   const hasOutput = !!(run.stdout_tail || run.error);
@@ -99,6 +134,11 @@ function RunCard({ run }: { run: TaskRun }) {
                 {run.verdict.replace("_", " ")}
               </Badge>
             </span>
+          )}
+          {lineage && (
+            <Badge color="muted">
+              attempt {lineage.n}/{lineage.m}
+            </Badge>
           )}
           {hasOutput && (
             <button
@@ -203,6 +243,10 @@ export function LiveFeed({
     }
     return runs.filter((r) => !r.task_id || latestByTask.get(r.task_id) === r);
   }, [runs]);
+
+  // Depth chip source; recomputed as runs stream in so realtime rows pick up
+  // their attempt number as soon as the parent is visible in the tail.
+  const lineageMap = useMemo(() => computeLineageMap(runs), [runs]);
 
   // Distinct session ids present in the current event tail, most recent first,
   // for the session filter dropdown. If the current filter isn't in the list
@@ -341,7 +385,9 @@ export function LiveFeed({
             ) : (
               <ul className="space-y-3">
                 <div ref={runsTopRef} />
-                {displayRuns.map((r) => <RunCard key={r.id} run={r} />)}
+                {displayRuns.map((r) => (
+                  <RunCard key={r.id} run={r} lineage={lineageMap.get(r.id) ?? null} />
+                ))}
               </ul>
             )}
           </div>

@@ -7,7 +7,8 @@ import { Pager } from "@/components/pager";
 import { getTasksPage, getTaskFacetRows, getProjects, getPlans } from "@/lib/queries";
 import { fmtDate, toList } from "@/lib/format";
 import { getSupabase } from "@/lib/supabase";
-import { getLatestRunsByTask } from "@/lib/attend";
+import { getLatestRunsByTask, getLineageStatsByTask } from "@/lib/attend";
+import type { RunLineage } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -40,9 +41,13 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
   ]);
 
   const db = getSupabase();
-  const latestRuns = db && tasksPage
-    ? await getLatestRunsByTask(db, tasksPage.rows.map((t) => t.id))
-    : new Map();
+  const taskIds = tasksPage ? tasksPage.rows.map((t) => t.id) : [];
+  const [latestRuns, lineageStats] = db && tasksPage
+    ? await Promise.all([
+        getLatestRunsByTask(db, taskIds),
+        getLineageStatsByTask(db, taskIds),
+      ])
+    : [new Map(), new Map<string, RunLineage>()];
 
   if (!tasksPage) {
     return (
@@ -135,7 +140,11 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
                         <span className="font-mono">{fmtDate(t.created_at)}</span>
                       </p>
                     </div>
-                    <AttendButton taskId={t.id} initialRun={latestRuns.get(t.id) ?? null} />
+                    <AttendButton
+                      taskId={t.id}
+                      initialRun={latestRuns.get(t.id) ?? null}
+                      lineage={lineageStats.get(t.id) ?? null}
+                    />
                   </li>
                 ))}
               </ul>
