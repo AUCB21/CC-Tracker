@@ -19,6 +19,7 @@
 
 # local agent settings (machine-specific paths)
 .claude/settings.local.json
+.claude/worktrees/*
 .playwright-mcp/
 
 # production
