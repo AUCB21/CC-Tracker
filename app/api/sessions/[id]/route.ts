@@ -52,7 +52,8 @@ export async function DELETE(
   if (!db) return Response.json({ error: "Supabase is not configured" }, { status: 503 });
 
   const { id } = await params;
-  const { error } = await db.from("sessions").delete().eq("id", id);
+  const { data, error } = await db.from("sessions").delete().eq("id", id).select("id").maybeSingle();
   if (error) return Response.json({ error: error.message }, { status: 500 });
+  if (!data) return Response.json({ error: "session not found" }, { status: 404 });
   return new Response(null, { status: 204 });
 }
