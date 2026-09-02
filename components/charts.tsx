@@ -62,7 +62,7 @@ function useDeckStyles(c: DeckColors) {
       backgroundColor: c.bone,
       border: `0.0625rem solid ${c.hairStrong}`,
       borderRadius: "0.625rem",
-      fontSize: 12,
+      fontSize: "0.75rem",
       color: c.ink,
       padding: "0.5rem 0.75rem",
       boxShadow: "0 1rem 2rem -0.75rem rgb(0 0 0 / 0.8)",
@@ -70,7 +70,7 @@ function useDeckStyles(c: DeckColors) {
     } as const,
     axis: {
       stroke: c.hair,
-      fontSize: 10,
+      fontSize: "0.625rem",
       tick: { fill: c.dust3, fontFamily: "var(--font-mono)" },
       tickLine: false,
       axisLine: false,
@@ -109,6 +109,7 @@ export function ActivityChart({
   const s = useDeckStyles(c);
   const uid = useId().replace(/:/g, "");
   return (
+    <div role="img" aria-label="Daily activity: prompts, tool calls, and sessions over time.">
     <ResponsiveContainer width="100%" height={280}>
       <ComposedChart data={data} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
         <defs>
@@ -124,6 +125,7 @@ export function ActivityChart({
         <Line dataKey="sessions" name="Sessions" stroke={c.green} strokeWidth={1.75} dot={false} strokeLinecap="round" strokeLinejoin="round" />
       </ComposedChart>
     </ResponsiveContainer>
+    </div>
   );
 }
 
@@ -132,6 +134,7 @@ export function ToolUsageChart({ data }: { data: { tool: string; count: number }
   const s = useDeckStyles(c);
   const uid = useId().replace(/:/g, "");
   return (
+    <div role="img" aria-label="Tool usage: call count per tool, horizontal bars.">
     <ResponsiveContainer width="100%" height={Math.max(180, data.length * 28 + 20)}>
       <BarChart data={data} layout="vertical" margin={{ top: 4, right: 40, left: 8, bottom: 4 }}>
         <defs>{hGradient(`${uid}-bar`, c.accent)}</defs>
@@ -140,10 +143,11 @@ export function ToolUsageChart({ data }: { data: { tool: string; count: number }
         <YAxis type="category" dataKey="tool" {...s.axis} width={120} />
         <Tooltip contentStyle={s.tooltip} cursor={{ fill: c.lift, opacity: 0.6 }} />
         <Bar dataKey="count" name="Calls" fill={`url(#${uid}-bar)`} radius={[0, 4, 4, 0]} barSize={14}>
-          <Label position="right" offset={8} fill={c.dust} fontSize={10} style={{ fontFamily: "var(--font-mono)" }} />
+          <Label position="right" offset={8} fill={c.dust} fontSize="0.625rem" style={{ fontFamily: "var(--font-mono)" }} />
         </Bar>
       </BarChart>
     </ResponsiveContainer>
+    </div>
   );
 }
 
@@ -156,6 +160,7 @@ export function TokenCostChart({
   const s = useDeckStyles(c);
   const uid = useId().replace(/:/g, "");
   return (
+    <div role="img" aria-label="Token usage and cost by day: stacked input/output/cache tokens with a cost line.">
     <ResponsiveContainer width="100%" height={280}>
       <ComposedChart data={data} margin={{ top: 8, right: 0, left: -14, bottom: 0 }}>
         <defs>
@@ -188,15 +193,16 @@ export function TokenCostChart({
         <Line yAxisId="usd" dataKey="cost" name="Cost (USD)" stroke={c.yellow} strokeWidth={1.75} dot={false} strokeLinecap="round" strokeLinejoin="round" />
       </ComposedChart>
     </ResponsiveContainer>
+    </div>
   );
 }
 
-export function DonutChart({ data }: { data: { name: string; value: number }[] }) {
+export function DonutChart({ data, ariaLabel }: { data: { name: string; value: number }[]; ariaLabel?: string }) {
   const c = DEFAULT_COLORS;
   const s = useDeckStyles(c);
   const total = data.reduce((a, d) => a + d.value, 0);
   return (
-    <div className="relative">
+    <div className="relative" role="img" aria-label={ariaLabel ?? "Donut chart with segment legend below."}>
       <ResponsiveContainer width="100%" height={220}>
         <PieChart>
           <Pie
@@ -265,18 +271,21 @@ export function SimpleBarChart({
   yKey,
   color,
   height = 220,
+  ariaLabel,
 }: {
   data: Record<string, string | number>[];
   xKey: string;
   yKey: string;
   color?: string;
   height?: number;
+  ariaLabel?: string;
 }) {
   const c = DEFAULT_COLORS;
   const s = useDeckStyles(c);
   const uid = useId().replace(/:/g, "");
   const fill = color ?? c.accent;
   return (
+    <div role="img" aria-label={ariaLabel ?? `Bar chart: ${yKey} by ${xKey}.`}>
     <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
         <defs>{vGradient(`${uid}-simple`, fill)}</defs>
@@ -291,5 +300,6 @@ export function SimpleBarChart({
         <Bar dataKey={yKey} fill={`url(#${uid}-simple)`} radius={[4, 4, 0, 0]} barSize={28} />
       </BarChart>
     </ResponsiveContainer>
+    </div>
   );
 }
