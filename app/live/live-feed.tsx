@@ -12,7 +12,8 @@ type BadgeColor = "green" | "yellow" | "blue" | "accent" | "muted" | "red";
 
 function runStatusBadge(status: TaskRun["status"]): BadgeColor {
   if (status === "done") return "green";
-  if (status === "error" || status === "cancelled") return "yellow";
+  if (status === "error") return "red";
+  if (status === "cancelled") return "muted";
   return "accent";
 }
 
@@ -148,7 +149,7 @@ function RunCard({ run, lineage }: { run: TaskRun; lineage?: { n: number; m: num
       {expanded && hasOutput && (
         <pre className="mt-3 max-h-48 overflow-y-auto whitespace-pre-wrap break-words rounded-md border border-line bg-panel p-2 text-[0.6875rem] leading-relaxed text-muted">
           {run.error && (
-            <span className="text-[color:var(--color-yellow)]">{run.error}{"\n"}</span>
+            <span className="text-[color:var(--color-red)]">{run.error}{"\n"}</span>
           )}
           {run.stdout_tail?.slice(-2000)}
         </pre>

@@ -94,7 +94,7 @@ export function PromptEditor({
         <button className={CHIP_TINY} onClick={() => setOpen(false)} disabled={pending}>
           Cancel
         </button>
-        {err && <span className="text-[0.6875rem] text-[color:var(--color-yellow)]">{err}</span>}
+        {err && <span className="text-[0.6875rem] text-[color:var(--color-red)]">{err}</span>}
       </div>
     </div>
   );

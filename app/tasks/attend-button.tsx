@@ -16,7 +16,8 @@ const CHIP_TINY =
 
 function statusChipClass(status: TaskRun["status"]): string {
   if (status === "done") return `${CHIP_BASE} border-[color:var(--color-green)]/40 bg-[color:var(--color-green)]/10 text-[color:var(--color-green)]`;
-  if (status === "error" || status === "cancelled") return `${CHIP_BASE} border-[color:var(--color-yellow)]/40 bg-[color:var(--color-yellow)]/10 text-[color:var(--color-yellow)]`;
+  if (status === "error") return `${CHIP_BASE} border-[color:var(--color-red)]/40 bg-[color:var(--color-red)]/10 text-[color:var(--color-red)]`;
+  if (status === "cancelled") return `${CHIP_BASE} border-line text-muted`;
   // queued / claimed / running: pulsing accent
   return `${CHIP_BASE} border-accent/40 bg-accent/10 text-foreground`;
 }
@@ -127,7 +128,7 @@ export function AttendButton({
 
   if (err) {
     return (
-      <span className="flex items-center gap-2 text-[0.6875rem] text-[color:var(--color-yellow)]">
+      <span className="flex items-center gap-2 text-[0.6875rem] text-[color:var(--color-red)]">
         {err}
         <button onClick={() => setErr(null)} className={CHIP_TINY}>
           retry
@@ -206,7 +207,7 @@ export function AttendButton({
               </span>
             )}
             {run.error && (
-              <span className="text-[color:var(--color-yellow)]">{run.error}{"\n"}</span>
+              <span className="text-[color:var(--color-red)]">{run.error}{"\n"}</span>
             )}
             {run.stdout_tail?.slice(-800) ?? ""}
           </pre>
@@ -264,7 +265,7 @@ export function AttendButton({
           </div>
         )}
         {followupErr && (
-          <span className="text-[0.6875rem] text-[color:var(--color-yellow)]">{followupErr}</span>
+          <span className="text-[0.6875rem] text-[color:var(--color-red)]">{followupErr}</span>
         )}
       </div>
     );
