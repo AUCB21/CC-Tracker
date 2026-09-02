@@ -49,6 +49,24 @@
   --color-blue-deep:    oklch(0.55 0.09 250);
   --color-red:          oklch(0.66 0.16 25);
 
+  /* Signal role-tints: -soft = pill bg (~14%), -ring = pill border (~45-50%),
+     -glow = status-dot / emphasis shadow. Referenced by inline styles
+     that can't consume Tailwind alpha utilities. */
+  --color-green-soft:   oklch(0.74 0.10 142 / 0.14);
+  --color-green-ring:   oklch(0.74 0.10 142 / 0.45);
+  --color-green-glow:   oklch(0.74 0.10 142 / 0.8);
+  --color-yellow-soft:  oklch(0.79 0.11 85 / 0.14);
+  --color-yellow-ring:  oklch(0.79 0.11 85 / 0.45);
+  --color-yellow-glow:  oklch(0.79 0.11 85 / 0.6);
+  --color-blue-soft:    oklch(0.72 0.10 248 / 0.14);
+  --color-blue-ring:    oklch(0.72 0.10 248 / 0.45);
+  --color-red-soft:     oklch(0.66 0.16 25 / 0.14);
+  --color-red-ring:     oklch(0.66 0.16 25 / 0.5);
+  --color-accent-glow:  oklch(0.66 0.108 44 / 0.65);
+
+  /* Ink for text/glyphs placed on an accent-500 (terracotta) surface. */
+  --color-on-accent:    #14100d;
+
   /* Chart dim variants (kept from the pre-refresh charts.tsx palette) */
   --color-accent-dim:  var(--color-accent-800);
   --color-blue-dim:    var(--color-blue-deep);
@@ -66,6 +84,12 @@
   --duration-base:  150ms;
   --duration-slow:  320ms;
   --duration-enter: 520ms;
+}
+
+/* Reused gradients / shells. Kept outside @theme (Tailwind's utility
+   layer targets color/spacing/font tokens, not arbitrary gradients). */
+:root {
+  --gradient-topbar: linear-gradient(180deg, #17141200 0%, #0e0d0c 100%), #131110;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
