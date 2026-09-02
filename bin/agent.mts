@@ -247,7 +247,9 @@ async function taskContext(taskId: string | null): Promise<{ content: string; de
 }
 
 // Triggers whose child rows resume the parent's claude session via --resume.
-const RESUME_TRIGGERS = new Set(["chain", "followup", "retry_on_fail"]);
+// "chain" was speculative -- nothing ever inserts trigger: "chain" -- so it's
+// not included here.
+const RESUME_TRIGGERS = new Set(["followup", "retry_on_fail"]);
 const MAX_RETRIES_PER_LINEAGE = 2;
 
 async function resumeSessionFor(run: TaskRun): Promise<string | null> {
@@ -341,7 +343,7 @@ async function execute(
     void flushIfDue();
   };
 
-  // Chain / followup / retry_on_fail inherit the parent's claude session when
+  // Followup / retry_on_fail inherit the parent's claude session when
   // it's known, so context (files read, prior reasoning) is preserved. Falls
   // back to a fresh session when the parent finished before we captured its
   // session id.
