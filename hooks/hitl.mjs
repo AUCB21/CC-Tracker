@@ -51,13 +51,14 @@ function matches(matcher, toolName, toolInput) {
   const substr = colon === -1 ? "" : matcher.slice(colon + 1).trim();
   if (name !== toolName) return false;
   if (!substr) return true;
-  const walk = (v) => {
-    if (typeof v === "string") return v.includes(substr);
-    if (Array.isArray(v)) return v.some(walk);
-    if (v && typeof v === "object") return Object.values(v).some(walk);
-    return false;
-  };
-  return walk(toolInput);
+  // Substring-search the JSON serialization rather than walking string
+  // leaves by hand -- same "does this needle appear anywhere in tool_input"
+  // contract. `?? null` guards tool_input === undefined, where
+  // JSON.stringify returns undefined (not a string) rather than "null".
+  // Note: a needle containing `"` or `\` could false-negative against
+  // JSON's escaping of those characters; fine as long as matcher substrings
+  // stay plain text (paths, flags, command fragments).
+  return JSON.stringify(toolInput ?? null).includes(substr);
 }
 
 function ok() { process.exit(0); }
