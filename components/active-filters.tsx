@@ -80,10 +80,11 @@ export function ActiveFilterBar({ facets }: { facets: Facet[] }) {
           <button
             type="button"
             onClick={() => removeFilter(chip.key, chip.value)}
-            className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full text-[0.6875rem] font-bold leading-none text-muted transition-all hover:bg-accent/30 hover:text-foreground active:scale-90"
+            aria-label={`Remove ${chip.label}`}
             title={`Remove ${chip.label}`}
+            className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full text-[0.6875rem] font-bold leading-none text-muted transition-all hover:bg-accent/30 hover:text-foreground active:scale-90"
           >
-            ✕
+            <span aria-hidden>✕</span>
           </button>
         </span>
       ))}

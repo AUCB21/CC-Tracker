@@ -286,6 +286,7 @@ export function AttendButton({
           onClick={() => setShowOverride((v) => !v)}
           className={CHIP_TINY}
           aria-expanded={showOverride}
+          aria-label={showOverride ? "Hide extra instructions" : "Add extra instructions"}
           title="Extra instructions for this run"
         >
           {showOverride ? "×" : "+"}

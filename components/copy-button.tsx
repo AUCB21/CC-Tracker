@@ -32,6 +32,7 @@ export function CopyButton({
       type="button"
       onClick={handleCopy}
       title={copied ? "Copied to clipboard!" : `Copy ${label ?? text}`}
+      aria-label={copied ? "Copied to clipboard" : `Copy ${label ?? text}`}
       className={`inline-flex items-center justify-center gap-1.5 rounded-md border px-2.5 py-1 text-[0.6875rem] font-medium leading-none transition-all hover:bg-[var(--color-surface-2)] focus-visible:ring-1 focus-visible:ring-accent active:scale-[0.96] ${className}`}
       style={{
         borderColor: copied ? "var(--color-green)" : "var(--color-line-strong)",
