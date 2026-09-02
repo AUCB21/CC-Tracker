@@ -24,7 +24,8 @@
   --color-muted:      #a29a8f;
   --color-muted-2:    #8e867c;
   --color-muted-3:    #8a8177;
-  --color-muted-4:    #827970;
+  /* muted-4 lifted to hit >=4.5:1 on surface-2 (was #827970 ~4.2:1) */
+  --color-muted-4:    #948a7f;
 
   /* Accent ramp - terracotta, hue 46 */
   --color-accent-50:  oklch(0.96 0.020 46);
