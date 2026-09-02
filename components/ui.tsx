@@ -205,6 +205,25 @@ export function Stat({
   );
 }
 
+/** Red-tinted role=alert block. Per DESIGN.md's Alarm-Is-Terminal Rule,
+ *  Red belongs on failures; use this for surfaced errors, not Ember. */
+export function ErrorAlert({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      role="alert"
+      className={`rounded-md border border-[color:var(--color-red)]/40 bg-[color:var(--color-red)]/10 px-3 py-2 text-[0.75rem] text-[color:var(--color-red)] ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
+
 export function Badge({
   color,
   children,
