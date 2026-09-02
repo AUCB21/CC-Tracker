@@ -67,12 +67,14 @@ export function PromptEditor({
           onChange={(e) => setName(e.target.value)}
           disabled={!!seed}
           placeholder="name (e.g. attend.template)"
+          aria-label="Prompt name"
           className="min-w-[16rem] flex-1 rounded-md border border-line bg-panel px-3 py-1.5 text-[0.75rem] text-foreground focus:border-accent focus:outline-none disabled:opacity-60"
         />
         <select
           value={kind}
           onChange={(e) => setKind(e.target.value as PromptKind)}
           disabled={!!seed}
+          aria-label="Prompt kind"
           className="rounded-md border border-line bg-panel px-3 py-1.5 text-[0.75rem] text-foreground focus:border-accent focus:outline-none disabled:opacity-60"
         >
           <option value="template">template</option>
