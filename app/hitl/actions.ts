@@ -4,16 +4,18 @@ import { getSupabase } from "@/lib/supabase";
 
 export async function decideApproval(
   id: string,
-  decision: "approved" | "denied",
+  decision: "approved" | "denied" | "timeout",
 ): Promise<{ ok: true } | { error: string }> {
   const db = getSupabase();
   if (!db) return { error: "Supabase not configured" };
+  // "timeout" comes from the hitl.mjs hook giving up on polling, not a human
+  // click -- no decided_by in that case.
   const { data, error } = await db
     .from("hitl_approvals")
     .update({
       status: decision,
       decided_at: new Date().toISOString(),
-      decided_by: "ui",
+      ...(decision === "timeout" ? {} : { decided_by: "ui" }),
     })
     .eq("id", id)
     .eq("status", "pending")

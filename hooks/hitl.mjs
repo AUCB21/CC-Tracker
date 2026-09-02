@@ -145,10 +145,9 @@ async function main() {
 
   // Best-effort: mark the row timed-out so the UI stops showing it as pending.
   try {
-    await fetch(new URL(`/api/hitl/approvals/${approvalId}`, url).toString(), {
-      method: "PATCH",
-      headers: { "content-type": "application/json", "x-api-key": key },
-      body: JSON.stringify({ status: "timeout" }),
+    await fetch(new URL(`/api/hitl/approvals/${approvalId}/timeout`, url).toString(), {
+      method: "POST",
+      headers: { "x-api-key": key },
       signal: AbortSignal.timeout(2000),
     });
   } catch { /* ignore */ }
