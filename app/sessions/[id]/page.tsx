@@ -3,6 +3,8 @@ import { SetupBanner, Card, Stat, Badge, PageHeader, Empty, Progress, TaskLine, 
 import { ToolUsageChart } from "@/components/charts";
 import { FilterRail, type Facet } from "@/components/filter-rail";
 import { LiveTimeline } from "@/components/live-timeline";
+import { RenameSessionButton } from "./rename-session-button";
+import { DeleteSessionButton } from "./delete-session-button";
 import { getSession, getProject, getPlans, getTasks, getEvents } from "@/lib/queries";
 import { fmtNum, fmtCost, fmtDate, fmtDuration, fmtRelative, truncate, toList } from "@/lib/format";
 import { isLive } from "@/lib/types";
@@ -113,11 +115,15 @@ export default async function SessionDetailPage({
         title={truncate(session.title, 90)}
         sub={`${session.id.slice(0, 8)}  ${fmtDate(session.started_at)}  duration ${fmtDuration(session.started_at, session.ended_at)}${session.model ? `  ${session.model}` : ""}`}
         right={
-          isLive(session) ? (
-            <Badge color="green" glyph={<LiveDot className="h-1.5 w-1.5" />}>live</Badge>
-          ) : (
-            <Badge color="muted">last activity {fmtRelative(session.last_activity_at)}</Badge>
-          )
+          <div className="flex items-center gap-2">
+            {isLive(session) ? (
+              <Badge color="green" glyph={<LiveDot className="h-1.5 w-1.5" />}>live</Badge>
+            ) : (
+              <Badge color="muted">last activity {fmtRelative(session.last_activity_at)}</Badge>
+            )}
+            <RenameSessionButton sessionId={session.id} initialTitle={session.title ?? session.id.slice(0, 8)} />
+            <DeleteSessionButton sessionId={session.id} sessionName={session.title || session.id.slice(0, 8)} />
+          </div>
         }
       />
 

@@ -5,6 +5,7 @@ import { ActiveFilterBar } from "@/components/active-filters";
 import { CopyButton } from "@/components/copy-button";
 import { Pager } from "@/components/pager";
 import { RenamePlanButton } from "./rename-plan-button";
+import { DeletePlanButton } from "./delete-plan-button";
 import { TaskRowEditable } from "@/components/task-row-editable";
 import { getPlansPage, getPlanFacetRows, getTasks, getProjects, getPlans } from "@/lib/queries";
 import { fmtDate, truncate, toList } from "@/lib/format";
@@ -139,6 +140,7 @@ export default async function PlansPage({ searchParams }: { searchParams: Search
                             initialTitle={p.title}
                             initialDescription={p.description}
                           />
+                          <DeletePlanButton planId={p.id} planTitle={p.title} />
                         </div>
                       </div>
                       {p.description && <p className="mt-3 text-sm text-muted">{p.description}</p>}

@@ -4,12 +4,19 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "./ui";
 import { TaskEditModal } from "./task-edit-modal";
+import { DeleteConfirmModal } from "./delete-confirm-modal";
 import type { Task } from "@/lib/types";
 
 const PENCIL = (
   <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
     <path d="M4 16h4l8-8-4-4-8 8v4z" />
     <path d="M12 4l4 4" />
+  </svg>
+);
+
+const TRASH = (
+  <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <path d="M4 6h12M8 6V4.5A1.5 1.5 0 0 1 9.5 3h1A1.5 1.5 0 0 1 12 4.5V6M6 6l.6 9.2A1.5 1.5 0 0 0 8.1 16.6h3.8a1.5 1.5 0 0 0 1.5-1.4L14 6" />
   </svg>
 );
 
@@ -46,8 +53,18 @@ export function TaskRowEditable({
 }) {
   const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   function refresh() {
+    router.refresh();
+  }
+
+  async function handleDelete() {
+    const res = await fetch(`/api/tasks/${task.id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error ?? "Failed to delete task");
+    }
     router.refresh();
   }
 
@@ -62,7 +79,25 @@ export function TaskRowEditable({
       >
         {PENCIL}
       </button>
+      <button
+        type="button"
+        onClick={() => setDeleteOpen(true)}
+        aria-label="Delete task"
+        title="Delete"
+        className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-panel2 hover:text-[color:var(--color-red)]"
+      >
+        {TRASH}
+      </button>
       <TaskEditModal open={editOpen} onClose={() => setEditOpen(false)} task={task} plans={plans} onSaved={refresh} />
+      <DeleteConfirmModal
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        title="Delete task"
+        objectLabel="task"
+        objectName={task.content.slice(0, 60)}
+        requireTypeName={false}
+        onConfirm={handleDelete}
+      />
     </span>
   );
 
