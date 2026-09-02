@@ -159,7 +159,7 @@ function RunCard({ run, lineage }: { run: TaskRun; lineage?: { n: number; m: num
 
 // ---- feed (two-column tail) -----------------------------------------------
 
-const LANE_H = "h-[calc(100vh-16rem)]";
+const LANE_H = "h-[calc(100dvh-16rem)]";
 
 function LaneHeader({
   label,
