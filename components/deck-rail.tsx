@@ -76,7 +76,7 @@ function NavRow({
           "color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard)",
       }}
     >
-      {/* Left accent bar - always mounted; opacity 1 active, 0 idle, 0.45 hover */}
+      {/* Left accent bar - always mounted; opacity 1 active, 0 idle. */}
       <span
         aria-hidden
         className="absolute left-0"
@@ -91,10 +91,6 @@ function NavRow({
           transition: "opacity var(--duration-fast) var(--ease-standard)",
         }}
       />
-      <style jsx>{`
-        a:hover span[aria-hidden]:first-of-type { opacity: ${active ? 1 : 0.45}; }
-        a:hover { background: var(--color-surface-2); color: #f3efe8; }
-      `}</style>
       <span
         aria-hidden
         className="inline-flex"
