@@ -4,7 +4,7 @@ import { SetupBanner, Card, Stat, Badge, PageHeader, Empty, Progress, TaskLine, 
 import { getProject, getSessions, getPlans, getTasks } from "@/lib/queries";
 import { fmtNum, fmtCost, fmtDate, fmtRelative, truncate } from "@/lib/format";
 import { isLive } from "@/lib/types";
-import { RenameProjectButton } from "./rename-project-button";
+import { RenameEntityButton } from "@/components/rename-entity-button";
 import { DeleteProjectButton } from "./delete-project-button";
 
 export const dynamic = "force-dynamic";
@@ -48,7 +48,13 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
             {project.repo && (
               <Badge color="blue">{project.repo.split("/").pop()?.replace(/\.git$/, "")}</Badge>
             )}
-            <RenameProjectButton projectId={project.id} initialName={project.name} />
+            <RenameEntityButton
+              apiPath={`/api/projects/${project.id}`}
+              field="name"
+              currentValue={project.name}
+              entityLabel="project"
+              placeholder="Project name"
+            />
             <DeleteProjectButton projectId={project.id} projectName={project.name} />
           </div>
         }

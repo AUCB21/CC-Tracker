@@ -3,7 +3,7 @@ import { SetupBanner, Card, Stat, Badge, PageHeader, Empty, Progress, TaskLine, 
 import { ToolUsageChart } from "@/components/charts";
 import { FilterRail, type Facet } from "@/components/filter-rail";
 import { LiveTimeline } from "@/components/live-timeline";
-import { RenameSessionButton } from "./rename-session-button";
+import { RenameEntityButton } from "@/components/rename-entity-button";
 import { DeleteSessionButton } from "./delete-session-button";
 import { getSession, getProject, getPlans, getTasks, getEvents, getEventCount } from "@/lib/queries";
 import { fmtNum, fmtCost, fmtDate, fmtDuration, fmtRelative, truncate, toList } from "@/lib/format";
@@ -122,7 +122,13 @@ export default async function SessionDetailPage({
             ) : (
               <Badge color="muted">last activity {fmtRelative(session.last_activity_at)}</Badge>
             )}
-            <RenameSessionButton sessionId={session.id} initialTitle={session.title ?? session.id.slice(0, 8)} />
+            <RenameEntityButton
+              apiPath={`/api/sessions/${session.id}`}
+              field="title"
+              currentValue={session.title ?? session.id.slice(0, 8)}
+              entityLabel="session"
+              placeholder="Session title"
+            />
             <DeleteSessionButton
               sessionId={session.id}
               sessionName={session.title || session.id.slice(0, 8)}

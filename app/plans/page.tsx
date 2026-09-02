@@ -4,7 +4,7 @@ import { FilterRail, type Facet } from "@/components/filter-rail";
 import { ActiveFilterBar } from "@/components/active-filters";
 import { CopyButton } from "@/components/copy-button";
 import { Pager } from "@/components/pager";
-import { RenamePlanButton } from "./rename-plan-button";
+import { RenameEntityButton } from "@/components/rename-entity-button";
 import { DeletePlanButton } from "./delete-plan-button";
 import { TaskRowEditable } from "@/components/task-row-editable";
 import { getPlansPage, getPlanFacetRows, getTasks, getProjects, getPlans } from "@/lib/queries";
@@ -135,10 +135,16 @@ export default async function PlansPage({ searchParams }: { searchParams: Search
                               session
                             </Link>
                           )}
-                          <RenamePlanButton
-                            planId={p.id}
-                            initialTitle={p.title}
-                            initialDescription={p.description}
+                          <RenameEntityButton
+                            apiPath={`/api/plans/${p.id}`}
+                            field="title"
+                            currentValue={p.title}
+                            entityLabel="plan"
+                            placeholder="Refactor auth"
+                            descriptionField={{
+                              initialValue: p.description,
+                              placeholder: "Optional context...",
+                            }}
                           />
                           <DeletePlanButton planId={p.id} planTitle={p.title} />
                         </div>
