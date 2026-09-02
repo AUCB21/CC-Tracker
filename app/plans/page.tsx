@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { SetupBanner, Card, Badge, PageHeader, Empty, Progress, TaskLine } from "@/components/ui";
+import { SetupBanner, Card, Badge, PageHeader, Empty, Progress } from "@/components/ui";
 import { FilterRail, type Facet } from "@/components/filter-rail";
 import { ActiveFilterBar } from "@/components/active-filters";
 import { CopyButton } from "@/components/copy-button";
 import { Pager } from "@/components/pager";
 import { RenamePlanButton } from "./rename-plan-button";
-import { getPlansPage, getPlanFacetRows, getTasks, getProjects } from "@/lib/queries";
+import { TaskRowEditable } from "@/components/task-row-editable";
+import { getPlansPage, getPlanFacetRows, getTasks, getProjects, getPlans } from "@/lib/queries";
 import { fmtDate, truncate, toList } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -26,7 +27,7 @@ export default async function PlansPage({ searchParams }: { searchParams: Search
   const statusFilter = toList(params.status);
   const page = Math.max(1, Number(Array.isArray(params.page) ? params.page[0] : params.page) || 1);
 
-  const [plansPage, projects, allTasks, facetRows] = await Promise.all([
+  const [plansPage, projects, allTasks, facetRows, planOptions] = await Promise.all([
     getPlansPage({
       projectIds: projectFilter.length > 0 ? projectFilter : undefined,
       statuses: statusFilter.length > 0 ? statusFilter : undefined,
@@ -36,7 +37,9 @@ export default async function PlansPage({ searchParams }: { searchParams: Search
     getProjects(),
     getTasks(),
     getPlanFacetRows(),
+    getPlans({ columns: "id,title" }),
   ]);
+  const planPickerOptions = (planOptions ?? []) as { id: string; title: string }[];
 
   if (!plansPage) {
     return (
@@ -143,7 +146,7 @@ export default async function PlansPage({ searchParams }: { searchParams: Search
                         <>
                           <ul className="mt-4 space-y-1.5">
                             {pTasks.map((t) => (
-                              <TaskLine key={t.id} status={t.status} content={t.content} />
+                              <TaskRowEditable key={t.id} task={t} plans={planPickerOptions} />
                             ))}
                           </ul>
                           <div className="mt-4">
@@ -170,16 +173,7 @@ export default async function PlansPage({ searchParams }: { searchParams: Search
               </p>
               <ul className="space-y-2">
                 {unassigned.map((t) => (
-                  <li key={t.id} className="flex items-center gap-3">
-                    <Badge
-                      color={t.status === "completed" ? "green" : t.status === "in_progress" ? "yellow" : "muted"}
-                    >
-                      {t.status.replace("_", " ")}
-                    </Badge>
-                    <span className={`text-sm ${t.status === "completed" ? "text-muted line-through" : "text-foreground"}`}>
-                      {t.content}
-                    </span>
-                  </li>
+                  <TaskRowEditable key={t.id} task={t} plans={planPickerOptions} />
                 ))}
               </ul>
             </Card>

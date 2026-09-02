@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { SetupBanner, Badge, PageHeader, Empty } from "@/components/ui";
+import { SetupBanner, PageHeader, Empty } from "@/components/ui";
 import { AttendButton } from "./attend-button";
 import { FilterRail, type Facet } from "@/components/filter-rail";
 import { ActiveFilterBar } from "@/components/active-filters";
 import { Pager } from "@/components/pager";
+import { TaskRowEditable } from "@/components/task-row-editable";
 import { getTasksPage, getTaskFacetRows, getProjects, getPlans } from "@/lib/queries";
 import { fmtDate, toList } from "@/lib/format";
 import { getSupabase } from "@/lib/supabase";
@@ -57,6 +58,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const projectMap = new Map((projects ?? []).map((p) => [p.id, p.name]));
   const planMap = new Map((plans ?? []).map((p) => [p.id, p.title]));
+  const planPickerOptions = (plans ?? []).map((p) => ({ id: p.id, title: p.title }));
 
   const facets: Facet[] = [
     {
@@ -98,45 +100,30 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
             <div className="rounded-2xl border border-line bg-panel">
               <ul className="divide-y divide-line">
                 {tasks.map((t) => (
-                  <li
+                  <TaskRowEditable
                     key={t.id}
-                    className="flex flex-wrap items-start gap-3 px-4 py-4 sm:flex-nowrap sm:gap-4 sm:px-5"
-                  >
-                    <Badge
-                      color={t.status === "completed" ? "green" : t.status === "in_progress" ? "yellow" : "muted"}
-                    >
-                      {t.status.replace("_", " ")}
-                    </Badge>
-                    <div className="min-w-0 flex-1 basis-full sm:basis-auto">
-                      <p
-                        className={
-                          t.status === "completed"
-                            ? "max-w-[75ch] break-words text-sm font-medium text-muted line-through decoration-line"
-                            : "max-w-[75ch] break-words text-sm font-medium text-foreground"
-                        }
-                      >
-                        {t.content}
-                      </p>
-                      {t.description && (
+                    task={t}
+                    plans={planPickerOptions}
+                    variant="row"
+                    projectSlot={
+                      t.project_id && (
+                        <Link
+                          href={`/projects/${t.project_id}`}
+                          className="max-w-full truncate hover:text-accent hover:underline underline-offset-4"
+                        >
+                          {projectMap.get(t.project_id) ?? "project"}
+                        </Link>
+                      )
+                    }
+                    planLabel={t.plan_id ? planMap.get(t.plan_id) : undefined}
+                    dateSlot={<span className="font-mono">{fmtDate(t.created_at)}</span>}
+                    descriptionSlot={
+                      t.description && (
                         <p className="mt-1 max-w-[75ch] break-words text-[0.75rem] text-muted">{t.description}</p>
-                      )}
-                      <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.6875rem] text-muted">
-                        {t.project_id && (
-                          <Link
-                            href={`/projects/${t.project_id}`}
-                            className="max-w-full truncate hover:text-accent hover:underline underline-offset-4"
-                          >
-                            {projectMap.get(t.project_id) ?? "project"}
-                          </Link>
-                        )}
-                        {t.plan_id && planMap.get(t.plan_id) && (
-                          <span className="max-w-full truncate">{planMap.get(t.plan_id)}</span>
-                        )}
-                        <span className="font-mono">{fmtDate(t.created_at)}</span>
-                      </p>
-                    </div>
-                    <AttendButton taskId={t.id} initialRun={latestRuns.get(t.id) ?? null} />
-                  </li>
+                      )
+                    }
+                    right={<AttendButton taskId={t.id} initialRun={latestRuns.get(t.id) ?? null} />}
+                  />
                 ))}
               </ul>
             </div>
