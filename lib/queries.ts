@@ -167,15 +167,28 @@ export async function getEventsSince(
 ): Promise<EventRow[] | null> {
   const db = getSupabase();
   if (!db) return null;
-  let q = db
-    .from("events")
-    .select("id,type,tool_name,created_at")
-    .gte("created_at", sinceIso)
-    .order("created_at", { ascending: true })
-    .limit(limit);
-  if (types?.length) q = q.in("type", types);
-  const { data } = await q;
-  return (data as EventRow[]) ?? [];
+  // Supabase caps responses at 1000 rows and silently ignores larger .limit()
+  // values, so paginate via keyset (id > lastId) until we've drained the range
+  // or reached the caller's cap. events.id is a bigserial → monotonic increasing.
+  const PAGE = 1000;
+  const all: EventRow[] = [];
+  let lastId = 0;
+  while (all.length < limit) {
+    let q = db
+      .from("events")
+      .select("id,type,tool_name,created_at")
+      .gte("created_at", sinceIso)
+      .gt("id", lastId)
+      .order("id", { ascending: true })
+      .limit(Math.min(PAGE, limit - all.length));
+    if (types?.length) q = q.in("type", types);
+    const { data } = await q;
+    if (!data || data.length === 0) break;
+    all.push(...(data as EventRow[]));
+    if (data.length < PAGE) break;
+    lastId = Number((data[data.length - 1] as EventRow).id);
+  }
+  return all;
 }
 
 /**
