@@ -8,7 +8,7 @@ export async function decideApproval(
 ): Promise<{ ok: true } | { error: string }> {
   const db = getSupabase();
   if (!db) return { error: "Supabase not configured" };
-  const { error } = await db
+  const { data, error } = await db
     .from("hitl_approvals")
     .update({
       status: decision,
@@ -16,8 +16,14 @@ export async function decideApproval(
       decided_by: "ui",
     })
     .eq("id", id)
-    .eq("status", "pending");
+    .eq("status", "pending")
+    .select("id")
+    .maybeSingle();
   if (error) return { error: error.message };
+  // `.eq("status", "pending")` matches zero rows once the row is already
+  // terminal (approved/denied/timeout) -- without this check the UPDATE
+  // "succeeds" with nothing changed and the caller wrongly reports success.
+  if (!data) return { error: "already decided" };
   revalidatePath("/hitl");
   return { ok: true };
 }
