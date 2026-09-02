@@ -5,7 +5,7 @@ import { FilterRail, type Facet } from "@/components/filter-rail";
 import { LiveTimeline } from "@/components/live-timeline";
 import { RenameSessionButton } from "./rename-session-button";
 import { DeleteSessionButton } from "./delete-session-button";
-import { getSession, getProject, getPlans, getTasks, getEvents } from "@/lib/queries";
+import { getSession, getProject, getPlans, getTasks, getEvents, getEventCount } from "@/lib/queries";
 import { fmtNum, fmtCost, fmtDate, fmtDuration, fmtRelative, truncate, toList } from "@/lib/format";
 import { isLive } from "@/lib/types";
 
@@ -36,7 +36,7 @@ export default async function SessionDetailPage({
   const typeFilter = toList(sp.type);
   const toolFilter = toList(sp.tool);
 
-  const [session, plans, tasks, events, allEvents] = await Promise.all([
+  const [session, plans, tasks, events, allEvents, eventCount] = await Promise.all([
     getSession(id),
     getPlans({ sessionId: id }),
     getTasks({ sessionId: id }),
@@ -47,6 +47,7 @@ export default async function SessionDetailPage({
     // Unfiltered slice for the facet option counts (limited so we do not pull
     // the entire event log on huge sessions):
     getEvents(id, { limit: 500 }),
+    getEventCount(id),
   ]);
 
   if (!session) {
@@ -122,7 +123,13 @@ export default async function SessionDetailPage({
               <Badge color="muted">last activity {fmtRelative(session.last_activity_at)}</Badge>
             )}
             <RenameSessionButton sessionId={session.id} initialTitle={session.title ?? session.id.slice(0, 8)} />
-            <DeleteSessionButton sessionId={session.id} sessionName={session.title || session.id.slice(0, 8)} />
+            <DeleteSessionButton
+              sessionId={session.id}
+              sessionName={session.title || session.id.slice(0, 8)}
+              planCount={(plans ?? []).length}
+              taskCount={(tasks ?? []).length}
+              eventCount={eventCount}
+            />
           </div>
         }
       />

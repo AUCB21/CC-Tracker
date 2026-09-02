@@ -10,7 +10,19 @@ const TRASH = (
   </svg>
 );
 
-export function DeleteSessionButton({ sessionId, sessionName }: { sessionId: string; sessionName: string }) {
+export function DeleteSessionButton({
+  sessionId,
+  sessionName,
+  planCount,
+  taskCount,
+  eventCount,
+}: {
+  sessionId: string;
+  sessionName: string;
+  planCount: number;
+  taskCount: number;
+  eventCount: number;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
@@ -43,7 +55,16 @@ export function DeleteSessionButton({ sessionId, sessionName }: { sessionId: str
         objectName={sessionName}
         requireTypeName
         onConfirm={handleDelete}
-      />
+      >
+        <p className="text-sm text-muted">
+          This will also permanently delete {planCount} {plural(planCount, "plan")}, {taskCount}{" "}
+          {plural(taskCount, "task")}, and {eventCount} {plural(eventCount, "event")}.
+        </p>
+      </DeleteConfirmModal>
     </>
   );
+}
+
+function plural(n: number, word: string): string {
+  return n === 1 ? word : `${word}s`;
 }

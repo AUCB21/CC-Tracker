@@ -149,6 +149,17 @@ export async function getEvents(
   return (data as EventRow[]) ?? [];
 }
 
+/** Exact total event count for a session (independent of any type/tool filter). */
+export async function getEventCount(sessionId: string): Promise<number> {
+  const db = getSupabase();
+  if (!db) return 0;
+  const { count } = await db
+    .from("events")
+    .select("id", { count: "exact", head: true })
+    .eq("session_id", sessionId);
+  return count ?? 0;
+}
+
 export async function getEventsSince(
   sinceIso: string,
   types?: string[],

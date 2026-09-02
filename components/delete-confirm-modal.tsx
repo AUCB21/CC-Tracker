@@ -17,6 +17,7 @@ export function DeleteConfirmModal({
   objectName,
   requireTypeName = false,
   onConfirm,
+  children,
 }: {
   open: boolean;
   onClose: () => void;
@@ -25,6 +26,8 @@ export function DeleteConfirmModal({
   objectName: string;
   requireTypeName?: boolean;
   onConfirm: () => Promise<void> | void;
+  /** Extra notice rendered under the primary confirm text, e.g. cascade scope. */
+  children?: React.ReactNode;
 }) {
   const [typed, setTyped] = useState("");
   const [pending, setPending] = useState(false);
@@ -85,6 +88,7 @@ export function DeleteConfirmModal({
           This will permanently delete the {objectLabel}{" "}
           <span className="font-semibold text-foreground">{objectName}</span>. This can&apos;t be undone.
         </p>
+        {children}
         {requireTypeName && (
           <div>
             <label
