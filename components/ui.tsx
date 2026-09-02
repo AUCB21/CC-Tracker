@@ -510,6 +510,21 @@ export const RailIcons = {
   ),
 } as const;
 
+/** Small inline-action glyphs (edit/delete chips) shared across entity rows. */
+export const ActionIcons = {
+  pencil: (
+    <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M4 16h4l8-8-4-4-8 8v4z" />
+      <path d="M12 4l4 4" />
+    </svg>
+  ),
+  trash: (
+    <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M4 6h12M8 6V4.5A1.5 1.5 0 0 1 9.5 3h1A1.5 1.5 0 0 1 12 4.5V6M6 6l.6 9.2A1.5 1.5 0 0 0 8.1 16.6h3.8a1.5 1.5 0 0 0 1.5-1.4L14 6" />
+    </svg>
+  ),
+} as const;
+
 export function LiveDot({ className = "" }: { className?: string }) {
   return (
     <span className={`relative inline-flex h-2 w-2 ${className}`} aria-hidden>

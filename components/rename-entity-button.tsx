@@ -3,13 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Modal } from "@/components/modal";
-
-const PENCIL = (
-  <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-    <path d="M4 16h4l8-8-4-4-8 8v4z" />
-    <path d="M12 4l4 4" />
-  </svg>
-);
+import { ActionIcons } from "@/components/ui";
 
 /**
  * Generic rename affordance: pencil chip + Modal with a single-line form
@@ -94,7 +88,7 @@ export function RenameEntityButton({
         title="Rename"
         className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-panel2 hover:text-accent"
       >
-        {PENCIL}
+        {ActionIcons.pencil}
       </button>
       <Modal
         open={open}

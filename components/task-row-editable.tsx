@@ -2,17 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Badge } from "./ui";
+import { Badge, ActionIcons } from "./ui";
 import { TaskEditModal } from "./task-edit-modal";
 import { DeleteEntityButton } from "./delete-entity-button";
 import type { Task } from "@/lib/types";
-
-const PENCIL = (
-  <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-    <path d="M4 16h4l8-8-4-4-8 8v4z" />
-    <path d="M12 4l4 4" />
-  </svg>
-);
 
 const GLYPH_SPEC: Record<Task["status"], { glyph: string; tone: string }> = {
   completed: { glyph: "✓", tone: "text-[color:var(--color-green)]" },
@@ -61,7 +54,7 @@ export function TaskRowEditable({
         title="Edit"
         className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-panel2 hover:text-accent"
       >
-        {PENCIL}
+        {ActionIcons.pencil}
       </button>
       <DeleteEntityButton apiPath={`/api/tasks/${task.id}`} entityLabel="task" entityName={task.content.slice(0, 60)} />
       <TaskEditModal open={editOpen} onClose={() => setEditOpen(false)} task={task} plans={plans} onSaved={refresh} />
