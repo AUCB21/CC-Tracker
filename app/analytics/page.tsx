@@ -5,7 +5,7 @@ import {
   TokenCostChart,
   DonutChart,
   SimpleBarChart,
-} from "@/components/charts";
+} from "@/components/charts-lazy";
 import { getStats, getAllSessions, getTasks, getRecentActivityEventsCached } from "@/lib/queries";
 import {
   buildActivitySeries,

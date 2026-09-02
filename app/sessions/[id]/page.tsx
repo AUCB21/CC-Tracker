@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { SetupBanner, Card, Stat, Badge, PageHeader, Empty, Progress, TaskLine, LiveDot } from "@/components/ui";
-import { ToolUsageChart } from "@/components/charts";
+import { ToolUsageChart } from "@/components/charts-lazy";
 import { FilterRail, type Facet } from "@/components/filter-rail";
 import { LiveTimeline } from "@/components/live-timeline";
 import { RenameEntityButton } from "@/components/rename-entity-button";

@@ -10,7 +10,7 @@ import {
   LiveDot,
   CELL_STYLE,
 } from "@/components/ui";
-import { ActivityChart } from "@/components/charts";
+import { ActivityChart } from "@/components/charts-lazy";
 import {
   getStats,
   getRecentSessions,
