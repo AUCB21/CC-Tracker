@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Badge, ActionIcons } from "./ui";
+import { Badge, ActionIcons, IconButton } from "./ui";
 import { TaskEditModal } from "./task-edit-modal";
 import { DeleteEntityButton } from "./delete-entity-button";
 import type { Task } from "@/lib/types";
@@ -47,15 +47,13 @@ export function TaskRowEditable({
 
   const chips = (
     <span className="inline-flex shrink-0 items-center gap-1">
-      <button
-        type="button"
+      <IconButton
         onClick={() => setEditOpen(true)}
-        aria-label="Edit task"
+        ariaLabel="Edit task"
         title="Edit"
-        className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-panel2 hover:text-accent"
       >
         {ActionIcons.pencil}
-      </button>
+      </IconButton>
       <DeleteEntityButton apiPath={`/api/tasks/${task.id}`} entityLabel="task" entityName={task.content.slice(0, 60)} />
       <TaskEditModal open={editOpen} onClose={() => setEditOpen(false)} task={task} plans={plans} onSaved={refresh} />
     </span>

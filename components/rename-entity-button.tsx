@@ -3,8 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Modal } from "@/components/modal";
-import { ErrorAlert } from "@/components/ui";
-import { ActionIcons } from "@/components/ui";
+import { ActionIcons, ErrorAlert, IconButton } from "@/components/ui";
 
 /**
  * Generic rename affordance: pencil chip + Modal with a single-line form
@@ -82,15 +81,13 @@ export function RenameEntityButton({
 
   return (
     <>
-      <button
-        type="button"
+      <IconButton
         onClick={() => setOpen(true)}
-        aria-label={`Rename ${entityLabel}`}
+        ariaLabel={`Rename ${entityLabel}`}
         title="Rename"
-        className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-panel2 hover:text-accent"
       >
         {ActionIcons.pencil}
-      </button>
+      </IconButton>
       <Modal
         open={open}
         onClose={close}

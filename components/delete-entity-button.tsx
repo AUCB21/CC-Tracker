@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { DeleteConfirmModal } from "@/components/delete-confirm-modal";
-import { ActionIcons } from "@/components/ui";
+import { ActionIcons, IconButton } from "@/components/ui";
 
 /**
  * Generic delete affordance: trash chip + DeleteConfirmModal, backed by a
@@ -43,15 +43,14 @@ export function DeleteEntityButton({
 
   return (
     <>
-      <button
-        type="button"
+      <IconButton
         onClick={() => setOpen(true)}
-        aria-label={`Delete ${entityLabel}`}
+        ariaLabel={`Delete ${entityLabel}`}
         title="Delete"
-        className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-panel2 hover:text-[color:var(--color-red)]"
+        intent="danger"
       >
         {ActionIcons.trash}
-      </button>
+      </IconButton>
       <DeleteConfirmModal
         open={open}
         onClose={() => setOpen(false)}
