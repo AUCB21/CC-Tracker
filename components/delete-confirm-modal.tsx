@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Modal } from "./modal";
+import { ErrorAlert } from "@/components/ui";
 
 /**
  * Shared destructive-action confirmation, built on the Modal primitive.
@@ -108,14 +109,7 @@ export function DeleteConfirmModal({
             />
           </div>
         )}
-        {err && (
-          <p
-            role="alert"
-            className="rounded-md border border-[color:var(--color-yellow)]/40 bg-[color:var(--color-yellow)]/10 px-3 py-2 text-[0.75rem] text-[color:var(--color-yellow)]"
-          >
-            {err}
-          </p>
-        )}
+        {err && <ErrorAlert>{err}</ErrorAlert>}
       </div>
     </Modal>
   );

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Modal } from "@/components/modal";
+import { ErrorAlert } from "@/components/ui";
 import { ActionIcons } from "@/components/ui";
 
 /**
@@ -144,11 +145,7 @@ export function RenameEntityButton({
               />
             </div>
           )}
-          {err && (
-            <p role="alert" className="rounded-md border border-[color:var(--color-yellow)]/40 bg-[color:var(--color-yellow)]/10 px-3 py-2 text-[0.75rem] text-[color:var(--color-yellow)]">
-              {err}
-            </p>
-          )}
+          {err && <ErrorAlert>{err}</ErrorAlert>}
         </form>
       </Modal>
     </>

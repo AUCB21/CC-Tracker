@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { EventRow } from "@/lib/types";
-import { Empty, LiveDot } from "@/components/ui";
+import { Empty, ErrorAlert, LiveDot } from "@/components/ui";
 import { truncate } from "@/lib/format";
 
 const EVENT_MARK: Record<string, string> = {
@@ -128,12 +128,7 @@ export function LiveTimeline({
 
       <div className="px-5 pb-5">
         {pollError && live && (
-          <div
-            role="alert"
-            className="mb-3 rounded-lg border border-[color:var(--color-yellow)]/40 bg-[color:var(--color-yellow)]/10 px-3 py-2 text-[0.6875rem] text-[color:var(--color-yellow)]"
-          >
-            {pollError}. Retrying...
-          </div>
+          <ErrorAlert className="mb-3 text-[0.6875rem]">{pollError}. Retrying...</ErrorAlert>
         )}
 
         {events.length === 0 ? (
