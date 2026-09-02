@@ -59,20 +59,20 @@ const DEFAULT_COLORS: DeckColors = {
 function useDeckStyles(c: DeckColors) {
   return {
     tooltip: {
-      backgroundColor: c.bone,
+      backgroundColor: c.lift,
       border: `0.0625rem solid ${c.hairStrong}`,
       borderRadius: "0.625rem",
       fontSize: "0.75rem",
-      color: c.ink,
+      color: c.bone,
       padding: "0.5rem 0.75rem",
       boxShadow: "0 1rem 2rem -0.75rem rgb(0 0 0 / 0.8)",
       fontFamily: "var(--font-mono)",
     } as const,
     // Recharts sets each tooltip item's `color` to `payload.color || #000`
-    // inline, which paints black-on-bone (worst on Pie tooltips whose
-    // payload.color is undefined). Force the ink text explicitly.
-    tooltipItem: { color: c.ink } as const,
-    tooltipLabel: { color: c.ink, fontWeight: 600 } as const,
+    // inline (worst on Pie tooltips whose payload.color is undefined), which
+    // would paint black-on-lift. Force bone explicitly on item + label.
+    tooltipItem: { color: c.bone } as const,
+    tooltipLabel: { color: c.bone, fontWeight: 600 } as const,
     axis: {
       stroke: c.hair,
       fontSize: "0.625rem",
