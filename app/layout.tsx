@@ -113,7 +113,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <Link
               href="/setup"
               aria-label={connected ? "Database connected" : "Database not configured"}
-              className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-line"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-line"
             >
               <span aria-hidden className="relative inline-flex h-2 w-2">
                 <span
