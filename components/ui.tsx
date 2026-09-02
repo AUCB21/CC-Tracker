@@ -93,11 +93,11 @@ export function Stat({
 }) {
   const emphasisStyle: React.CSSProperties = emphasis
     ? {
-        border: "0.0625rem solid oklch(0.44 0.082 40 / 0.75)",
+        border: "0.0625rem solid color-mix(in oklab, var(--color-accent-800) 75%, transparent)",
         background:
-          "linear-gradient(180deg, oklch(0.32 0.062 38 / 0.5), var(--color-surface-1b) 70%)",
+          "linear-gradient(180deg, color-mix(in oklab, var(--color-accent-900) 50%, transparent), var(--color-surface-1b) 70%)",
         boxShadow:
-          "inset 0 0.0625rem 0 oklch(0.86 0.058 46 / 0.14), 0 0.0625rem 0.125rem rgb(0 0 0 / 0.5)",
+          "inset 0 0.0625rem 0 color-mix(in oklab, var(--color-accent-200) 14%, transparent), 0 0.0625rem 0.125rem rgb(0 0 0 / 0.5)",
       }
     : {};
   const content = (
@@ -154,7 +154,7 @@ export function Stat({
           fontSize: "clamp(1.875rem, 2.3vw, 2.875rem)",
           color: emphasis ? "var(--color-accent-200)" : "var(--color-foreground)",
           textShadow: emphasis
-            ? "0 0 1.75rem oklch(0.66 0.108 44 / 0.65)"
+            ? "0 0 1.75rem var(--color-accent-glow)"
             : undefined,
           fontVariantNumeric: "tabular-nums",
         }}
@@ -235,23 +235,23 @@ export function Badge({
 }) {
   const map: Record<typeof color, { border: string; bg: string; text: string }> = {
     green: {
-      border: "oklch(0.74 0.10 142 / 0.45)",
-      bg: "oklch(0.74 0.10 142 / 0.14)",
+      border: "var(--color-green-ring)",
+      bg: "var(--color-green-soft)",
       text: "var(--color-green-bright)",
     },
     yellow: {
-      border: "oklch(0.79 0.11 85 / 0.45)",
-      bg: "oklch(0.79 0.11 85 / 0.14)",
+      border: "var(--color-yellow-ring)",
+      bg: "var(--color-yellow-soft)",
       text: "var(--color-yellow)",
     },
     blue: {
-      border: "oklch(0.72 0.10 248 / 0.45)",
-      bg: "oklch(0.72 0.10 248 / 0.14)",
+      border: "var(--color-blue-ring)",
+      bg: "var(--color-blue-soft)",
       text: "var(--color-blue)",
     },
     accent: {
       border: "var(--color-accent-700)",
-      bg: "oklch(0.44 0.082 40 / 0.2)",
+      bg: "color-mix(in oklab, var(--color-accent-800) 20%, transparent)",
       text: "var(--color-accent-200)",
     },
     muted: {
@@ -260,8 +260,8 @@ export function Badge({
       text: "var(--color-muted-2)",
     },
     red: {
-      border: "oklch(0.66 0.16 25 / 0.5)",
-      bg: "oklch(0.66 0.16 25 / 0.14)",
+      border: "var(--color-red-ring)",
+      bg: "var(--color-red-soft)",
       text: "var(--color-red)",
     },
   };
@@ -308,7 +308,7 @@ export function Progress({
             transformOrigin: "left",
             background:
               "linear-gradient(90deg, var(--color-green), var(--color-green-bright))",
-            boxShadow: "0 0 0.5rem oklch(0.74 0.10 142 / 0.5)",
+            boxShadow: "0 0 0.5rem color-mix(in oklab, var(--color-green) 50%, transparent)",
             animation: `fillbar 900ms var(--ease-standard) ${delayMs}ms both`,
           }}
         />
@@ -335,7 +335,7 @@ export function SetupBanner() {
         borderRadius: "1.125rem",
         border: "0.0625rem solid var(--color-accent-700)",
         background:
-          "linear-gradient(180deg, oklch(0.32 0.062 38 / 0.4), transparent)",
+          "linear-gradient(180deg, color-mix(in oklab, var(--color-accent-900) 40%, transparent), transparent)",
       }}
     >
       <span
@@ -569,7 +569,7 @@ export function LiveDot({ className = "" }: { className?: string }) {
         className="absolute inset-0 rounded-full"
         style={{
           background: "var(--color-green)",
-          boxShadow: "0 0 0.5rem oklch(0.74 0.10 142 / 0.8)",
+          boxShadow: "0 0 0.5rem var(--color-green-glow)",
         }}
       />
     </span>

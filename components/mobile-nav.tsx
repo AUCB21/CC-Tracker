@@ -68,7 +68,7 @@ export function MobileNav() {
           padding: 0,
           border: 0,
           borderLeft: "0.0625rem solid var(--color-line)",
-          background: "linear-gradient(180deg, #17141200 0%, #0e0d0c 100%), #131110",
+          background: "var(--gradient-topbar)",
           color: "var(--color-text)",
           overflowY: "auto",
         }}

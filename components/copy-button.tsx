@@ -35,7 +35,7 @@ export function CopyButton({
       className={`inline-flex items-center justify-center gap-1.5 rounded-md border px-2.5 py-1 text-[0.6875rem] font-medium leading-none transition-all hover:bg-[var(--color-surface-2)] focus-visible:ring-1 focus-visible:ring-accent active:scale-[0.96] ${className}`}
       style={{
         borderColor: copied ? "var(--color-green)" : "var(--color-line-strong)",
-        background: copied ? "oklch(0.74 0.10 142 / 0.14)" : "var(--color-surface-1a)",
+        background: copied ? "var(--color-green-soft)" : "var(--color-surface-1a)",
         color: copied ? "var(--color-green-bright)" : "var(--color-muted-2)",
       }}
     >

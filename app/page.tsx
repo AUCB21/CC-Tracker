@@ -81,8 +81,8 @@ export default async function OverviewPage() {
             <span
               className="inline-flex items-center gap-2 rounded-full px-3.5 py-2"
               style={{
-                border: "0.0625rem solid oklch(0.44 0.082 40 / 0.6)",
-                background: "linear-gradient(180deg, oklch(0.32 0.062 38 / 0.35), transparent)",
+                border: "0.0625rem solid color-mix(in oklab, var(--color-accent-800) 60%, transparent)",
+                background: "linear-gradient(180deg, color-mix(in oklab, var(--color-accent-900) 35%, transparent), transparent)",
                 fontSize: "0.8125rem",
                 color: "var(--color-muted-2)",
               }}

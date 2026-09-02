@@ -29,7 +29,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         style={{
           fontFamily: "var(--font-sans)",
           background:
-            "radial-gradient(120% 80% at 78% -10%, oklch(0.32 0.062 38 / 0.28), transparent 62%), var(--color-background)",
+            "radial-gradient(120% 80% at 78% -10%, color-mix(in oklab, var(--color-accent-900) 28%, transparent), transparent 62%), var(--color-background)",
         }}
       >
         <a href="#main" className="skip-link">Skip to content</a>
@@ -37,8 +37,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <aside
             className="fixed inset-y-0 left-0 z-20 hidden w-[clamp(12rem,14vw,15rem)] flex-col border-r border-line md:flex"
             style={{
-              background:
-                "linear-gradient(180deg, #17141200 0%, #0e0d0c 100%), #131110",
+              background: "var(--gradient-topbar)",
               boxShadow: "inset -0.0625rem 0 0 rgb(255 255 255 / 0.02)",
             }}
           >
@@ -49,12 +48,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                   className="inline-flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-[0.625rem] font-display font-bold"
                   style={{
                     background:
-                      "linear-gradient(160deg, var(--color-accent-300), oklch(0.62 0.108 44))",
-                    color: "#14100d",
+                      "linear-gradient(160deg, var(--color-accent-300), var(--color-accent-600))",
+                    color: "var(--color-on-accent)",
                     fontSize: "0.9375rem",
                     letterSpacing: "-0.03em",
                     boxShadow:
-                      "inset 0 0.0625rem 0 rgb(255 255 255 / 0.35), 0 0.375rem 1rem -0.375rem oklch(0.56 0.1 42 / 0.7)",
+                      "inset 0 0.0625rem 0 rgb(255 255 255 / 0.35), 0 0.375rem 1rem -0.375rem color-mix(in oklab, var(--color-accent-700) 70%, transparent)",
                   }}
                 >
                   CC
@@ -100,8 +99,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                 className="inline-flex h-7 w-7 items-center justify-center rounded-[0.5rem] font-display font-bold"
                 style={{
                   background:
-                    "linear-gradient(160deg, var(--color-accent-300), oklch(0.62 0.108 44))",
-                  color: "#14100d",
+                    "linear-gradient(160deg, var(--color-accent-300), var(--color-accent-600))",
+                  color: "var(--color-on-accent)",
                   fontSize: "0.8125rem",
                   letterSpacing: "-0.03em",
                 }}
@@ -128,8 +127,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                   style={{
                     background: connected ? "var(--color-green)" : "var(--color-yellow)",
                     boxShadow: connected
-                      ? "0 0 0.5rem oklch(0.74 0.10 142 / 0.8)"
-                      : "0 0 0.5rem oklch(0.79 0.11 85 / 0.6)",
+                      ? "0 0 0.5rem var(--color-green-glow)"
+                      : "0 0 0.5rem var(--color-yellow-glow)",
                   }}
                 />
               </span>

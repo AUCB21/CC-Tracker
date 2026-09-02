@@ -84,8 +84,8 @@ export function DeckShelf({ connected }: { connected: boolean }) {
             style={{
               background: connected ? "var(--color-green)" : "var(--color-yellow)",
               boxShadow: connected
-                ? "0 0 0.5rem oklch(0.74 0.10 142 / 0.8)"
-                : "0 0 0.5rem oklch(0.79 0.11 85 / 0.6)",
+                ? "0 0 0.5rem var(--color-green-glow)"
+                : "0 0 0.5rem var(--color-yellow-glow)",
             }}
           />
         </span>
