@@ -508,6 +508,17 @@ export const RailIcons = {
       <path d="M10 3v2M10 15v2M3 10h2M15 10h2M5 5l1.5 1.5M13.5 13.5L15 15M5 15l1.5-1.5M13.5 6.5L15 5" strokeLinecap="round" />
     </svg>
   ),
+  hitl: (
+    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M10 3.5l5.5 2v4c0 3.8-2.3 6.2-5.5 7-3.2-.8-5.5-3.2-5.5-7v-4z" />
+      <path d="M7.3 10l2 2 3.4-3.8" />
+    </svg>
+  ),
+  prompts: (
+    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" aria-hidden>
+      <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h9A1.5 1.5 0 0 1 16 5.5v6A1.5 1.5 0 0 1 14.5 13H9l-3.5 3v-3H5.5A1.5 1.5 0 0 1 4 11.5z" />
+    </svg>
+  ),
 } as const;
 
 export function LiveDot({ className = "" }: { className?: string }) {
