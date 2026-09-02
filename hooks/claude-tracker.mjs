@@ -93,9 +93,14 @@ async function main() {
   const cfg = loadConfig();
   if (!cfg.url || !cfg.key) return;
 
-  // Keep the tracker alive on every hook fire, and boot it on SessionStart if down.
+  // Keep the tracker alive on every hook fire; re-probe on SessionStart and each
+  // UserPromptSubmit so a server that died mid-session comes back before the
+  // next prompt turns into tool calls.
   touchHeartbeat();
-  if (payload.hook_event_name === "SessionStart") {
+  if (
+    payload.hook_event_name === "SessionStart" ||
+    payload.hook_event_name === "UserPromptSubmit"
+  ) {
     await ensureTrackerUp(cfg);
   }
 
