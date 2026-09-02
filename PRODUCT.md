@@ -18,11 +18,12 @@ The retrospective view is the reason the product exists. Live-session monitoring
 
 ## Positioning
 
-Zero-friction telemetry tied to Claude Code's native hook events (SessionStart, UserPromptSubmit, PostToolUse, Stop, SessionEnd). The developer pastes one hook block into `~/.claude/settings.json` once and every future session is captured automatically. No tags, no manual logging, no third-party observability agent. The `cctrack` CLI plus a paste-in `CLAUDE.md.snippet` lets Claude itself keep the plan/task bookkeeping updated.
+Zero-friction telemetry tied to Claude Code's native hook events (SessionStart, UserPromptSubmit, PostToolUse, Stop, SessionEnd). The developer pastes one hook block into `~/.claude/settings.json` once and every future session is captured automatically. No tags, no manual logging, no third-party observability agent. The `cctrack` CLI plus a paste-in `CLAUDE.md.snippet` lets Claude itself keep the plan/task bookkeeping updated, and the project-level `cc-track/CLAUDE.md` makes the rule binding: any agent working inside the repo must use `TaskCreate` / `TodoWrite` / `ExitPlanMode` for multi-step work so `/tasks` and `/plans` stay in sync with what agents actually do.
 
 ## Operating Context
 
 - Runs at `http://localhost:3000` on the developer's own machine.
+- Tracker lifecycle is bound to Claude Code activity: the hook script probes `/api/health` on `SessionStart` and every `UserPromptSubmit` and boots the server via `start-hidden.vbs` (fire-and-forget, no console window) when it is down. Every hook fire also touches `.heartbeat` client-side, so `start.sh`'s idle timer (`IDLE_TIMEOUT`, default 60s) resets while any session is active and the server shuts down on its own once Claude goes quiet. The developer never starts or stops it manually and no microservice lingers between sessions.
 - Data lives in a personal Supabase project. All DB access is server-side using the service-role key; RLS is enabled with no policies so the anon key returns nothing.
 - API surface is protected by a shared `CC_TRACKER_API_KEY` header, not by end-user auth.
 - Ingestion happens through a Node hook script (`hooks/claude-tracker.mjs`) wired into Claude Code, plus a CLI (`bin/cctrack.mjs`) that targets the current session automatically via `~/.cc-track/current-session.json`.
@@ -36,6 +37,8 @@ Confirmed capabilities:
 - TodoWrite lists sync into `tasks` via a stable dedupe key.
 - Rough per-1M-token USD pricing by model family (opus / sonnet / haiku).
 - Dashboard surfaces: Overview, Projects (list + detail), Plans, Sessions (list + detail with a full event timeline), Analytics (activity, tokens & cost, tool ranking, task completion, model share, session-duration buckets, hour-of-day prompting), Setup.
+- Server auto-boot + client-side heartbeat: opening a Claude Code session brings the tracker up if it is down; agent activity keeps it alive; silence past `IDLE_TIMEOUT` shuts it down. No manual `npm run start` and no always-on process.
+- Recharts is code-split via `next/dynamic` (SSR off) so first paint on non-chart routes stays out of the chart-library payload.
 
 Constraints:
 - Single-user by design. No auth screens will ever be added.
@@ -71,3 +74,9 @@ No customer testimonials, no benchmarks, no press coverage exist. Do not invent 
 ## Accessibility & Inclusion
 
 No product-specific standard was established beyond baseline: readable contrast on the dark surface, keyboard reachability of every link/button, and no color-only status conveyance (badges pair a color with a symbol or word).
+
+Concrete implementations layered on that baseline:
+- **Touch targets:** interactive icon controls route through a shared `IconButton` primitive sized 2.75rem (WCAG 2.5.5 AAA). Same target size on modal close, pager Prev/Next, filter-drawer rows, and the mobile DB-status link. Inline filter-chip remove `×` keeps its 14px glyph but expands its hitbox to 44x44 via a transparent `::before` pseudo-element, so touch works without disturbing the chip's rhythm.
+- **Icon-only controls:** `aria-label` is explicit (not just a `title` tooltip) on `CopyButton`, the attend-button `+`/`×` toggle, and the active-filters remove chip, so assistive tech announces the action instead of the glyph.
+- **Charts:** every chart export is wrapped in `role="img"` with a descriptive `aria-label`, and font sizes are declared in `rem` (not unit-less px), so screen readers announce a summary and users who scale text see the chart labels scale with them.
+- **Status color discipline:** error states route through a shared `ErrorAlert` primitive and always render in Red; Ember (yellow) is reserved for in-flight and warning states per the design system. A failed run, a stdout error line, and an inline validation hint all read as the same category to a viewer scanning for problems.
