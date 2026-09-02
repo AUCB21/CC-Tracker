@@ -31,6 +31,19 @@ export function ingestionKeyConfigured(): boolean {
   return Boolean(process.env.CC_TRACKER_API_KEY);
 }
 
+/**
+ * Shared DELETE /api/<resource>/[id] handler: 404 on missing row, 204 on success.
+ * Callers pass the table name and a lowercase noun for the error message.
+ */
+export async function deleteRow(table: string, id: string, notFoundLabel: string): Promise<Response> {
+  const db = getSupabase();
+  if (!db) return Response.json({ error: "Supabase is not configured" }, { status: 503 });
+  const { data, error } = await db.from(table).delete().eq("id", id).select("id").maybeSingle();
+  if (error) return Response.json({ error: error.message }, { status: 500 });
+  if (!data) return Response.json({ error: `${notFoundLabel} not found` }, { status: 404 });
+  return new Response(null, { status: 204 });
+}
+
 /** Shared guard for all /api/ingest/* routes. Returns an error Response or null. */
 export function checkApiKey(req: Request): Response | null {
   const expected = process.env.CC_TRACKER_API_KEY;
