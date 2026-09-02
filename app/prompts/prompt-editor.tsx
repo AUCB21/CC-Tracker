@@ -47,7 +47,7 @@ export function PromptEditor({
         className={CHIP_TINY}
         onClick={() => { reset(); setOpen(true); }}
       >
-        {seed ? "new version" : "new prompt"}
+        {seed ? "New Version" : "New Prompt"}
       </button>
     );
   }
@@ -87,10 +87,10 @@ export function PromptEditor({
       />
       <div className="flex items-center gap-2">
         <button className={CHIP_PRIMARY} onClick={submit} disabled={pending}>
-          {pending ? "saving…" : "save version"}
+          {pending ? "Saving…" : "Save Version"}
         </button>
         <button className={CHIP_TINY} onClick={() => setOpen(false)} disabled={pending}>
-          cancel
+          Cancel
         </button>
         {err && <span className="text-[0.6875rem] text-[color:var(--color-yellow)]">{err}</span>}
       </div>

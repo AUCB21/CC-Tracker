@@ -55,14 +55,14 @@ export function DecideButtons({ id }: { id: string }) {
         aria-pressed={armed}
         title={armed ? "Click again to authorize this tool call" : "Review tool input above, then click to arm"}
       >
-        {armed ? "confirm approve" : "approve"}
+        {armed ? "Confirm Approve" : "Approve"}
       </button>
       <button
         className={CHIP_DENY}
         onClick={onDeny}
         disabled={pending}
       >
-        deny
+        Deny
       </button>
       {err && <span className="text-[0.6875rem] text-[color:var(--color-yellow)]">{err}</span>}
     </div>
