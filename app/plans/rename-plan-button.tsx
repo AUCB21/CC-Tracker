@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Modal } from "@/components/modal";
-import { renamePlan } from "./actions";
 
 const PENCIL = (
   <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -38,16 +37,24 @@ export function RenamePlanButton({
     e.preventDefault();
     setErr(null);
     startTransition(async () => {
-      const result = await renamePlan(planId, {
-        title: title.trim() !== initialTitle ? title : undefined,
-        description: description !== (initialDescription ?? "") ? description : undefined,
-      });
-      if ("error" in result) {
-        setErr(result.error);
-        return;
+      try {
+        const res = await fetch(`/api/plans/${planId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: title.trim() !== initialTitle ? title : undefined,
+            description: description !== (initialDescription ?? "") ? description : undefined,
+          }),
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error ?? "Failed to rename plan");
+        }
+        setOpen(false);
+        router.refresh();
+      } catch (e) {
+        setErr(e instanceof Error ? e.message : "Something went wrong.");
       }
-      setOpen(false);
-      router.refresh();
     });
   }
 
