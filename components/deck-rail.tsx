@@ -34,6 +34,12 @@ const NAV: NavGroup[] = [
     ],
   },
   {
+    label: "Control",
+    items: [
+      { href: "/hitl",    label: "HITL",    icon: RailIcons.setup },
+    ],
+  },
+  {
     label: "System",
     items: [{ href: "/setup", label: "Setup", icon: RailIcons.setup }],
   },

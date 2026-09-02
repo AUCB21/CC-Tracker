@@ -191,6 +191,43 @@ create policy task_runs_anon_read on public.task_runs for select using (true);
 alter table public.projects add column if not exists per_run_budget_usd numeric(10,4);
 alter table public.projects add column if not exists per_run_max_turns  int;
 
+-- ---------- HITL approvals (Gap 6) ----------
+-- One row per PreToolUse gate. The hitl.mjs hook inserts a `pending` row and
+-- polls until the /hitl UI (or an API caller) flips it to approved/denied;
+-- the hook exits 0 on approved, 2 on denied/timeout so claude blocks the call.
+create table if not exists public.hitl_approvals (
+  id           uuid primary key default gen_random_uuid(),
+  task_run_id  uuid references public.task_runs(id) on delete set null,
+  session_id   text,
+  tool_name    text,
+  tool_input   jsonb,
+  status       text not null default 'pending'
+               check (status in ('pending','approved','denied','timeout')),
+  created_at   timestamptz not null default now(),
+  decided_at   timestamptz,
+  decided_by   text
+);
+
+create index if not exists hitl_approvals_status_idx  on public.hitl_approvals (status, created_at desc);
+create index if not exists hitl_approvals_created_idx on public.hitl_approvals (created_at desc);
+
+alter table public.hitl_approvals enable row level security;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+     where pubname = 'supabase_realtime'
+       and schemaname = 'public'
+       and tablename = 'hitl_approvals'
+  ) then
+    alter publication supabase_realtime add table public.hitl_approvals;
+  end if;
+end $$;
+
+drop policy if exists hitl_approvals_anon_read on public.hitl_approvals;
+create policy hitl_approvals_anon_read on public.hitl_approvals for select using (true);
+
 -- ---------- realtime: live-refresh for sessions/plans/tasks/projects ----------
 -- Same pattern as task_runs above: publish + anon-read so the browser can
 -- subscribe to writes and call router.refresh() (see components/live-refresh.tsx).
