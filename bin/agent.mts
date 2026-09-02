@@ -263,27 +263,29 @@ async function resumeSessionFor(run: TaskRun): Promise<string | null> {
   return sid ?? null;
 }
 
-// Walk parent_run_id upward from `runId` (exclusive) and count how many
+// Walk parent_run_id upward from `run` (exclusive) and count how many
 // ancestors were themselves retry_on_fail rows. Used to cap retries per
 // lineage rather than per task, so a task's retry budget doesn't reset when a
 // new manual Attend starts a fresh chain.
-async function countAncestorRetries(runId: string): Promise<number> {
-  let count = 0;
-  const seen = new Set<string>([runId]);
-  const { data: head } = await db!
+//
+// One round trip for the whole task's run history, then walk the parent
+// chain in memory -- avoids a DB call per ancestor on long retry chains.
+async function countAncestorRetries(run: TaskRun): Promise<number> {
+  if (!run.task_id) return 0;
+  type Row = { id: string; parent_run_id: string | null; trigger: string | null };
+  const { data } = await db!
     .from("task_runs")
-    .select("parent_run_id")
-    .eq("id", runId)
-    .maybeSingle();
-  let cur = (head as { parent_run_id: string | null } | null)?.parent_run_id ?? null;
+    .select("id,parent_run_id,trigger")
+    .eq("task_id", run.task_id);
+  const byId = new Map<string, Row>();
+  for (const r of (data as Row[] | null) ?? []) byId.set(r.id, r);
+
+  let count = 0;
+  const seen = new Set<string>([run.id]);
+  let cur = run.parent_run_id;
   while (cur && !seen.has(cur)) {
     seen.add(cur);
-    const { data } = await db!
-      .from("task_runs")
-      .select("parent_run_id,trigger")
-      .eq("id", cur)
-      .maybeSingle();
-    const row = data as { parent_run_id: string | null; trigger: string | null } | null;
+    const row = byId.get(cur);
     if (!row) break;
     if (row.trigger === "retry_on_fail") count += 1;
     cur = row.parent_run_id;
@@ -292,7 +294,7 @@ async function countAncestorRetries(runId: string): Promise<number> {
 }
 
 async function enqueueRetry(run: TaskRun): Promise<void> {
-  const priorRetries = await countAncestorRetries(run.id);
+  const priorRetries = await countAncestorRetries(run);
   if (priorRetries >= MAX_RETRIES_PER_LINEAGE) return;
   const { error } = await db!.from("task_runs").insert({
     task_id: run.task_id,
