@@ -8,7 +8,7 @@ import Link from "next/link";
    Everything flat gets one of them.
 --------------------------------------------------------------------------- */
 
-const PANEL_STYLE: React.CSSProperties = {
+export const PANEL_STYLE: React.CSSProperties = {
   borderRadius: "1.125rem",
   border: "0.0625rem solid var(--color-line)",
   background:

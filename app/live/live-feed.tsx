@@ -6,16 +6,7 @@ import Link from "next/link";
 import type { TaskRun, EventRow, Project } from "@/lib/types";
 import { getBrowserSupabase } from "@/lib/supabase-browser";
 import { fmtCost, fmtRelative, truncate } from "@/lib/format";
-import { Badge, CELL_STYLE, LiveDot } from "@/components/ui";
-
-const LANE_PANEL: React.CSSProperties = {
-  borderRadius: "1.125rem",
-  border: "0.0625rem solid var(--color-line)",
-  background:
-    "linear-gradient(180deg, var(--color-surface-1a), var(--color-surface-1b))",
-  boxShadow:
-    "inset 0 0.0625rem 0 rgb(255 255 255 / 0.045), 0 1rem 2rem -1.25rem rgb(0 0 0 / 0.8)",
-};
+import { Badge, CELL_STYLE, LiveDot, PANEL_STYLE as LANE_PANEL } from "@/components/ui";
 
 type BadgeColor = "green" | "yellow" | "blue" | "accent" | "muted" | "red";
 
