@@ -5,7 +5,7 @@ import { getProject, getSessions, getPlans, getTasks } from "@/lib/queries";
 import { fmtNum, fmtCost, fmtDate, fmtRelative, truncate } from "@/lib/format";
 import { isLive } from "@/lib/types";
 import { RenameEntityButton } from "@/components/rename-entity-button";
-import { DeleteProjectButton } from "./delete-project-button";
+import { DeleteEntityButton } from "@/components/delete-entity-button";
 
 export const dynamic = "force-dynamic";
 
@@ -55,7 +55,13 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               entityLabel="project"
               placeholder="Project name"
             />
-            <DeleteProjectButton projectId={project.id} projectName={project.name} />
+            <DeleteEntityButton
+              apiPath={`/api/projects/${project.id}`}
+              entityLabel="project"
+              entityName={project.name}
+              requireTypeName
+              redirectTo="/projects"
+            />
           </div>
         }
       />

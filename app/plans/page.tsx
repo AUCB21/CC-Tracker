@@ -5,7 +5,7 @@ import { ActiveFilterBar } from "@/components/active-filters";
 import { CopyButton } from "@/components/copy-button";
 import { Pager } from "@/components/pager";
 import { RenameEntityButton } from "@/components/rename-entity-button";
-import { DeletePlanButton } from "./delete-plan-button";
+import { DeleteEntityButton } from "@/components/delete-entity-button";
 import { TaskRowEditable } from "@/components/task-row-editable";
 import { getPlansPage, getPlanFacetRows, getTasks, getProjects, getPlans } from "@/lib/queries";
 import { fmtDate, truncate, toList } from "@/lib/format";
@@ -146,7 +146,11 @@ export default async function PlansPage({ searchParams }: { searchParams: Search
                               placeholder: "Optional context...",
                             }}
                           />
-                          <DeletePlanButton planId={p.id} planTitle={p.title} />
+                          <DeleteEntityButton
+                            apiPath={`/api/plans/${p.id}`}
+                            entityLabel="plan"
+                            entityName={p.title}
+                          />
                         </div>
                       </div>
                       {p.description && <p className="mt-3 text-sm text-muted">{p.description}</p>}

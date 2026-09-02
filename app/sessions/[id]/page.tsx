@@ -4,7 +4,7 @@ import { ToolUsageChart } from "@/components/charts";
 import { FilterRail, type Facet } from "@/components/filter-rail";
 import { LiveTimeline } from "@/components/live-timeline";
 import { RenameEntityButton } from "@/components/rename-entity-button";
-import { DeleteSessionButton } from "./delete-session-button";
+import { DeleteEntityButton } from "@/components/delete-entity-button";
 import { getSession, getProject, getPlans, getTasks, getEvents, getEventCount } from "@/lib/queries";
 import { fmtNum, fmtCost, fmtDate, fmtDuration, fmtRelative, truncate, toList } from "@/lib/format";
 import { isLive } from "@/lib/types";
@@ -129,12 +129,20 @@ export default async function SessionDetailPage({
               entityLabel="session"
               placeholder="Session title"
             />
-            <DeleteSessionButton
-              sessionId={session.id}
-              sessionName={session.title || session.id.slice(0, 8)}
-              planCount={(plans ?? []).length}
-              taskCount={(tasks ?? []).length}
-              eventCount={eventCount}
+            <DeleteEntityButton
+              apiPath={`/api/sessions/${session.id}`}
+              entityLabel="session"
+              entityName={session.title || session.id.slice(0, 8)}
+              requireTypeName
+              redirectTo="/sessions"
+              extraNotice={
+                <p className="text-sm text-muted">
+                  This will also permanently delete {(plans ?? []).length}{" "}
+                  {plural((plans ?? []).length, "plan")}, {(tasks ?? []).length}{" "}
+                  {plural((tasks ?? []).length, "task")}, and {eventCount}{" "}
+                  {plural(eventCount, "event")}.
+                </p>
+              }
             />
           </div>
         }
@@ -235,4 +243,8 @@ export default async function SessionDetailPage({
       </div>
     </>
   );
+}
+
+function plural(n: number, word: string): string {
+  return n === 1 ? word : `${word}s`;
 }
