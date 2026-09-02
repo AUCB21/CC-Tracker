@@ -59,11 +59,11 @@ const DEFAULT_COLORS: DeckColors = {
 function useDeckStyles(c: DeckColors) {
   return {
     tooltip: {
-      backgroundColor: c.lift,
-      border: `0.0625rem solid #322c25`,
+      backgroundColor: c.bone,
+      border: `0.0625rem solid ${c.hairStrong}`,
       borderRadius: "0.625rem",
       fontSize: 12,
-      color: c.bone,
+      color: c.ink,
       padding: "0.5rem 0.75rem",
       boxShadow: "0 1rem 2rem -0.75rem rgb(0 0 0 / 0.8)",
       fontFamily: "var(--font-mono)",
