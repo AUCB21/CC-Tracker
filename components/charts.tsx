@@ -68,6 +68,11 @@ function useDeckStyles(c: DeckColors) {
       boxShadow: "0 1rem 2rem -0.75rem rgb(0 0 0 / 0.8)",
       fontFamily: "var(--font-mono)",
     } as const,
+    // Recharts sets each tooltip item's `color` to `payload.color || #000`
+    // inline, which paints black-on-bone (worst on Pie tooltips whose
+    // payload.color is undefined). Force the ink text explicitly.
+    tooltipItem: { color: c.ink } as const,
+    tooltipLabel: { color: c.ink, fontWeight: 600 } as const,
     axis: {
       stroke: c.hair,
       fontSize: "0.625rem",
@@ -119,7 +124,7 @@ export function ActivityChart({
         <CartesianGrid stroke={c.hair} strokeOpacity={0.55} vertical={false} />
         <XAxis dataKey="day" {...s.axis} interval="preserveStartEnd" minTickGap={30} />
         <YAxis {...s.axis} allowDecimals={false} />
-        <Tooltip contentStyle={s.tooltip} cursor={{ fill: c.lift, opacity: 0.6 }} />
+        <Tooltip contentStyle={s.tooltip} itemStyle={s.tooltipItem} labelStyle={s.tooltipLabel} cursor={{ fill: c.lift, opacity: 0.6 }} />
         <Bar dataKey="prompts"  name="Prompts"    stackId="a" fill={`url(#${uid}-prompts)`} />
         <Bar dataKey="toolUses" name="Tool calls" stackId="a" fill={`url(#${uid}-tool)`} radius={[3, 3, 0, 0]} />
         <Line dataKey="sessions" name="Sessions" stroke={c.green} strokeWidth={1.75} dot={false} strokeLinecap="round" strokeLinejoin="round" />
@@ -141,7 +146,7 @@ export function ToolUsageChart({ data }: { data: { tool: string; count: number }
         <CartesianGrid stroke={c.hair} strokeOpacity={0.55} horizontal={false} />
         <XAxis type="number" {...s.axis} allowDecimals={false} />
         <YAxis type="category" dataKey="tool" {...s.axis} width={120} />
-        <Tooltip contentStyle={s.tooltip} cursor={{ fill: c.lift, opacity: 0.6 }} />
+        <Tooltip contentStyle={s.tooltip} itemStyle={s.tooltipItem} labelStyle={s.tooltipLabel} cursor={{ fill: c.lift, opacity: 0.6 }} />
         <Bar dataKey="count" name="Calls" fill={`url(#${uid}-bar)`} radius={[0, 4, 4, 0]} barSize={14}>
           <Label position="right" offset={8} fill={c.dust} fontSize="0.625rem" style={{ fontFamily: "var(--font-mono)" }} />
         </Bar>
@@ -180,6 +185,8 @@ export function TokenCostChart({
         <YAxis yAxisId="usd" orientation="right" {...s.axis} tickFormatter={(v: number) => `$${v}`} />
         <Tooltip
           contentStyle={s.tooltip}
+          itemStyle={s.tooltipItem}
+          labelStyle={s.tooltipLabel}
           cursor={{ fill: c.lift, opacity: 0.6 }}
           formatter={(value, name) =>
             name === "Cost (USD)"
@@ -218,7 +225,7 @@ export function DonutChart({ data, ariaLabel }: { data: { name: string; value: n
               <Cell key={i} fill={s.palette[i % s.palette.length]} />
             ))}
           </Pie>
-          <Tooltip contentStyle={s.tooltip} />
+          <Tooltip contentStyle={s.tooltip} itemStyle={s.tooltipItem} labelStyle={s.tooltipLabel} />
         </PieChart>
       </ResponsiveContainer>
       {/* Center readout */}
@@ -296,7 +303,7 @@ export function SimpleBarChart({
           tickFormatter={(v) => (typeof v === "string" ? v.replace(/h$/, "") : v)}
         />
         <YAxis {...s.axis} allowDecimals={false} />
-        <Tooltip contentStyle={s.tooltip} cursor={{ fill: c.lift, opacity: 0.6 }} />
+        <Tooltip contentStyle={s.tooltip} itemStyle={s.tooltipItem} labelStyle={s.tooltipLabel} cursor={{ fill: c.lift, opacity: 0.6 }} />
         <Bar dataKey={yKey} fill={`url(#${uid}-simple)`} radius={[4, 4, 0, 0]} barSize={28} />
       </BarChart>
     </ResponsiveContainer>
