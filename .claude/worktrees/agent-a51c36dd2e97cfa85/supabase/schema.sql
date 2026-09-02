@@ -162,18 +162,22 @@ alter table public.task_runs add column if not exists verdict text
 alter table public.task_runs add column if not exists verdict_reason text;
 alter table public.task_runs add column if not exists diff_summary jsonb;
 
+-- Lineage: retries, chains, and follow-ups all point back to a parent row so
+-- the UI can render attempts inline and the runner can walk the chain (e.g.
+-- to cap retries per lineage). `trigger` records how the row was created:
+--   manual         -> the operator hit Attend
+--   retry_on_fail  -> the runner auto-enqueued after an error
+--   chain          -> next step of a plan chain (future use)
+--   followup       -> a follow-up prompt against a resumed session
+alter table public.task_runs add column if not exists parent_run_id uuid references public.task_runs(id) on delete set null;
+alter table public.task_runs add column if not exists trigger text not null default 'manual';
+
+create index if not exists task_runs_parent_idx on public.task_runs (parent_run_id);
+
 -- Note on claude_session_id: originally references sessions(id), but the runner
 -- writes the session UUID as soon as it arrives in the JSON output; the hooks
 -- may not have inserted the sessions row yet. Drop the FK so writes never race.
 alter table public.task_runs drop constraint if exists task_runs_claude_session_id_fkey;
-
--- Lineage: retry_on_fail / chain / followup create child rows that point back to
--- their parent. `trigger` records how the row got created. No CHECK constraint;
--- values used today are 'manual' | 'retry_on_fail' | 'chain' | 'followup'.
-alter table public.task_runs add column if not exists parent_run_id uuid
-  references public.task_runs(id) on delete set null;
-alter table public.task_runs add column if not exists trigger text;
-create index if not exists task_runs_parent_idx on public.task_runs (parent_run_id);
 
 alter table public.task_runs enable row level security;
 
@@ -256,10 +260,9 @@ create index if not exists prompts_created_idx on public.prompts (created_at des
 
 alter table public.prompts enable row level security;
 
--- allowed_tools (per-project --allowedTools allow-list) was added but never
--- had a setter (no UI, no action) -- dead end-to-end. Dropped; the
--- --allowedTools wiring in bin/agent.mts was removed alongside this.
-alter table public.projects drop column if exists allowed_tools;
+-- Per-project tool allow-list. Passed as `--allowedTools` on every runner
+-- invocation. Null (or an empty array) means "no CLI restriction".
+alter table public.projects add column if not exists allowed_tools text[];
 
 -- ---------- realtime: live-refresh for sessions/plans/tasks/projects ----------
 -- Same pattern as task_runs above: publish + anon-read so the browser can
@@ -267,10 +270,7 @@ alter table public.projects drop column if exists allowed_tools;
 -- Single-user localhost app; anon reads are safe here (no PII, secrets stay in .env).
 -- Daily spend per project (last 24 h, successful runs only). Used by the budget
 -- guard in enqueueTaskRun and the PreToolUse hook.
--- security_invoker: run under the querying user's permissions (respects their RLS),
--- not the view creator's — fixes Supabase Advisor "Security Definer View" lint.
-create or replace view public.project_daily_spend
-  with (security_invoker = true) as
+create or replace view public.project_daily_spend as
 select
   project_id,
   coalesce(sum(total_cost_usd), 0) as spend_usd

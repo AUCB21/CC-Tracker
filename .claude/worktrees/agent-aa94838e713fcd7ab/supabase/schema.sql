@@ -256,10 +256,9 @@ create index if not exists prompts_created_idx on public.prompts (created_at des
 
 alter table public.prompts enable row level security;
 
--- allowed_tools (per-project --allowedTools allow-list) was added but never
--- had a setter (no UI, no action) -- dead end-to-end. Dropped; the
--- --allowedTools wiring in bin/agent.mts was removed alongside this.
-alter table public.projects drop column if exists allowed_tools;
+-- Per-project tool allow-list. Passed as `--allowedTools` on every runner
+-- invocation. Null (or an empty array) means "no CLI restriction".
+alter table public.projects add column if not exists allowed_tools text[];
 
 -- ---------- realtime: live-refresh for sessions/plans/tasks/projects ----------
 -- Same pattern as task_runs above: publish + anon-read so the browser can
@@ -267,10 +266,7 @@ alter table public.projects drop column if exists allowed_tools;
 -- Single-user localhost app; anon reads are safe here (no PII, secrets stay in .env).
 -- Daily spend per project (last 24 h, successful runs only). Used by the budget
 -- guard in enqueueTaskRun and the PreToolUse hook.
--- security_invoker: run under the querying user's permissions (respects their RLS),
--- not the view creator's — fixes Supabase Advisor "Security Definer View" lint.
-create or replace view public.project_daily_spend
-  with (security_invoker = true) as
+create or replace view public.project_daily_spend as
 select
   project_id,
   coalesce(sum(total_cost_usd), 0) as spend_usd
