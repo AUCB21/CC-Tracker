@@ -4,13 +4,44 @@
 // It reads the hook JSON from stdin, enriches it, and POSTs it to the tracker.
 // It NEVER fails loudly or blocks Claude Code: any error exits silently with 0.
 
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, utimesSync, closeSync, openSync, existsSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
-import { execFileSync } from "node:child_process";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import { execFileSync, spawn } from "node:child_process";
 import { summarizeTranscriptText } from "./transcript.mjs";
 
 const STATE_DIR = join(homedir(), ".cc-track");
+const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+const HEARTBEAT = join(REPO_ROOT, ".heartbeat");
+const VBS = join(REPO_ROOT, "start-hidden.vbs");
+
+function touchHeartbeat() {
+  try {
+    const now = new Date();
+    if (existsSync(HEARTBEAT)) utimesSync(HEARTBEAT, now, now);
+    else closeSync(openSync(HEARTBEAT, "w"));
+  } catch { /* best effort */ }
+}
+
+async function ensureTrackerUp(cfg) {
+  try {
+    const res = await fetch(new URL("/api/health", cfg.url).toString(), {
+      signal: AbortSignal.timeout(500),
+    });
+    if (res.ok) return;
+  } catch { /* down, boot below */ }
+  // ponytail: windows-first (uses start-hidden.vbs). Add nohup ./start.sh branch when a non-Windows dev shows up.
+  if (process.platform !== "win32" || !existsSync(VBS)) return;
+  try {
+    spawn("wscript.exe", [VBS], {
+      cwd: REPO_ROOT,
+      detached: true,
+      stdio: "ignore",
+      windowsHide: true,
+    }).unref();
+  } catch { /* best effort */ }
+}
 
 function loadConfig() {
   const env = {
@@ -61,6 +92,12 @@ async function main() {
 
   const cfg = loadConfig();
   if (!cfg.url || !cfg.key) return;
+
+  // Keep the tracker alive on every hook fire, and boot it on SessionStart if down.
+  touchHeartbeat();
+  if (payload.hook_event_name === "SessionStart") {
+    await ensureTrackerUp(cfg);
+  }
 
   const cwd = payload.cwd || process.cwd();
   payload.cwd = cwd;
