@@ -61,7 +61,11 @@ If you'd rather not leave a dev server running, `./start.sh` runs
 `next start` and shuts it down when no open+visible browser tab has been seen
 for `IDLE_TIMEOUT` seconds. The root layout pings `/api/heartbeat` every 10s
 while `document.visibilityState === "visible"`, so a closed tab, a switched-away
-tab, or a minimized window all count as idle.
+tab, or a minimized window all count as idle. Once the hooks are wired
+(section 3), you rarely have to run this manually: the SessionStart /
+UserPromptSubmit hook probes `/api/health` and boots `start-hidden.vbs` for you
+when the tracker is down, and every hook fire touches `.heartbeat` client-side
+so the idle timer resets on agent activity even with no browser tab open.
 
 ```bash
 npm run build
@@ -168,7 +172,10 @@ The CLI targets the **current session automatically** (hooks keep
 
 **Let Claude do the bookkeeping:** paste `CLAUDE.md.snippet` into your
 project's `CLAUDE.md` and Claude will create a plan at the start of each piece
-of work and keep task statuses updated as it executes them.
+of work and keep task statuses updated as it executes them. This repo's own
+`CLAUDE.md` codifies the same expectation as a binding rule for any agent
+working inside `cc-track`, so `/plans` and `/tasks` stay in sync with what
+Claude actually does here.
 
 ## 5 · Remote task runs: Attend
 
