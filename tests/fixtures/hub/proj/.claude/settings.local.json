@@ -1,0 +1,14 @@
+{
+  "enabledPlugins": {
+    "pl@mk": false
+  },
+  "hooks": {
+    "Notification": [
+      {
+        "hooks": [
+          { "type": "command", "command": "echo notify" }
+        ]
+      }
+    ]
+  }
+}
