@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "plsrv": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["plsrv-cli"],
+      "env": { "TOKEN": "secret" }
+    }
+  }
+}

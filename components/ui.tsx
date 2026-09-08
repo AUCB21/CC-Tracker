@@ -567,6 +567,12 @@ export const RailIcons = {
       <path d="M10 3v2M10 15v2M3 10h2M15 10h2M5 5l1.5 1.5M13.5 13.5L15 15M5 15l1.5-1.5M13.5 6.5L15 5" strokeLinecap="round" />
     </svg>
   ),
+  hub: (
+    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <circle cx="10" cy="10" r="1.75" />
+      <path d="M10 8.25V4.5M10 11.75V15.5M8.25 10H4.5M11.75 10H15.5" />
+    </svg>
+  ),
   hitl: (
     <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M10 3.5l5.5 2v4c0 3.8-2.3 6.2-5.5 7-3.2-.8-5.5-3.2-5.5-7v-4z" />

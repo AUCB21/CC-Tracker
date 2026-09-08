@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "approved": { "type": "stdio", "command": "node", "args": ["approved.js"] },
+    "rejected": { "type": "stdio", "command": "node", "args": ["rejected.js"] },
+    "unknown": { "type": "stdio", "command": "node", "args": ["unknown.js"] }
+  }
+}

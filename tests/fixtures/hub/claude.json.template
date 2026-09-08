@@ -1,0 +1,33 @@
+{
+  "oauthAccount": { "emailAddress": "nope@example.com" },
+  "userID": "should-never-appear",
+  "machineID": "should-never-appear",
+  "mcpServers": {
+    "play": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["x"],
+      "env": { "KEY": "v" }
+    }
+  },
+  "projects": {
+    "__PROJ_A__": {
+      "mcpServers": {},
+      "enabledMcpjsonServers": ["approved"],
+      "disabledMcpjsonServers": ["rejected"]
+    },
+    "__PROJ_B__": {
+      "mcpServers": {},
+      "enabledMcpjsonServers": ["approved"],
+      "disabledMcpjsonServers": ["rejected"]
+    }
+  },
+  "pluginUsage": {
+    "pl@mk": { "usageCount": 3 },
+    "foo@inline": { "usageCount": 7 }
+  },
+  "skillUsage": {
+    "demo": 2,
+    "pl:x": 5
+  }
+}

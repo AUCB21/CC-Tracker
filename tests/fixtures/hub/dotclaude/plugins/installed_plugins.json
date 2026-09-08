@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "plugins": {
+    "pl@mk": [
+      {
+        "scope": "user",
+        "installPath": "cache/mk/pl/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-01-01T00:00:00.000Z"
+      }
+    ]
+  }
+}

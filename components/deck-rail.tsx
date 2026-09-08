@@ -42,7 +42,10 @@ const NAV: NavGroup[] = [
   },
   {
     label: "System",
-    items: [{ href: "/setup", label: "Setup", icon: RailIcons.setup }],
+    items: [
+      { href: "/hub",   label: "Hub",   icon: RailIcons.hub },
+      { href: "/setup", label: "Setup", icon: RailIcons.setup },
+    ],
   },
 ];
 

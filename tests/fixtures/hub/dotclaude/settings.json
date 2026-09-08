@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node session-start.js", "async": true }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "pl@mk": true,
+    "ghost@mk": true
+  }
+}

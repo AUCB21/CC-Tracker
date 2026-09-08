@@ -12,6 +12,7 @@ const SECTION_LABEL: Record<string, string> = {
   tasks: "Tasks",
   sessions: "Sessions",
   setup: "Setup",
+  hub: "Hub",
 };
 
 function crumbFromPath(pathname: string): string {
