@@ -184,4 +184,75 @@ try {
   }
 }
 
+// ---- mcpjson decision precedence: project settings.local.json (most specific) beats
+// .claude.json's project entry (least specific) for the same server. ----
+{
+  const root = await mkdtemp(join(tmpdir(), "hub-test-mcpprecedence-"));
+  try {
+    const projDir = join(root, "proj");
+    await mkdir(join(projDir, ".claude"), { recursive: true });
+    await writeFile(
+      join(projDir, ".mcp.json"),
+      JSON.stringify({ mcpServers: { srv: { type: "stdio", command: "node", args: ["srv.js"] } } }),
+      "utf8"
+    );
+    const localSettingsPath = join(projDir, ".claude", "settings.local.json");
+    await writeFile(localSettingsPath, JSON.stringify({ disabledMcpjsonServers: ["srv"] }), "utf8");
+
+    const claudeJsonPath = join(root, "claude.json");
+    await writeFile(
+      claudeJsonPath,
+      JSON.stringify({ projects: { [projDir]: { enabledMcpjsonServers: ["srv"] } } }),
+      "utf8"
+    );
+
+    const hub = await getHub({
+      configDir: join(root, ".claude"),
+      claudeJsonPath,
+      projectPaths: [projDir],
+    });
+
+    const srv = hub.items.find((i) => i.type === "mcp" && i.name === "srv");
+    assert.ok(srv, "srv mcp item present");
+    assert.equal(srv?.state, "disabled", `srv state: ${srv?.state}`);
+    assert.equal(srv?.meta.decidedBy, localSettingsPath, `srv decidedBy: ${srv?.meta.decidedBy}`);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+}
+
+// ---- mcpjson decision: enableAllProjectMcpServers in user settings enables a server no
+// source otherwise mentions. ----
+{
+  const root = await mkdtemp(join(tmpdir(), "hub-test-mcpenableall-"));
+  try {
+    const configDir = join(root, ".claude");
+    await mkdir(configDir, { recursive: true });
+    const userSettingsPath = join(configDir, "settings.json");
+    await writeFile(userSettingsPath, JSON.stringify({ enableAllProjectMcpServers: true }), "utf8");
+
+    const projDir = join(root, "proj");
+    await mkdir(projDir, { recursive: true });
+    await writeFile(
+      join(projDir, ".mcp.json"),
+      JSON.stringify({ mcpServers: { srv2: { type: "stdio", command: "node", args: ["srv2.js"] } } }),
+      "utf8"
+    );
+
+    const hub = await getHub({
+      configDir,
+      claudeJsonPath: join(root, "does-not-exist.json"),
+      projectPaths: [projDir],
+    });
+
+    const srv2 = hub.items.find((i) => i.type === "mcp" && i.name === "srv2");
+    assert.ok(srv2, "srv2 mcp item present");
+    assert.equal(srv2?.state, "enabled", `srv2 state: ${srv2?.state}`);
+    assert.equal(srv2?.meta.decidedBy, userSettingsPath, `srv2 decidedBy: ${srv2?.meta.decidedBy}`);
+    assert.ok(!hub.warnings.some((w) => w.code === "mcp-pending"), "no mcp-pending warning when enableAllProjectMcpServers applies");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+}
+
 console.log("✔ tests/hub.test.mts — all assertions passed");

@@ -3,7 +3,8 @@ import { FilterRail, type Facet } from "@/components/filter-rail";
 import { ActiveFilterBar } from "@/components/active-filters";
 import { getProjects } from "@/lib/queries";
 import { toList } from "@/lib/format";
-import { getHub } from "@/lib/hub";
+import { getHub, hubProjectPaths } from "@/lib/hub";
+import { HubToggle } from "@/components/hub-toggle";
 import type { Hub, HubItem, HubScope, HubState, HubType } from "@/lib/hub-parse";
 
 export const dynamic = "force-dynamic";
@@ -67,6 +68,7 @@ function metaParts(item: HubItem): string[] {
         m.transport ?? "",
         m.command || m.url || "",
         m.envKeys ? `env: ${m.envKeys}` : "",
+        m.decidedBy ? `decided by ${m.decidedBy}` : "",
       ].filter(Boolean);
     case "skill":
       return [m.version ? `v${m.version}` : "", m.usageCount ? `used ${m.usageCount}` : ""].filter(Boolean);
@@ -86,6 +88,29 @@ function metaLine(item: HubItem): string {
   return parts.length > 0 ? `${parts.join(" | ")} | ${item.source}` : item.source;
 }
 
+function renderToggle(item: HubItem) {
+  if (item.type === "plugin" && item.scope.kind === "plugin" && item.state !== "stale") {
+    return (
+      <HubToggle
+        kind="plugin"
+        pluginKey={`${item.scope.plugin}@${item.meta.marketplace}`}
+        enabled={item.state === "enabled"}
+      />
+    );
+  }
+  if (item.type === "mcp" && item.scope.kind === "project" && item.meta.local !== "true") {
+    return (
+      <HubToggle
+        kind="mcpjson"
+        projectPath={item.scope.path}
+        server={item.name}
+        state={item.state as "enabled" | "disabled" | "pending"}
+      />
+    );
+  }
+  return null;
+}
+
 export default async function HubPage({ searchParams }: { searchParams: Search }) {
   const params = await searchParams;
   const typeFilter = new Set(toList(params.type));
@@ -94,8 +119,7 @@ export default async function HubPage({ searchParams }: { searchParams: Search }
   const projectFilter = new Set(toList(params.project));
 
   const projects = await getProjects();
-  const projectPaths = Array.from(new Set([...(projects ?? []).map((p) => p.path), process.cwd()]));
-  const hub: Hub = await getHub({ projectPaths });
+  const hub: Hub = await getHub({ projectPaths: await hubProjectPaths() });
 
   const items = hub.items;
 
@@ -175,8 +199,12 @@ export default async function HubPage({ searchParams }: { searchParams: Search }
         title="Hub"
         sub="Skills, MCP servers, hooks, plugins and agents configured for Claude Code on this machine."
       />
+      <p className="mb-6 -mt-6 text-sm text-muted">
+        Toggles write to Claude Code settings files after saving a backup to ~/.cc-track/backups. Changes apply to
+        new Claude Code sessions.
+      </p>
       {projects === null && (
-        <p className="mb-6 -mt-6 text-sm text-muted">
+        <p className="mb-6 text-sm text-muted">
           Database not configured. Scanning user scope and this repo only.
         </p>
       )}
@@ -234,6 +262,7 @@ export default async function HubPage({ searchParams }: { searchParams: Search }
                           </span>
                           <Badge color="blue">{scopeText(item.scope)}</Badge>
                           <Badge color={STATE_BADGE[item.state]}>{STATE_LABEL[item.state]}</Badge>
+                          {renderToggle(item)}
                         </div>
                         {item.description && (
                           <p className="mt-1 line-clamp-2 text-sm text-muted">{item.description}</p>

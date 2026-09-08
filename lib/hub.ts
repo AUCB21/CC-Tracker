@@ -3,6 +3,7 @@ import { readFile, readdir, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import { extname, isAbsolute, join, posix as pathPosix } from "node:path";
 import { normalizePath } from "./ingest";
+import { getProjects } from "./queries";
 import {
   type Hub,
   type HubItem,
@@ -44,6 +45,9 @@ type SettingsFile = {
   hooks?: Record<string, HookGroup[]>;
   enabledPlugins?: Record<string, boolean>;
   disableAllHooks?: boolean;
+  enabledMcpjsonServers?: string[] | "all";
+  disabledMcpjsonServers?: string[] | "all";
+  enableAllProjectMcpServers?: boolean;
 };
 type McpServerDef = {
   type?: string;
@@ -201,6 +205,30 @@ function unionMcpList(current: string[] | "all", incoming: string[] | undefined)
   return [...new Set([...current, ...incoming])];
 }
 
+type McpJsonSource = {
+  path: string;
+  enabled?: string[] | "all";
+  disabled?: string[] | "all";
+  enableAll?: boolean;
+};
+type McpJsonDecisionResult = { state: "enabled" | "disabled" | "pending"; decidedBy?: string };
+
+// ponytail: most-specific-wins; Claude Code's exact merge is undocumented, revisit if a toggle looks ignored
+/** Decides a single `.mcp.json` server's approve/reject state by walking `sources` in
+ *  most-specific-first order and taking the first one that "names" the server: appears in
+ *  either list, or the source sets `enabled === "all"` / `enableAll === true`. Within one
+ *  source, an explicit `disabled` mention wins over `enableAll`. No source names it ->
+ *  "pending" (caller still owns pushing the mcp-pending warning). */
+function decideMcpJson(server: string, sources: McpJsonSource[]): McpJsonDecisionResult {
+  for (const src of sources) {
+    const disabledNamed = src.disabled === "all" || (Array.isArray(src.disabled) && src.disabled.includes(server));
+    if (disabledNamed) return { state: "disabled", decidedBy: src.path };
+    const enabledNamed = src.enabled === "all" || (Array.isArray(src.enabled) && src.enabled.includes(server));
+    if (enabledNamed || src.enableAll === true) return { state: "enabled", decidedBy: src.path };
+  }
+  return { state: "pending" };
+}
+
 function buildClaudeProjectsMap(
   rawProjects: Record<string, ClaudeProjectEntry> | undefined,
   claudeJsonPath: string,
@@ -342,11 +370,15 @@ export async function getHub(opts: HubOptions = {}): Promise<Hub> {
 
   // ---- per-project settings: hooks + enabledPlugins overrides ----
   const pluginOverridesByPlugin = new Map<string, { project: string; value: boolean }[]>();
+  // Keyed by project.path (not projectKey) since every downstream consumer below iterates
+  // the same `projects` array and already has the raw path in hand.
+  const projectSettingsMap = new Map<string, { base?: SettingsFile; local?: SettingsFile }>();
   for (const project of projects) {
     const baseP = join(project.path, ".claude", "settings.json");
     const localP = join(project.path, ".claude", "settings.local.json");
     const base = await readJsonSafe<SettingsFile>(baseP);
     const local = await readJsonSafe<SettingsFile>(localP);
+    projectSettingsMap.set(project.path, { base, local });
     const scope: HubScope = { kind: "project", path: project.path, name: project.name };
     collectHooksFromSettings(base, baseP, scope, hookCandidates);
     collectHooksFromSettings(local, localP, scope, hookCandidates);
@@ -544,19 +576,49 @@ export async function getHub(opts: HubOptions = {}): Promise<Hub> {
     if (!mcpJson?.mcpServers) continue;
     const scope: HubScope = { kind: "project", path: project.path, name: project.name };
     const claudeProj = claudeProjectsMap.get(projectKey(project.path));
-    const enabledList = claudeProj?.enabledMcpjsonServers ?? [];
-    const disabledList = claudeProj?.disabledMcpjsonServers ?? [];
+    const projSettings = projectSettingsMap.get(project.path);
+    // Most-specific-first: project settings.local.json, project settings.json, user
+    // settings.local.json, user settings.json, then the .claude.json project entry.
+    const sources: McpJsonSource[] = [
+      {
+        path: join(project.path, ".claude", "settings.local.json"),
+        enabled: projSettings?.local?.enabledMcpjsonServers,
+        disabled: projSettings?.local?.disabledMcpjsonServers,
+        enableAll: projSettings?.local?.enableAllProjectMcpServers,
+      },
+      {
+        path: join(project.path, ".claude", "settings.json"),
+        enabled: projSettings?.base?.enabledMcpjsonServers,
+        disabled: projSettings?.base?.disabledMcpjsonServers,
+        enableAll: projSettings?.base?.enableAllProjectMcpServers,
+      },
+      {
+        path: userLocalSettingsPath,
+        enabled: userLocal?.enabledMcpjsonServers,
+        disabled: userLocal?.disabledMcpjsonServers,
+        enableAll: userLocal?.enableAllProjectMcpServers,
+      },
+      {
+        path: userSettingsPath,
+        enabled: userBase?.enabledMcpjsonServers,
+        disabled: userBase?.disabledMcpjsonServers,
+        enableAll: userBase?.enableAllProjectMcpServers,
+      },
+      {
+        path: claudeJsonPath,
+        enabled: claudeProj?.enabledMcpjsonServers,
+        disabled: claudeProj?.disabledMcpjsonServers,
+      },
+    ];
     for (const [name, server] of Object.entries(mcpJson.mcpServers)) {
-      const isEnabled = enabledList === "all" || (Array.isArray(enabledList) && enabledList.includes(name));
-      const isDisabled = disabledList === "all" || (Array.isArray(disabledList) && disabledList.includes(name));
-      let state: HubState;
-      if (isEnabled) state = "enabled";
-      else if (isDisabled) state = "disabled";
-      else {
-        state = "pending";
+      const decision = decideMcpJson(name, sources);
+      const meta = buildMcpMeta(server);
+      if (decision.state === "pending") {
         warnings.push({ code: "mcp-pending", message: `${name} (${project.name}) is not approved or rejected`, source: mcpJsonPath });
+      } else if (decision.decidedBy) {
+        meta.decidedBy = decision.decidedBy;
       }
-      items.push({ id: makeItemId("mcp", scope, name), type: "mcp", name, description: null, scope, state, source: mcpJsonPath, meta: buildMcpMeta(server) });
+      items.push({ id: makeItemId("mcp", scope, name), type: "mcp", name, description: null, scope, state: decision.state, source: mcpJsonPath, meta });
     }
   }
 
@@ -594,4 +656,14 @@ export async function getHub(opts: HubOptions = {}): Promise<Hub> {
     generatedAt: new Date().toISOString(),
     projectsScanned: projects.map((p) => p.path),
   };
+}
+
+/** The `projectPaths` getHub() needs to scan every known project: every project the DB
+ *  knows about, plus the current working directory (so /hub always covers "this repo"
+ *  even when it isn't itself a tracked project), deduped. This is the one DB touch in the
+ *  module — getHub itself stays pure/fs-only; callers (the /hub page, the toggle API
+ *  route) call this first and pass the result in. */
+export async function hubProjectPaths(): Promise<string[]> {
+  const projects = await getProjects();
+  return Array.from(new Set([...(projects ?? []).map((p) => p.path), process.cwd()]));
 }
