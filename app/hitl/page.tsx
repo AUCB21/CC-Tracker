@@ -3,6 +3,7 @@ import { PageHeader, SetupBanner, Empty, Badge } from "@/components/ui";
 import { getSupabase, isDbConfigured } from "@/lib/supabase";
 import { fmtRelative } from "@/lib/format";
 import { DecideButtons } from "./decide-buttons";
+import { AutoRefresh } from "./auto-refresh";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "HITL" };
@@ -43,6 +44,7 @@ export default async function HitlPage() {
 
   return (
     <>
+      <AutoRefresh />
       <PageHeader
         title="HITL Approvals"
         sub={`${rows.length} pending tool call${rows.length === 1 ? "" : "s"} waiting on you.`}
