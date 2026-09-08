@@ -30,7 +30,13 @@ export type HubWarning = {
   message: string;
   source: string;
 };
-export type Hub = { items: HubItem[]; warnings: HubWarning[]; generatedAt: string; projectsScanned: string[] };
+export type Hub = {
+  items: HubItem[];
+  warnings: HubWarning[];
+  generatedAt: string;
+  projectsScanned: string[];
+  configDir: string;
+};
 
 export type ParsedFrontmatter = {
   name: string | null;

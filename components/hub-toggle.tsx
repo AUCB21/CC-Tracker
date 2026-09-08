@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 // Copied locally from app/hitl/decide-buttons.tsx; not exported from there.
 const CHIP =
-  "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[0.75rem] font-medium leading-none transition-colors disabled:opacity-40";
+  "inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 py-1 text-[0.75rem] font-medium leading-none transition-colors disabled:opacity-40 sm:min-h-0";
 const CHIP_IDLE = `${CHIP} border-line text-muted hover:border-line-strong`;
 const CHIP_ACTIVE = `${CHIP} border-[color:var(--color-accent-500)] bg-[color:var(--color-accent-500)] text-background`;
 
@@ -31,6 +31,8 @@ export function HubToggle(props: Props) {
   const [pending, startTransition] = useTransition();
   const [err, setErr] = useState<string | null>(null);
 
+  let content: React.ReactNode;
+
   if (props.kind === "plugin") {
     const { pluginKey, enabled } = props;
 
@@ -46,7 +48,7 @@ export function HubToggle(props: Props) {
       });
     }
 
-    return (
+    content = (
       <div className="ml-auto flex items-center gap-2">
         <button className={CHIP_IDLE} onClick={onClick} disabled={pending}>
           {pending ? "Saving..." : enabled ? "Disable" : "Enable"}
@@ -54,48 +56,63 @@ export function HubToggle(props: Props) {
         {err && <span className="text-[0.6875rem] text-[color:var(--color-red)]">{err}</span>}
       </div>
     );
-  }
+  } else {
+    const { projectPath, server, state } = props;
 
-  const { projectPath, server, state } = props;
+    function decide(decision: "enabled" | "disabled" | "clear") {
+      setErr(null);
+      startTransition(async () => {
+        const failure = await postToggle({ kind: "mcpjson", projectPath, server, decision });
+        if (failure) {
+          setErr(failure.error);
+          return;
+        }
+        router.refresh();
+      });
+    }
 
-  function decide(decision: "enabled" | "disabled" | "clear") {
-    setErr(null);
-    startTransition(async () => {
-      const failure = await postToggle({ kind: "mcpjson", projectPath, server, decision });
-      if (failure) {
-        setErr(failure.error);
-        return;
-      }
-      router.refresh();
-    });
-  }
-
-  return (
-    <div className="ml-auto flex items-center gap-2">
-      <button
-        className={state === "enabled" ? CHIP_ACTIVE : CHIP_IDLE}
-        onClick={() => decide("enabled")}
-        disabled={pending || state === "enabled"}
-      >
-        {pending ? "Saving..." : "Approve"}
-      </button>
-      <button
-        className={state === "disabled" ? CHIP_ACTIVE : CHIP_IDLE}
-        onClick={() => decide("disabled")}
-        disabled={pending || state === "disabled"}
-      >
-        {pending ? "Saving..." : "Reject"}
-      </button>
-      {state !== "pending" && (
+    content = (
+      <div className="ml-auto flex items-center gap-2">
         <button
-          className={`${CHIP} border-line text-muted hover:border-line-strong text-[0.6875rem]`}
-          onClick={() => decide("clear")}
-          disabled={pending}
+          className={state === "enabled" ? CHIP_ACTIVE : CHIP_IDLE}
+          onClick={() => decide("enabled")}
+          disabled={pending || state === "enabled"}
         >
-          Reset
+          {pending ? "Saving..." : "Approve"}
         </button>
-      )}
-      {err && <span className="text-[0.6875rem] text-[color:var(--color-red)]">{err}</span>}
+        <button
+          className={state === "disabled" ? CHIP_ACTIVE : CHIP_IDLE}
+          onClick={() => decide("disabled")}
+          disabled={pending || state === "disabled"}
+        >
+          {pending ? "Saving..." : "Reject"}
+        </button>
+        {state !== "pending" && (
+          <button
+            className={`${CHIP} border-line text-muted hover:border-line-strong text-[0.6875rem]`}
+            onClick={() => decide("clear")}
+            disabled={pending}
+          >
+            Reset
+          </button>
+        )}
+        {err && <span className="text-[0.6875rem] text-[color:var(--color-red)]">{err}</span>}
+      </div>
+    );
+  }
+
+  // ponytail: display:contents keeps the wrapper out of the flex layout while
+  // still sitting in the DOM (and thus the click bubble path), so the click
+  // that stops propagation doesn't also disturb the row's flex sizing.
+  return (
+    <div
+      className="contents"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }}
+    >
+      {content}
     </div>
   );
 }

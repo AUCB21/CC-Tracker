@@ -655,6 +655,7 @@ export async function getHub(opts: HubOptions = {}): Promise<Hub> {
     warnings,
     generatedAt: new Date().toISOString(),
     projectsScanned: projects.map((p) => p.path),
+    configDir,
   };
 }
 

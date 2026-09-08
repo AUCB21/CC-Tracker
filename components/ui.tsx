@@ -78,6 +78,59 @@ export function Card({
   );
 }
 
+/** Native <details>/<summary> disclosure used to group the Hub page's owner
+ *  boxes (level 1, same material as Card) and per-type sub-boxes (level 2, a
+ *  lighter Surface 2 inset). No JS, no persisted open state.
+ *  ponytail: native <details>, no persisted open state; add URL/localStorage persistence if people ask */
+export function Fold({
+  summary,
+  right,
+  open,
+  children,
+  className = "",
+  level = 1,
+}: {
+  summary: React.ReactNode;
+  right?: React.ReactNode;
+  open?: boolean;
+  children: React.ReactNode;
+  className?: string;
+  level?: 1 | 2;
+}) {
+  const headerPad = level === 1 ? "px-5 py-4" : "px-4 py-3";
+  const bodyPad = level === 1 ? "px-5 pb-5" : "px-4 pb-4";
+  const style = level === 1 ? PANEL_STYLE : undefined;
+  const shellClass = level === 1 ? "" : "rounded-[0.875rem] bg-panel2/40";
+
+  return (
+    <details open={open} className={`group min-w-0 ${shellClass} ${className}`} style={style}>
+      <summary
+        className={`flex min-h-11 cursor-pointer list-none flex-wrap items-center gap-3 ${headerPad} [&::-webkit-details-marker]:hidden`}
+        style={level === 1 ? { borderBottom: "0.0625rem solid var(--color-line-soft)" } : undefined}
+      >
+        <svg
+          aria-hidden
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-4 w-4 shrink-0 text-muted transition-transform group-open:rotate-90"
+          style={{ transitionDuration: "var(--duration-fast)" }}
+        >
+          <path d="M7 4.5l6 5.5-6 5.5" />
+        </svg>
+        <span className="min-w-0 flex-1 break-words">{summary}</span>
+        {right && (
+          <span className="ml-auto flex min-w-0 flex-wrap items-center gap-2">{right}</span>
+        )}
+      </summary>
+      <div className={bodyPad}>{children}</div>
+    </details>
+  );
+}
+
 export function Stat({
   label,
   value,

@@ -143,6 +143,9 @@ try {
 
   // ---- generatedAt present ----
   assert.ok(hub.generatedAt.length > 0);
+
+  // ---- configDir echoes the resolved config dir ----
+  assert.equal(hub.configDir, configDir);
 } finally {
   await rm(tmpDir, { recursive: true, force: true });
 }
