@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useCallback } from "react";
+import { Label } from "@/components/ui";
 
 export type Facet =
   | {
@@ -94,9 +95,9 @@ export function FilterRail({
 
       {facets.map((facet) => (
         <section key={facet.key}>
-          <p className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-muted">
+          <Label as="span" className="mb-2 block">
             {facet.label}
-          </p>
+          </Label>
           {facet.kind === "checkbox" ? (
             <ul className="space-y-1.5">
               {facet.options.map((opt) => {

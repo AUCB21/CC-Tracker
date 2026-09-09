@@ -7,6 +7,9 @@ import type { TaskRun, EventRow, Project } from "@/lib/types";
 import { getBrowserSupabase } from "@/lib/supabase-browser";
 import { fmtCost, fmtRelative, truncate } from "@/lib/format";
 import { Badge, CELL_STYLE, LiveDot, PANEL_STYLE as LANE_PANEL } from "@/components/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const ALL_FILTER = "__all__";
 
 type BadgeColor = "green" | "yellow" | "blue" | "accent" | "muted" | "red";
 
@@ -426,28 +429,40 @@ export function LiveFeed({
     <div className="flex flex-col gap-4">
       {/* Filter bar */}
       <div className="flex flex-wrap items-center gap-3">
-        <select
-          aria-label="Filter by project"
-          value={filterProject ?? ""}
-          onChange={(e) => setFilter("project", e.target.value)}
-          className="max-w-full flex-1 min-w-0 rounded-md border border-line bg-panel2 px-3 py-1.5 text-[0.75rem] text-foreground focus:border-accent focus:outline-none sm:flex-none"
+        <Select
+          value={filterProject ?? ALL_FILTER}
+          onValueChange={(v) => setFilter("project", v === ALL_FILTER ? "" : v)}
         >
-          <option value="">All projects</option>
-          {projects.map((p) => (
-            <option key={p.id} value={p.id}>{p.name}</option>
-          ))}
-        </select>
-        <select
-          aria-label="Filter by session"
-          value={filterSession ?? ""}
-          onChange={(e) => setFilter("session", e.target.value)}
-          className="max-w-full flex-1 min-w-0 rounded-md border border-line bg-panel2 px-3 py-1.5 text-[0.75rem] text-foreground focus:border-accent focus:outline-none sm:flex-none"
+          <SelectTrigger
+            aria-label="Filter by project"
+            className="h-auto max-w-full flex-1 min-w-0 rounded-md border-line bg-panel2 px-3 py-1.5 text-[0.75rem] text-foreground focus:border-accent focus:outline-none focus:ring-0 sm:flex-none"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="border-[color:var(--color-line)] bg-popover text-popover-foreground">
+            <SelectItem value={ALL_FILTER}>All projects</SelectItem>
+            {projects.map((p) => (
+              <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={filterSession ?? ALL_FILTER}
+          onValueChange={(v) => setFilter("session", v === ALL_FILTER ? "" : v)}
         >
-          <option value="">All sessions</option>
-          {sessionOptions.map((sid) => (
-            <option key={sid} value={sid}>{sid.slice(0, 8)}...{sid.slice(-4)}</option>
-          ))}
-        </select>
+          <SelectTrigger
+            aria-label="Filter by session"
+            className="h-auto max-w-full flex-1 min-w-0 rounded-md border-line bg-panel2 px-3 py-1.5 text-[0.75rem] text-foreground focus:border-accent focus:outline-none focus:ring-0 sm:flex-none"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="border-[color:var(--color-line)] bg-popover text-popover-foreground">
+            <SelectItem value={ALL_FILTER}>All sessions</SelectItem>
+            {sessionOptions.map((sid) => (
+              <SelectItem key={sid} value={sid}>{sid.slice(0, 8)}...{sid.slice(-4)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Two-column tail */}

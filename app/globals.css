@@ -68,6 +68,15 @@
   /* Ink for text/glyphs placed on an accent-500 (terracotta) surface. */
   --color-on-accent:    #14100d;
 
+  /* shadcn Select tokens, remapped onto the existing palette (no new colors). */
+  --color-popover:            var(--color-panel);
+  --color-popover-foreground: var(--color-foreground);
+  --color-muted-foreground:   var(--color-muted);
+  --color-accent-foreground:  var(--color-on-accent);
+  --color-border:             var(--color-line);
+  --color-input:              var(--color-line);
+  --color-ring:               var(--color-accent);
+
   /* Chart dim variants (kept from the pre-refresh charts.tsx palette) */
   --color-accent-dim:  var(--color-accent-800);
   --color-blue-dim:    var(--color-blue-deep);
@@ -161,6 +170,26 @@ body {
 @keyframes lift    { from { opacity: 0; transform: translateY(1.25rem) scale(0.97); } to { opacity: 1; transform: none; } }
 @keyframes slidein { from { opacity: 0; transform: translateX(1.5rem); } to { opacity: 1; transform: none; } }
 @keyframes draw    { from { stroke-dashoffset: 1200; } to { stroke-dashoffset: 0; } }
+@keyframes drawerIn { from { transform: translateX(100%); } to { transform: none; } }
+
+/* Migrated from LiveTimeline's <style> block: accent wash on freshly-arrived rows. */
+.deck-timeline li[data-new="1"] {
+  animation: deck-new-event 900ms var(--ease-standard);
+}
+@keyframes deck-new-event {
+  0%   { background-color: color-mix(in oklab, var(--color-accent) 22%, transparent); }
+  100% { background-color: transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .deck-timeline li[data-new="1"] { animation: none; }
+}
+
+/* Migrated from MobileNav's <style> block: slide-in drawer + backdrop veil. */
+.mobile-nav-drawer[open] { animation: drawerIn var(--duration-base) var(--ease-standard) both; }
+.mobile-nav-drawer[open]::backdrop { animation: veil var(--duration-base) var(--ease-standard) both; }
+@media (prefers-reduced-motion: reduce) {
+  .mobile-nav-drawer[open], .mobile-nav-drawer[open]::backdrop { animation: none; }
+}
 
 /* Respect prefers-reduced-motion: preserve state change, kill animation.
    The `.motion-safe-pulse` opt-out keeps liveness indicators animating so

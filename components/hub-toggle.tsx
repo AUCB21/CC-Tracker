@@ -2,12 +2,11 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Chip, InlineError } from "@/components/ui";
 
-// Copied locally from app/hitl/decide-buttons.tsx; not exported from there.
-const CHIP =
-  "inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 py-1 text-[0.75rem] font-medium leading-none transition-colors disabled:opacity-40 sm:min-h-0";
-const CHIP_IDLE = `${CHIP} border-line text-muted hover:border-line-strong`;
-const CHIP_ACTIVE = `${CHIP} border-[color:var(--color-accent-500)] bg-[color:var(--color-accent-500)] text-background`;
+// Touch-target floor (2.75rem) on mobile, collapsing to the compact chip
+// height at sm+ where pointer precision is higher.
+const TOUCH_CLASS = "min-h-11 sm:min-h-0";
 
 type Props =
   | { kind: "plugin"; pluginKey: string; enabled: boolean }
@@ -50,10 +49,10 @@ export function HubToggle(props: Props) {
 
     content = (
       <div className="ml-auto flex items-center gap-2">
-        <button className={CHIP_IDLE} onClick={onClick} disabled={pending}>
+        <Chip variant="neutral" className={TOUCH_CLASS} onClick={onClick} disabled={pending}>
           {pending ? "Saving..." : enabled ? "Disable" : "Enable"}
-        </button>
-        {err && <span className="text-[0.6875rem] text-[color:var(--color-red)]">{err}</span>}
+        </Chip>
+        <InlineError>{err}</InlineError>
       </div>
     );
   } else {
@@ -73,30 +72,36 @@ export function HubToggle(props: Props) {
 
     content = (
       <div className="ml-auto flex items-center gap-2">
-        <button
-          className={state === "enabled" ? CHIP_ACTIVE : CHIP_IDLE}
+        <Chip
+          variant={state === "enabled" ? "primary" : "neutral"}
+          armed={state === "enabled"}
+          className={TOUCH_CLASS}
           onClick={() => decide("enabled")}
           disabled={pending || state === "enabled"}
         >
           {pending ? "Saving..." : "Approve"}
-        </button>
-        <button
-          className={state === "disabled" ? CHIP_ACTIVE : CHIP_IDLE}
+        </Chip>
+        <Chip
+          variant={state === "disabled" ? "primary" : "neutral"}
+          armed={state === "disabled"}
+          className={TOUCH_CLASS}
           onClick={() => decide("disabled")}
           disabled={pending || state === "disabled"}
         >
           {pending ? "Saving..." : "Reject"}
-        </button>
+        </Chip>
         {state !== "pending" && (
-          <button
-            className={`${CHIP} border-line text-muted hover:border-line-strong text-[0.6875rem]`}
+          <Chip
+            variant="neutral"
+            className={TOUCH_CLASS}
+            style={{ fontSize: "0.6875rem" }}
             onClick={() => decide("clear")}
             disabled={pending}
           >
             Reset
-          </button>
+          </Chip>
         )}
-        {err && <span className="text-[0.6875rem] text-[color:var(--color-red)]">{err}</span>}
+        <InlineError>{err}</InlineError>
       </div>
     );
   }

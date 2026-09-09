@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Modal } from "./modal";
-import { ErrorAlert } from "@/components/ui";
+import { ErrorAlert, Input, Label } from "@/components/ui";
 
 /**
  * Shared destructive-action confirmation, built on the Modal primitive.
@@ -92,19 +92,16 @@ export function DeleteConfirmModal({
         {children}
         {requireTypeName && (
           <div>
-            <label
-              htmlFor="delete-confirm-name"
-              className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-muted"
-            >
+            <Label as="label" htmlFor="delete-confirm-name">
               Type <span className="font-mono normal-case text-foreground">{objectName}</span> to confirm
-            </label>
-            <input
+            </Label>
+            <Input
               id="delete-confirm-name"
               value={typed}
               onChange={(e) => setTyped(e.target.value)}
               autoComplete="off"
               spellCheck={false}
-              className="mt-1.5 w-full rounded-md border border-line bg-panel2 px-3 py-2 text-sm text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none"
+              className="mt-1.5"
               placeholder={objectName}
             />
           </div>

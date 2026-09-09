@@ -1,21 +1,21 @@
 "use client";
 import { useState, useTransition } from "react";
-import { createPromptVersion } from "./actions";
+import { createProject, createPromptVersion } from "./actions";
+import { ProjectPicker } from "./project-picker";
+import { Chip, InlineError } from "@/components/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { PromptKind, PromptRow } from "@/lib/types";
-
-const CHIP =
-  "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[0.75rem] font-medium leading-none transition-colors disabled:opacity-40";
-const CHIP_PRIMARY = `${CHIP} border-accent/40 bg-accent/10 text-foreground hover:border-accent`;
-const CHIP_TINY = `${CHIP} border-line text-muted hover:border-accent hover:text-foreground`;
 
 export function PromptEditor({
   seed,
   projectId,
   projectName,
+  projects,
 }: {
   seed: PromptRow | null;
   projectId: string | null;
   projectName: string | null;
+  projects: { id: string; name: string; path: string }[];
 }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(seed?.name ?? "");
@@ -23,18 +23,46 @@ export function PromptEditor({
   const [body, setBody] = useState(seed?.body ?? "");
   const [err, setErr] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [selectedProjectId, setSelectedProjectId] = useState<string | "" | "__create__">(
+    seed ? (seed.project_id ?? "") : (projectId ?? "")
+  );
+  const [newProjectName, setNewProjectName] = useState("");
+  const [newProjectPath, setNewProjectPath] = useState("");
+  const [creatingProject, startCreateTransition] = useTransition();
 
   function reset() {
     setName(seed?.name ?? "");
     setKind((seed?.kind as PromptKind) ?? "template");
     setBody(seed?.body ?? "");
     setErr(null);
+    setSelectedProjectId(seed ? (seed.project_id ?? "") : (projectId ?? ""));
+    setNewProjectName("");
+    setNewProjectPath("");
+  }
+
+  function createNewProject() {
+    startCreateTransition(async () => {
+      const r = await createProject({ name: newProjectName, path: newProjectPath });
+      if ("error" in r) { setErr(r.error); return; }
+      setSelectedProjectId(r.row.id);
+      setNewProjectName("");
+      setNewProjectPath("");
+    });
   }
 
   function submit() {
     setErr(null);
+    if (!seed && selectedProjectId === "__create__") {
+      setErr("Finish creating the project first, or pick one from the list.");
+      return;
+    }
+    const effectiveProjectId = seed
+      ? projectId
+      : selectedProjectId === "__create__" || selectedProjectId === ""
+        ? null
+        : selectedProjectId;
     startTransition(async () => {
-      const r = await createPromptVersion({ name, body, kind, project_id: projectId });
+      const r = await createPromptVersion({ name, body, kind, project_id: effectiveProjectId });
       if ("error" in r) { setErr(r.error); return; }
       setOpen(false);
     });
@@ -42,13 +70,9 @@ export function PromptEditor({
 
   if (!open) {
     return (
-      <button
-        type="button"
-        className={CHIP_TINY}
-        onClick={() => { reset(); setOpen(true); }}
-      >
+      <Chip variant="neutral" onClick={() => { reset(); setOpen(true); }}>
         {seed ? "New Version" : "New Prompt"}
-      </button>
+      </Chip>
     );
   }
 
@@ -58,7 +82,7 @@ export function PromptEditor({
         <span>
           {seed
             ? `Editing "${seed.name}" (v${seed.version} → v${seed.version + 1})`
-            : `New prompt${projectName ? ` for ${projectName}` : " (global)"}`}
+            : `New prompt${projectName ? ` for ${projectName}` : ""}`}
         </span>
       </div>
       <div className="flex flex-wrap gap-2">
@@ -70,17 +94,51 @@ export function PromptEditor({
           aria-label="Prompt name"
           className="min-w-[16rem] flex-1 rounded-md border border-line bg-panel px-3 py-1.5 text-[0.75rem] text-foreground focus:border-accent focus:outline-none disabled:opacity-60"
         />
-        <select
+        <Select
           value={kind}
-          onChange={(e) => setKind(e.target.value as PromptKind)}
+          onValueChange={(v) => setKind(v as PromptKind)}
           disabled={!!seed}
-          aria-label="Prompt kind"
-          className="rounded-md border border-line bg-panel px-3 py-1.5 text-[0.75rem] text-foreground focus:border-accent focus:outline-none disabled:opacity-60"
         >
-          <option value="template">template</option>
-          <option value="system">system</option>
-        </select>
+          <SelectTrigger
+            aria-label="Prompt kind"
+            className="h-auto w-auto rounded-md border-line bg-panel px-3 py-1.5 text-[0.75rem] text-foreground focus:border-accent focus:outline-none focus:ring-0 disabled:opacity-60"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="border-[color:var(--color-line)] bg-popover text-popover-foreground">
+            <SelectItem value="template">message</SelectItem>
+            <SelectItem value="system">system prompt</SelectItem>
+          </SelectContent>
+        </Select>
+        {!seed && (
+          <ProjectPicker
+            value={selectedProjectId}
+            projects={projects}
+            onChange={setSelectedProjectId}
+          />
+        )}
       </div>
+      {!seed && selectedProjectId === "__create__" && (
+        <div className="flex flex-wrap gap-2">
+          <input
+            value={newProjectName}
+            onChange={(e) => setNewProjectName(e.target.value)}
+            placeholder="project name"
+            aria-label="New project name"
+            className="min-w-[16rem] flex-1 rounded-md border border-line bg-panel px-3 py-1.5 text-[0.75rem] text-foreground focus:border-accent focus:outline-none disabled:opacity-60"
+          />
+          <input
+            value={newProjectPath}
+            onChange={(e) => setNewProjectPath(e.target.value)}
+            placeholder="project path"
+            aria-label="New project path"
+            className="min-w-[16rem] flex-1 rounded-md border border-line bg-panel px-3 py-1.5 text-[0.75rem] text-foreground focus:border-accent focus:outline-none disabled:opacity-60"
+          />
+          <Chip variant="neutral" onClick={createNewProject} disabled={creatingProject}>
+            {creatingProject ? "Creating…" : "Create & use"}
+          </Chip>
+        </div>
+      )}
       <textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
@@ -88,13 +146,13 @@ export function PromptEditor({
         className="min-h-[10rem] w-full resize-y rounded-md border border-line bg-panel p-2 font-mono text-[0.75rem] text-foreground focus:border-accent focus:outline-none"
       />
       <div className="flex items-center gap-2">
-        <button className={CHIP_PRIMARY} onClick={submit} disabled={pending}>
+        <Chip variant="primary" onClick={submit} disabled={pending}>
           {pending ? "Saving…" : "Save Version"}
-        </button>
-        <button className={CHIP_TINY} onClick={() => setOpen(false)} disabled={pending}>
+        </Chip>
+        <Chip variant="neutral" onClick={() => setOpen(false)} disabled={pending}>
           Cancel
-        </button>
-        {err && <span className="text-[0.6875rem] text-[color:var(--color-red)]">{err}</span>}
+        </Chip>
+        <InlineError>{err}</InlineError>
       </div>
     </div>
   );

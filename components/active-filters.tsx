@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useCallback } from "react";
+import { Chip } from "@/components/ui";
 import type { Facet } from "./filter-rail";
 
 export function ActiveFilterBar({ facets }: { facets: Facet[] }) {
@@ -72,10 +73,7 @@ export function ActiveFilterBar({ facets }: { facets: Facet[] }) {
         Active Filters:
       </span>
       {activeChips.map((chip) => (
-        <span
-          key={`${chip.key}-${chip.value}`}
-          className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-2.5 py-1 text-[0.75rem] font-medium leading-none text-foreground transition-colors hover:border-accent"
-        >
+        <Chip key={`${chip.key}-${chip.value}`} as="span" variant="primary" size="sm">
           <span>{chip.label}</span>
           <button
             type="button"
@@ -86,7 +84,7 @@ export function ActiveFilterBar({ facets }: { facets: Facet[] }) {
           >
             <span aria-hidden>✕</span>
           </button>
-        </span>
+        </Chip>
       ))}
       <button
         type="button"

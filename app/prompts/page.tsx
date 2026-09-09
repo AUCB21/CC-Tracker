@@ -5,6 +5,8 @@ import { getProjects } from "@/lib/queries";
 import { fmtDate } from "@/lib/format";
 import type { PromptRow } from "@/lib/types";
 import { PromptEditor } from "./prompt-editor";
+import { SendButton } from "./send-button";
+import { EditProjectInline } from "./edit-project-inline";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Prompts" };
@@ -62,7 +64,7 @@ export default async function PromptsPage() {
         <h2 className="mb-3 text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-muted">
           New prompt
         </h2>
-        <PromptEditor seed={null} projectId={null} projectName={null} />
+        <PromptEditor seed={null} projectId={null} projectName={null} projects={projects ?? []} />
       </div>
 
       {groups.size === 0 ? (
@@ -92,10 +94,21 @@ export default async function PromptsPage() {
                   {latest.body}
                 </pre>
                 <div className="mt-3">
+                  <EditProjectInline
+                    promptId={latest.id}
+                    currentProjectId={latest.project_id}
+                    projects={projects ?? []}
+                  />
+                </div>
+                <div className="mt-3">
+                  <SendButton promptId={latest.id} />
+                </div>
+                <div className="mt-3">
                   <PromptEditor
                     seed={latest}
                     projectId={latest.project_id}
                     projectName={projectName}
+                    projects={[]}
                   />
                 </div>
                 {versions.length > 1 && (

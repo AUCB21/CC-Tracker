@@ -219,19 +219,6 @@ export function LiveTimeline({
           </ul>
         )}
       </div>
-
-      <style>{`
-        .deck-timeline li[data-new="1"] {
-          animation: deck-new-event 900ms var(--ease-standard);
-        }
-        @keyframes deck-new-event {
-          0%   { background-color: color-mix(in oklab, var(--color-accent) 22%, transparent); }
-          100% { background-color: transparent; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .deck-timeline li[data-new="1"] { animation: none; }
-        }
-      `}</style>
     </section>
   );
 }

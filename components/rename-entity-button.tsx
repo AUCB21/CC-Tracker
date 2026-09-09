@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Modal } from "@/components/modal";
-import { ActionIcons, ErrorAlert, IconButton } from "@/components/ui";
+import { ActionIcons, ErrorAlert, IconButton, Input, Label } from "@/components/ui";
 
 /**
  * Generic rename affordance: pencil chip + Modal with a single-line form
@@ -115,23 +115,23 @@ export function RenameEntityButton({
       >
         <form id={formId} onSubmit={submit} className="space-y-4">
           <div>
-            <label htmlFor={inputId} className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-muted">
+            <Label as="label" htmlFor={inputId}>
               {fieldLabel}
-            </label>
-            <input
+            </Label>
+            <Input
               id={inputId}
               value={value}
               onChange={(e) => setValue(e.target.value)}
               maxLength={200}
-              className="mt-1.5 w-full rounded-md border border-line bg-panel2 px-3 py-2 text-sm text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none"
+              className="mt-1.5"
               placeholder={placeholder}
             />
           </div>
           {descriptionField && (
             <div>
-              <label htmlFor={`${entityLabel}-desc`} className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-muted">
+              <Label as="label" htmlFor={`${entityLabel}-desc`}>
                 Description
-              </label>
+              </Label>
               <textarea
                 id={`${entityLabel}-desc`}
                 value={description}

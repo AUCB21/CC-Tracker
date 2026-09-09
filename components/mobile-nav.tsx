@@ -75,14 +75,6 @@ export function MobileNav() {
       >
         <DeckRail onNavigate={close} />
       </dialog>
-      <style>{`
-        .mobile-nav-drawer[open] { animation: drawerIn var(--duration-base) var(--ease-standard) both; }
-        .mobile-nav-drawer[open]::backdrop { animation: veil var(--duration-base) var(--ease-standard) both; }
-        @keyframes drawerIn { from { transform: translateX(100%); } to { transform: none; } }
-        @media (prefers-reduced-motion: reduce) {
-          .mobile-nav-drawer[open], .mobile-nav-drawer[open]::backdrop { animation: none; }
-        }
-      `}</style>
     </div>
   );
 }

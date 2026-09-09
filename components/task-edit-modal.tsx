@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { Modal } from "./modal";
-import { ErrorAlert } from "@/components/ui";
+import { ErrorAlert, Label, Textarea } from "@/components/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Task } from "@/lib/types";
+
+const NONE_PLAN = "__none__";
 
 const STATUS_OPTIONS: { value: Task["status"]; label: string }[] = [
   { value: "pending", label: "Pending" },
@@ -115,22 +118,22 @@ export function TaskEditModal({
     >
       <div className="space-y-4">
         <div>
-          <label htmlFor="task-content" className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-muted">
+          <Label as="label" htmlFor="task-content">
             Content
-          </label>
-          <textarea
+          </Label>
+          <Textarea
             id="task-content"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={3}
             required
-            className="mt-1.5 w-full resize-y rounded-md border border-line bg-panel2 px-3 py-2 text-sm text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none"
+            className="mt-1.5 resize-y"
             placeholder="Task content"
           />
         </div>
 
         <div>
-          <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-muted">Status</span>
+          <Label>Status</Label>
           <div className="mt-1.5 flex flex-wrap gap-2">
             {STATUS_OPTIONS.map((opt) => (
               <label
@@ -156,22 +159,28 @@ export function TaskEditModal({
         </div>
 
         <div>
-          <label htmlFor="task-plan" className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-muted">
+          <Label as="label" htmlFor="task-plan">
             Plan
-          </label>
-          <select
-            id="task-plan"
-            value={planId}
-            onChange={(e) => setPlanId(e.target.value)}
-            className="mt-1.5 w-full rounded-md border border-line bg-panel2 px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none"
+          </Label>
+          <Select
+            value={planId === "" ? NONE_PLAN : planId}
+            onValueChange={(v) => setPlanId(v === NONE_PLAN ? "" : v)}
           >
-            <option value="">— none —</option>
-            {plans.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.title}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger
+              id="task-plan"
+              className="mt-1.5 h-auto w-full rounded-md border-line bg-panel2 px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-0"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="border-[color:var(--color-line)] bg-popover text-popover-foreground">
+              <SelectItem value={NONE_PLAN}>no plan</SelectItem>
+              {plans.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {err && <ErrorAlert>{err}</ErrorAlert>}

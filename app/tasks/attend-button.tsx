@@ -4,15 +4,10 @@ import { queueAttend, pollRun, cancelRun, followUp } from "./actions";
 import { TASK_RUN_TERMINAL } from "@/lib/types";
 import type { TaskRun, RunLineage } from "@/lib/types";
 import { getBrowserSupabase } from "@/lib/supabase-browser";
+import { Chip, Textarea } from "@/components/ui";
 
-// Chip aesthetic to match active-filters: soft accent-tinted pill.
 const CHIP_BASE =
   "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.75rem] font-medium leading-none transition-colors";
-const CHIP_IDLE = `${CHIP_BASE} border-line text-muted hover:border-accent hover:text-accent`;
-const CHIP_ACTIVE = `${CHIP_BASE} border-accent/40 bg-accent/10 text-foreground hover:border-accent`;
-// ponytail: same dimensions as CHIP_BASE so status/action chips align in one row.
-const CHIP_TINY =
-  `${CHIP_BASE} border-line text-muted hover:border-accent hover:text-foreground`;
 
 function statusChipClass(status: TaskRun["status"]): string {
   if (status === "done") return `${CHIP_BASE} border-[color:var(--color-green)]/40 bg-[color:var(--color-green)]/10 text-[color:var(--color-green)]`;
@@ -130,9 +125,9 @@ export function AttendButton({
     return (
       <span className="flex items-center gap-2 text-[0.6875rem] text-[color:var(--color-red)]">
         {err}
-        <button onClick={() => setErr(null)} className={CHIP_TINY}>
+        <Chip size="sm" onClick={() => setErr(null)}>
           retry
-        </button>
+        </Chip>
       </span>
     );
   }
@@ -164,36 +159,28 @@ export function AttendButton({
             </span>
           )}
           {lineage && (lineage.m > 1 || run.parent_run_id) && (
-            <span className={CHIP_TINY} title="attempt within retry / follow-up chain">
+            <Chip as="span" size="sm" title="attempt within retry / follow-up chain">
               <span className="font-mono">attempt {lineage.n}/{lineage.m}</span>
-            </span>
+            </Chip>
           )}
           {live && (
-            <button
-              onClick={handleCancel}
-              disabled={cancelling}
-              className={`${CHIP_TINY} disabled:opacity-40`}
-            >
+            <Chip size="sm" onClick={handleCancel} disabled={cancelling}>
               {cancelling ? "…" : "cancel"}
-            </button>
+            </Chip>
           )}
           {hasDetails && (
-            <button
+            <Chip
+              size="sm"
               onClick={() => setShowDetails((v) => !v)}
-              className={CHIP_TINY}
               aria-expanded={showDetails}
             >
               {showDetails ? "hide" : "details"}
-            </button>
+            </Chip>
           )}
           {terminal && (
-            <button
-              onClick={handleAttend}
-              disabled={loading}
-              className={`${CHIP_TINY} disabled:opacity-40`}
-            >
+            <Chip size="sm" onClick={handleAttend} disabled={loading}>
               {loading ? "…" : "retry"}
-            </button>
+            </Chip>
           )}
         </div>
         {hasDetails && showDetails && (
@@ -239,23 +226,24 @@ export function AttendButton({
               }}
               className="flex items-start gap-1.5"
             >
-              <textarea
+              <Textarea
                 id={`followup-${run.id}`}
                 name="text"
                 value={followupText}
                 onChange={(e) => setFollowupText(e.target.value)}
                 placeholder="follow up…"
                 rows={1}
-                className="w-full max-w-[20rem] min-w-0 max-h-16 min-h-[1.75rem] resize-y rounded-md border border-line bg-panel2 px-2 py-1 text-[0.6875rem] leading-relaxed text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none"
+                className="max-w-[20rem] min-w-0 max-h-16 min-h-[1.75rem] resize-y leading-relaxed"
+                style={{ padding: "0.25rem 0.5rem", fontSize: "0.6875rem" }}
               />
-              <button
+              <Chip
                 type="submit"
+                size="sm"
                 disabled={followupPending || !followupText.trim()}
-                className={`${CHIP_TINY} disabled:opacity-40`}
                 title="Resume the finished session with this prompt"
               >
                 {followupPending ? "…" : "send"}
-              </button>
+              </Chip>
             </form>
             {followupQueued && (
               <p role="status" className="text-[0.6875rem] text-[color:var(--color-green)]">
@@ -275,22 +263,23 @@ export function AttendButton({
   return (
     <div className="flex flex-col items-end gap-1">
       <div className="flex items-center gap-1.5">
-        <button
+        <Chip
+          size="sm"
+          variant={showOverride || override.trim() ? "primary" : "neutral"}
           onClick={handleAttend}
           disabled={loading}
-          className={`${showOverride || override.trim() ? CHIP_ACTIVE : CHIP_IDLE} disabled:opacity-40`}
         >
           {loading ? "…" : "Attend"}
-        </button>
-        <button
+        </Chip>
+        <Chip
+          size="sm"
           onClick={() => setShowOverride((v) => !v)}
-          className={CHIP_TINY}
           aria-expanded={showOverride}
           aria-label={showOverride ? "Hide extra instructions" : "Add extra instructions"}
           title="Extra instructions for this run"
         >
           {showOverride ? "×" : "+"}
-        </button>
+        </Chip>
       </div>
       {showOverride && (
         <textarea
