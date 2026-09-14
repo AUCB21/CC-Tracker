@@ -88,3 +88,8 @@ src/plugins/impeccable-live.client.ts
 
 # Local scratch: visual-diff baseline snapshot (not source)
 /.visual-baseline/
+
+# Local Claude Code skill installs (machine tooling, not source)
+.agents/
+.claude/skills/
+skills-lock.json
