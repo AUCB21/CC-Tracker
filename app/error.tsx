@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { SettingsTrigger } from "@/components/deck-preferences";
 import { Card, PageHeader } from "@/components/ui";
 
 export default function GlobalError({
@@ -42,12 +43,11 @@ export default function GlobalError({
         >
           Try again
         </button>
-        <Link
-          href="/setup"
+        <SettingsTrigger
           className="rounded-md border border-line bg-panel px-4 py-2 text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-foreground transition-colors hover:bg-panel2"
         >
           Go to setup
-        </Link>
+        </SettingsTrigger>
         <Link
           href="/api/health"
           className="text-[0.75rem] text-accent hover:underline underline-offset-4"

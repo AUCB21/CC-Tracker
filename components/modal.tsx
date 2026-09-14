@@ -56,7 +56,7 @@ export function Modal({
       style={{
         width: "calc(100% - 2rem)",
         maxWidth,
-        maxHeight: "82vh",
+        maxHeight: "82%",
         overflow: "auto",
         border: "0.0625rem solid #322c25",
         borderRadius: "1.25rem",
