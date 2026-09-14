@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SettingsTrigger } from "@/components/deck-preferences";
 
 /* ---------------------------------------------------------------------------
    Material recipes (HANDOFF §3)
@@ -13,8 +14,7 @@ export const PANEL_STYLE: React.CSSProperties = {
   border: "0.0625rem solid var(--color-line)",
   background:
     "linear-gradient(180deg, var(--color-surface-1a), var(--color-surface-1b))",
-  boxShadow:
-    "inset 0 0.0625rem 0 rgb(255 255 255 / 0.045), 0 1rem 2rem -1.25rem rgb(0 0 0 / 0.8)",
+  boxShadow: "var(--deck-shadow-panel)",
 };
 
 const STAT_STYLE: React.CSSProperties = {
@@ -22,8 +22,7 @@ const STAT_STYLE: React.CSSProperties = {
   border: "0.0625rem solid var(--color-line)",
   background:
     "linear-gradient(180deg, var(--color-surface-1a), var(--color-surface-1b))",
-  boxShadow:
-    "inset 0 0.0625rem 0 rgb(255 255 255 / 0.045), 0 0.0625rem 0.125rem rgb(0 0 0 / 0.5)",
+  boxShadow: "var(--deck-shadow-stat)",
 };
 
 /* Cell style is applied by callers on each list item (Overview cells). */
@@ -32,7 +31,7 @@ export const CELL_STYLE: React.CSSProperties = {
   border: "0.0625rem solid var(--color-line)",
   background:
     "linear-gradient(180deg, var(--color-surface-cell-a), var(--color-surface-cell-b))",
-  boxShadow: "inset 0 0.0625rem 0 rgb(255 255 255 / 0.03)",
+  boxShadow: "var(--deck-shadow-cell)",
   overflow: "hidden",
   width: "100%",
 };
@@ -51,7 +50,7 @@ export function Card({
   style?: React.CSSProperties;
 }) {
   return (
-    <section className={`min-w-0 ${className}`} style={{ ...PANEL_STYLE, ...style }}>
+    <section className={`deck-card min-w-0 ${className}`} style={{ ...PANEL_STYLE, ...style }}>
       {(title || right) && (
         <header
           className="flex items-center justify-between gap-4 px-5 py-4"
@@ -137,12 +136,16 @@ export function Stat({
   sub,
   emphasis = false,
   href,
+  spark,
+  delta,
 }: {
   label: string;
   value: React.ReactNode;
   sub?: string;
   emphasis?: boolean;
   href?: string;
+  spark?: number[];
+  delta?: { pct: number | null; goodDirection?: "up" | "down"; sub?: string };
 }) {
   const emphasisStyle: React.CSSProperties = emphasis
     ? {
@@ -155,6 +158,14 @@ export function Stat({
     : {};
   const content = (
     <>
+      {spark && (
+        <span
+          className="pointer-events-none absolute"
+          style={{ top: "1.25rem", right: "1.25rem" }}
+        >
+          <Sparkline data={spark} className="text-accent" />
+        </span>
+      )}
       {emphasis && (
         <span
           aria-hidden
@@ -214,6 +225,11 @@ export function Stat({
       >
         {value}
       </span>
+      {delta && (
+        <span className="relative" style={{ marginTop: "0.5rem" }}>
+          <TrendDelta {...delta} />
+        </span>
+      )}
       {sub && (
         <span
           className="relative"
@@ -345,7 +361,7 @@ export function Badge({
     accent: {
       border: "var(--color-accent-700)",
       bg: "color-mix(in oklab, var(--color-accent-800) 20%, transparent)",
-      text: "var(--color-accent-200)",
+      text: "var(--color-accent-status)",
     },
     muted: {
       border: "var(--color-line-strong)",
@@ -445,9 +461,7 @@ export function SetupBanner() {
           <code className="text-foreground">CC_TRACKER_API_KEY</code> to{" "}
           <code className="text-foreground">.env.local</code>, run{" "}
           <code className="text-foreground">supabase/schema.sql</code>, then restart the dev server.{" "}
-          <Link href="/setup" className="text-accent underline underline-offset-4">
-            Full instructions
-          </Link>
+          <SettingsTrigger className="text-accent underline underline-offset-4">Full instructions</SettingsTrigger>
         </p>
       </div>
     </div>
@@ -485,11 +499,13 @@ export function PageHeader({
   sub,
   right,
   eyebrow,
+  breadcrumbs,
 }: {
   title: string;
   sub?: string;
   right?: React.ReactNode;
   eyebrow?: string;
+  breadcrumbs?: { label: string; href?: string }[];
 }) {
   return (
     <header
@@ -497,6 +513,11 @@ export function PageHeader({
       style={{ animation: "rise 500ms var(--ease-standard) both" }}
     >
       <div className="min-w-0">
+        {breadcrumbs && breadcrumbs.length > 1 && (
+          <div className="mb-2">
+            <Breadcrumbs items={breadcrumbs} />
+          </div>
+        )}
         {eyebrow && (
           <p
             className="mb-2.5 uppercase"
@@ -805,4 +826,86 @@ export function Textarea({
   ...rest
 }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return <textarea className={`${FIELD_CLASS} ${className}`} {...rest} />;
+}
+
+export function NavBadge({ count }: { count: number }) {
+  if (count <= 0) return null;
+  const display = count > 99 ? "99+" : String(count);
+  return (
+    <span
+      aria-label={String(count)}
+      className="inline-flex items-center justify-center rounded-full px-1.5 min-w-[1.25rem] h-[1.25rem] text-[0.6875rem] font-semibold tabular-nums bg-accent text-background"
+    >
+      {display}
+    </span>
+  );
+}
+
+export function Breadcrumbs({ items }: { items: { label: string; href?: string }[] }) {
+  if (items.length <= 1) return null;
+  const lastIndex = items.length - 1;
+  return (
+    <nav aria-label="Breadcrumb">
+      <ol className="flex flex-wrap items-center text-[0.75rem]">
+        {items.map((item, index) => (
+          <li key={`${item.label}-${index}`} className="flex items-center">
+            {index > 0 && (
+              <span aria-hidden className="mx-2 text-muted">
+                &gt;
+              </span>
+            )}
+            {index === lastIndex || !item.href ? (
+              <span className="text-foreground">{item.label}</span>
+            ) : (
+              <Link href={item.href} className="text-muted hover:text-foreground transition-colors">
+                {item.label}
+              </Link>
+            )}
+          </li>
+        ))}
+      </ol>
+    </nav>
+  );
+}
+
+export function Sparkline({ data, className = "" }: { data: number[]; className?: string }) {
+  if (data.length < 2 || data.every((value) => value === 0)) return null;
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const xStep = 40 / (data.length - 1);
+  const points = data
+    .map((value, index) => `${index * xStep},${12 - ((value - min) / range) * 12}`)
+    .join(" ");
+  return (
+    <svg viewBox="0 0 40 12" className={`w-[2.5rem] h-[0.75rem] ${className}`}>
+      <polyline fill="none" stroke="currentColor" strokeWidth="1" points={points} />
+    </svg>
+  );
+}
+
+export function TrendDelta({
+  pct,
+  goodDirection = "up",
+  sub,
+}: {
+  pct: number | null;
+  goodDirection?: "up" | "down";
+  sub?: string;
+}) {
+  if (pct === null) return null;
+  const direction = pct > 0 ? "up" : pct < 0 ? "down" : "zero";
+  const colorClass =
+    direction === "zero"
+      ? "text-muted"
+      : direction === goodDirection
+        ? "text-[color:var(--color-green)]"
+        : "text-[color:var(--color-red)]";
+  const arrow = direction === "up" ? "^" : direction === "down" ? "v" : "-";
+  return (
+    <span className={`inline-flex items-center gap-1 text-[0.6875rem] font-medium tabular-nums ${colorClass}`}>
+      {arrow} {Math.abs(pct).toFixed(1)}%
+      {sub && <span className="text-muted ml-1">{sub}</span>}
+    </span>
+  );
 }

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SetupBanner, Card, Stat, Badge, PageHeader, Empty, Progress, TaskLine, LiveDot } from "@/components/ui";
 import { getProject, getSessions, getPlans, getTasks } from "@/lib/queries";
-import { fmtNum, fmtCost, fmtDate, fmtRelative, truncate } from "@/lib/format";
+import { fmtNum, fmtCost, fmtDate, fmtRelative, truncate, fmtSessionTitle } from "@/lib/format";
 import { isLive } from "@/lib/types";
 import { RenameEntityButton } from "@/components/rename-entity-button";
 import { DeleteEntityButton } from "@/components/delete-entity-button";
@@ -43,6 +43,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       <PageHeader
         title={project.name}
         sub={project.path}
+        breadcrumbs={[{ label: "Projects", href: "/projects" }, { label: project.name }]}
         right={
           <div className="flex items-center gap-2">
             {project.repo && (
@@ -85,7 +86,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                   className="-mx-2 flex items-center justify-between gap-4 rounded-md px-2 py-3 transition-colors hover:bg-panel2/60"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm">{truncate(sess.title, 90)}</p>
+                    <p className="truncate text-sm">{truncate(fmtSessionTitle(sess.title, sess.prompt_count), 90)}</p>
                     <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.6875rem] text-muted">
                       <span className="font-mono">{fmtDate(sess.started_at)}</span>
                       {sess.git_branch && <span className="font-mono">{sess.git_branch}</span>}

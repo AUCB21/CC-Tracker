@@ -3,8 +3,10 @@ import { SetupBanner, Badge, PageHeader, Empty, LiveDot } from "@/components/ui"
 import { FilterRail, type Facet } from "@/components/filter-rail";
 import { ActiveFilterBar } from "@/components/active-filters";
 import { Pager } from "@/components/pager";
+import { SessionTree } from "@/components/session-tree";
+import { SessionsViewToggle } from "@/components/sessions-view-toggle";
 import { getSessionsPage, getSessionFacetRows, getProjects } from "@/lib/queries";
-import { fmtNum, fmtCost, fmtDate, fmtDuration, truncate, fmtProjectName, toList } from "@/lib/format";
+import { fmtNum, fmtCost, fmtDate, fmtDuration, truncate, fmtProjectName, fmtSessionTitle, toList } from "@/lib/format";
 import { isLive } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -112,12 +114,15 @@ export default async function SessionsPage({ searchParams }: { searchParams: Sea
           {/* Mobile / tablet: filters as drawer above the table */}
           <FilterRail facets={facets} variant="drawer" className="xl:hidden" />
 
-          {sessions.length === 0 ? (
-            <Empty>No sessions match the current filters.</Empty>
-          ) : (
-            <>
-              {/* Below md: stacked card list. Above md: dense table. */}
-              <ul className="space-y-3 md:hidden">
+          <SessionsViewToggle
+            listView={
+              <>
+                {sessions.length === 0 ? (
+                  <Empty>No sessions match the current filters.</Empty>
+                ) : (
+                  <>
+                    {/* Below md: stacked card list. Above md: dense table. */}
+                    <ul className="space-y-3 md:hidden">
                 {sessions.map((s) => {
                   const tokens =
                     s.input_tokens + s.output_tokens + s.cache_read_tokens + s.cache_creation_tokens;
@@ -128,7 +133,7 @@ export default async function SessionsPage({ searchParams }: { searchParams: Sea
                           href={`/sessions/${s.id}`}
                           className="min-w-0 flex-1 text-sm text-foreground hover:text-accent"
                         >
-                          <p className="line-clamp-2">{truncate(s.title, 90)}</p>
+                          <p className="line-clamp-2">{truncate(fmtSessionTitle(s.title, s.prompt_count), 90)}</p>
                           <p className="mt-1 text-[0.6875rem] text-muted">
                             {s.model ? s.model.replace("claude-", "") : "no model"}
                             {s.git_branch ? ` / ${s.git_branch}` : ""}
@@ -199,7 +204,7 @@ export default async function SessionsPage({ searchParams }: { searchParams: Sea
                             href={`/sessions/${s.id}`}
                             className="relative block truncate hover:text-accent before:absolute before:inset-0 before:z-10 before:content-['']"
                           >
-                            {truncate(s.title, 60)}
+                            {truncate(fmtSessionTitle(s.title, s.prompt_count), 60)}
                           </Link>
                           <p className="mt-0.5 text-[0.6875rem] text-muted">
                             {s.model ? s.model.replace("claude-", "") : "no model"}
@@ -234,10 +239,13 @@ export default async function SessionsPage({ searchParams }: { searchParams: Sea
                   </tbody>
                 </table>
               </div>
-            </>
-          )}
-
-          <Pager pathname="/sessions" searchParams={params} page={page} totalPages={totalPages} />
+                  </>
+                )}
+                <Pager pathname="/sessions" searchParams={params} page={page} totalPages={totalPages} />
+              </>
+            }
+            treeView={<SessionTree projects={projects ?? []} sessions={sessions} />}
+          />
         </div>
 
         {/* Desktop: sticky filter rail on the right */}

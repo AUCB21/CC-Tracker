@@ -19,9 +19,10 @@ import {
   getPlans,
   getRecentActivityEventsCached,
   getProjects,
+  getSessions,
 } from "@/lib/queries";
-import { buildActivitySeries } from "@/lib/series";
-import { fmtNum, fmtCost, fmtRelative, truncate, fmtProjectName } from "@/lib/format";
+import { buildActivitySeries, buildTokenCostSeries, lastNDays } from "@/lib/series";
+import { fmtNum, fmtCost, fmtRelative, truncate, fmtProjectName, fmtSessionTitle } from "@/lib/format";
 import { isLive } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -54,21 +55,70 @@ export default async function OverviewPage() {
   }
 
   const since30 = new Date(Date.now() - 30 * 86_400_000).toISOString();
-  const [recentSessions, sessionStarts30, tasks, plans, projects, events30] = await Promise.all([
+  const [recentSessions, sessionStarts30, tasks, plans, projects, events30, sessions30] = await Promise.all([
     getRecentSessions(8),
     getSessionStartsSince(since30),
-    getTasks({ columns: "id,status,content,plan_id" }),
-    getPlans({ columns: "id,status,title,session_id" }),
+    getTasks({ columns: "id,status,content,plan_id,created_at" }),
+    getPlans({ columns: "id,status,title,session_id,created_at" }),
     getProjects(),
     getRecentActivityEventsCached(30, ["prompt", "tool_use", "tasks_synced"]),
+    getSessions({ sinceIso: since30 }),
   ]);
 
   const recent = recentSessions ?? [];
-  const activity = buildActivitySeries(30, events30 ?? [], sessionStarts30 ?? []);
+  const activity = buildActivitySeries(14, events30 ?? [], sessionStarts30 ?? []);
   const openTasks = (tasks ?? []).filter((t) => t.status !== "completed").slice(-12).reverse();
   const activePlans = (plans ?? []).filter((p) => p.status === "active").slice(0, 8);
   const projectMap = new Map((projects ?? []).map((p) => [p.id, fmtProjectName(p.name, p.path)]));
   const liveCount = recent.filter(isLive).length;
+
+  const N = 14;
+  const SPARK_DAYS = 7;
+  const activity2N = buildActivitySeries(2 * N, events30 ?? [], sessionStarts30 ?? []);
+  const tokenCost2N = buildTokenCostSeries(2 * N, sessions30 ?? []);
+  const countSpark = (rows: { created_at: string }[]) => {
+    const days = lastNDays(SPARK_DAYS);
+    const counts = new Map(days.map((day) => [day, 0]));
+    for (const row of rows) {
+      const day = row.created_at.slice(0, 10);
+      if (counts.has(day)) counts.set(day, counts.get(day)! + 1);
+    }
+    return days.map((day) => counts.get(day)!);
+  };
+
+  const sessionsSeries = activity2N.map((d) => d.sessions);
+  const sessionsSpark = sessionsSeries.slice(sessionsSeries.length - SPARK_DAYS);
+  const sessionsCurrent = sessionsSeries.slice(sessionsSeries.length - N).reduce((a, b) => a + b, 0);
+  const sessionsPrevious = sessionsSeries.slice(0, N).reduce((a, b) => a + b, 0);
+  const sessionsDeltaPct = sessionsPrevious === 0 ? null : ((sessionsCurrent - sessionsPrevious) / sessionsPrevious) * 100;
+
+  const promptsSeries = activity2N.map((d) => d.prompts);
+  const promptsSpark = promptsSeries.slice(promptsSeries.length - SPARK_DAYS);
+  const promptsCurrent = promptsSeries.slice(promptsSeries.length - N).reduce((a, b) => a + b, 0);
+  const promptsPrevious = promptsSeries.slice(0, N).reduce((a, b) => a + b, 0);
+  const promptsDeltaPct = promptsPrevious === 0 ? null : ((promptsCurrent - promptsPrevious) / promptsPrevious) * 100;
+
+  const toolsSeries = activity2N.map((d) => d.toolUses);
+  const toolsSpark = toolsSeries.slice(toolsSeries.length - SPARK_DAYS);
+  const toolsCurrent = toolsSeries.slice(toolsSeries.length - N).reduce((a, b) => a + b, 0);
+  const toolsPrevious = toolsSeries.slice(0, N).reduce((a, b) => a + b, 0);
+  const toolsDeltaPct = toolsPrevious === 0 ? null : ((toolsCurrent - toolsPrevious) / toolsPrevious) * 100;
+
+  const tokensSeries = tokenCost2N.map((d) => d.input + d.output + d.cacheRead);
+  const tokensSpark = tokensSeries.slice(tokensSeries.length - SPARK_DAYS);
+  const tokensCurrent = tokensSeries.slice(tokensSeries.length - N).reduce((a, b) => a + b, 0);
+  const tokensPrevious = tokensSeries.slice(0, N).reduce((a, b) => a + b, 0);
+  const tokensDeltaPct = tokensPrevious === 0 ? null : ((tokensCurrent - tokensPrevious) / tokensPrevious) * 100;
+
+  const costSeries = tokenCost2N.map((d) => d.cost);
+  const costSpark = costSeries.slice(costSeries.length - SPARK_DAYS);
+  const costCurrent = costSeries.slice(costSeries.length - N).reduce((a, b) => a + b, 0);
+  const costPrevious = costSeries.slice(0, N).reduce((a, b) => a + b, 0);
+  const costDeltaPct = costPrevious === 0 ? null : ((costCurrent - costPrevious) / costPrevious) * 100;
+
+  const projectsSpark = countSpark(projects ?? []);
+  const plansSpark = countSpark(plans ?? []);
+  const tasksSpark = countSpark(tasks ?? []);
 
   return (
     <>
@@ -98,16 +148,16 @@ export default async function OverviewPage() {
       />
 
       {/* Stat rail */}
-      <div className="mb-8 grid gap-3 grid-cols-2 md:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-8">
+      <div className="mb-8 grid gap-3 grid-cols-2 md:grid-cols-4 2xl:grid-cols-8">
         {[
-          { label: "Sessions",   value: stats.sessions,               href: "/sessions",  sub: `${stats.activeSessions} active now` },
-          { label: "Projects",   value: stats.projects,               href: "/projects",  sub: "tracked directories" },
-          { label: "Plans",      value: stats.plans,                  href: "/plans",     sub: `${stats.plansCompleted} completed` },
-          { label: "Tasks",      value: stats.tasks,                  href: "/tasks",     sub: `${stats.tasksCompleted} done / ${stats.tasksInProgress} running` },
-          { label: "Prompts",    value: fmtNum(stats.prompts),        href: "/analytics", sub: "hook-captured" },
-          { label: "Tool calls", value: fmtNum(stats.toolUses),       href: "/analytics", sub: "across all sessions" },
-          { label: "Tokens",     value: fmtNum(stats.totalTokens),    href: "/analytics", sub: "in, out, cache" },
-          { label: "Est. cost",  value: fmtCost(stats.totalCost),     href: "/analytics", sub: "rough model pricing", emphasis: true },
+          { label: "Sessions",   value: stats.sessions,               href: "/sessions",  sub: `${stats.activeSessions} active now`, spark: sessionsSpark, delta: { pct: sessionsDeltaPct, goodDirection: "up" as const, sub: "vs prior 14d" } },
+          { label: "Projects",   value: stats.projects,               href: "/projects",  sub: "tracked directories", spark: projectsSpark },
+          { label: "Plans",      value: stats.plans,                  href: "/plans",     sub: `${stats.plansCompleted} completed`, spark: plansSpark },
+          { label: "Tasks",      value: stats.tasks,                  href: "/tasks",     sub: `${stats.tasksCompleted} done / ${stats.tasksInProgress} running`, spark: tasksSpark },
+          { label: "Prompts",    value: fmtNum(stats.prompts),        href: "/analytics", sub: "hook-captured", spark: promptsSpark, delta: { pct: promptsDeltaPct, goodDirection: "up" as const, sub: "vs prior 14d" } },
+          { label: "Tool calls", value: fmtNum(stats.toolUses),       href: "/analytics", sub: "across all sessions", spark: toolsSpark, delta: { pct: toolsDeltaPct, goodDirection: "up" as const, sub: "vs prior 14d" } },
+          { label: "Tokens",     value: fmtNum(stats.totalTokens),    href: "/analytics", sub: "in, out, cache", spark: tokensSpark, delta: { pct: tokensDeltaPct, goodDirection: "up" as const, sub: "vs prior 14d" } },
+          { label: "Est. cost",  value: fmtCost(stats.totalCost),     href: "/analytics", sub: "rough model pricing", emphasis: true, spark: costSpark, delta: { pct: costDeltaPct, goodDirection: "down" as const, sub: "vs prior 14d" } },
         ].map((s, i) => (
           <div key={s.label} style={{ animation: CARD_ANIM(40 + i * 40) }}>
             <Stat {...s} />
@@ -117,7 +167,7 @@ export default async function OverviewPage() {
 
       {/* Activity spread */}
       <div style={{ animation: CARD_ANIM(360) }}>
-        <Card title="Activity, last 30 days" className="mb-8">
+        <Card title="Activity, last 14 days" className="mb-8">
           {events30 && events30.length + recent.length > 0 ? (
             <ActivityChart data={activity} />
           ) : (
@@ -164,7 +214,7 @@ export default async function OverviewPage() {
                       />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-[0.9375rem]" style={{ color: "var(--color-foreground)" }}>
-                          {truncate(s.title, 90)}
+                          {truncate(fmtSessionTitle(s.title, s.prompt_count), 90)}
                         </p>
                         <p
                           className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1"

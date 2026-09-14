@@ -6,7 +6,7 @@ import { LiveTimeline } from "@/components/live-timeline";
 import { RenameEntityButton } from "@/components/rename-entity-button";
 import { DeleteEntityButton } from "@/components/delete-entity-button";
 import { getSession, getProject, getPlans, getTasks, getEvents, getEventCount } from "@/lib/queries";
-import { fmtNum, fmtCost, fmtDate, fmtDuration, fmtRelative, truncate, toList } from "@/lib/format";
+import { fmtNum, fmtCost, fmtDate, fmtDuration, fmtRelative, truncate, fmtSessionTitle, toList } from "@/lib/format";
 import { isLive } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -75,6 +75,7 @@ export default async function SessionDetailPage({
     .sort((a, b) => b.count - a.count)
     .slice(0, 12);
   const doneTasks = (tasks ?? []).filter((t) => t.status === "completed").length;
+  const sessionTitle = fmtSessionTitle(session.title, session.prompt_count);
 
   // Facet options from the unfiltered slice
   const typeCounts = new Map<string, number>();
@@ -113,8 +114,9 @@ export default async function SessionDetailPage({
   return (
     <>
       <PageHeader
-        title={truncate(session.title, 90)}
+        title={truncate(sessionTitle, 90)}
         sub={`${session.id.slice(0, 8)}  ${fmtDate(session.started_at)}  duration ${fmtDuration(session.started_at, session.ended_at)}${session.model ? `  ${session.model}` : ""}`}
+        breadcrumbs={[{ label: "Sessions", href: "/sessions" }, { label: sessionTitle }]}
         right={
           <div className="flex items-center gap-2">
             {isLive(session) ? (
@@ -125,14 +127,14 @@ export default async function SessionDetailPage({
             <RenameEntityButton
               apiPath={`/api/sessions/${session.id}`}
               field="title"
-              currentValue={session.title ?? session.id.slice(0, 8)}
+              currentValue={sessionTitle}
               entityLabel="session"
               placeholder="Session title"
             />
             <DeleteEntityButton
               apiPath={`/api/sessions/${session.id}`}
               entityLabel="session"
-              entityName={session.title || session.id.slice(0, 8)}
+              entityName={sessionTitle}
               requireTypeName
               redirectTo="/sessions"
               extraNotice={

@@ -53,6 +53,12 @@ export function truncate(s: string | null | undefined, n = 80): string {
   return clean.length > n ? clean.slice(0, n - 1) + "…" : clean;
 }
 
+export function fmtSessionTitle(title: string | null | undefined, promptCount: number): string {
+  if (title?.startsWith("<system-reminder")) return "Worktree session - no user prompt yet";
+  if (!title && promptCount === 0) return "Session - no user prompt yet";
+  return title ?? "Session - no user prompt yet";
+}
+
 /** Flattens a searchParams value (string | string[] | undefined) into a comma-split list. */
 export function toList(v: string | string[] | undefined): string[] {
   if (!v) return [];

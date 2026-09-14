@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Familjen_Grotesk, Public_Sans, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { DeckRail } from "@/components/deck-rail";
-import { MobileNav } from "@/components/mobile-nav";
+import { MobileNav, type NavCounts } from "@/components/mobile-nav";
 import { DeckShelf } from "@/components/deck-shelf";
-import { isDbConfigured, ingestionKeyConfigured } from "@/lib/supabase";
+import { NavAutoRefresh } from "@/components/nav-auto-refresh";
+import { DeckPreferences, SettingsTrigger, ThemeToggle } from "@/components/deck-preferences";
+import { SettingsModal } from "@/components/settings-modal";
+import { getSupabase, isDbConfigured, ingestionKeyConfigured } from "@/lib/supabase";
 import "./globals.css";
 
 const familjen = Familjen_Grotesk({ variable: "--font-familjen", subsets: ["latin"] });
@@ -19,21 +23,48 @@ export const metadata: Metadata = {
   description: "Retrospective control room for every Claude Code session.",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const connected = isDbConfigured() && ingestionKeyConfigured();
+  const setupStatus = {
+    url: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
+    serviceRole: Boolean(process.env.SUPABASE_SECRET ?? process.env.SUPABASE_SERVICE_ROLE_KEY),
+    apiKey: ingestionKeyConfigured(),
+  };
+
+  const db = getSupabase();
+  let pendingApprovals = 0;
+  let inProgressTasks = 0;
+  let liveSessions = 0;
+  if (db) {
+    try {
+      const cutoff = new Date(Date.now() - 90_000).toISOString();
+      const [h, t, s] = await Promise.all([
+        db.from("hitl_approvals").select("*", { count: "exact", head: true }).eq("status", "pending"),
+        db.from("tasks").select("*", { count: "exact", head: true }).in("status", ["pending", "in_progress"]),
+        db.from("events").select("session_id", { count: "exact", head: true }).gte("created_at", cutoff),
+      ]);
+      pendingApprovals = h.count ?? 0;
+      inProgressTasks = t.count ?? 0;
+      liveSessions = s.count ?? 0;
+    } catch {}
+  }
+  const navCounts: NavCounts = { pendingApprovals, inProgressTasks, liveSessions };
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <Script id="deck-preferences" strategy="beforeInteractive">{`(function(){try{var t=localStorage.getItem("cc-track-theme");var d=localStorage.getItem("cc-track-density");if(t==="dark"||t==="light")document.documentElement.dataset.theme=t;if(d==="compact"||d==="comfy")document.documentElement.dataset.density=d}catch(e){}})()`}</Script>
+      </head>
       <body
         className={`${familjen.variable} ${publicSans.variable} ${geistMono.variable} antialiased`}
         style={{
           fontFamily: "var(--font-sans)",
-          background:
-            "radial-gradient(120% 80% at 78% -10%, color-mix(in oklab, var(--color-accent-900) 28%, transparent), transparent 62%), var(--color-background)",
+          background: "var(--color-background)",
         }}
       >
-        <a href="#main" className="skip-link">Skip to content</a>
-        <div className="flex min-h-screen">
+        <DeckPreferences>
+          <a href="#main" className="skip-link">Skip to content</a>
+          <div className="flex min-h-screen">
           <aside
             className="fixed inset-y-0 left-0 z-20 hidden w-[clamp(12rem,14vw,15rem)] flex-col border-r border-line md:flex"
             style={{
@@ -59,7 +90,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                   CC
                 </span>
                 <span className="flex flex-col leading-[1.15]">
-                  <span className="font-display font-semibold" style={{ fontSize: "0.9375rem", letterSpacing: "-0.015em", color: "#f3efe8" }}>
+                  <span className="font-display font-semibold text-foreground" style={{ fontSize: "0.9375rem", letterSpacing: "-0.015em" }}>
                     Claude Control
                   </span>
                   <span className="uppercase text-muted-4" style={{ fontSize: "0.625rem", letterSpacing: "0.14em" }}>
@@ -69,7 +100,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               </Link>
             </div>
 
-            <DeckRail />
+            <DeckRail counts={navCounts} />
+            <NavAutoRefresh />
 
             <div
               className="border-t border-line px-5 py-3.5 uppercase"
@@ -88,7 +120,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <header
             className="fixed inset-x-0 top-0 z-20 flex h-[3.75rem] items-center gap-3 border-b border-line px-4 md:hidden"
             style={{
-              background: "rgb(13 12 11 / 0.72)",
+              background: "color-mix(in oklab, var(--color-background) 88%, transparent)",
               backdropFilter: "blur(0.75rem) saturate(1.2)",
               WebkitBackdropFilter: "blur(0.75rem) saturate(1.2)",
             }}
@@ -109,8 +141,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               </span>
               <span className="font-display text-sm font-semibold tracking-tight">Claude Control</span>
             </Link>
-            <Link
-              href="/setup"
+            <ThemeToggle compact className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-line bg-panel text-muted transition-colors hover:text-foreground" />
+            <SettingsTrigger
               aria-label={connected ? "Database connected" : "Database not configured"}
               className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-line"
             >
@@ -132,23 +164,21 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                   }}
                 />
               </span>
-            </Link>
-            <MobileNav />
+            </SettingsTrigger>
+            <MobileNav counts={navCounts} />
           </header>
 
           <div className="w-full flex-1 min-w-0 md:ml-[clamp(12rem,14vw,15rem)]">
-            <DeckShelf connected={connected} />
+            <DeckShelf connected={connected} setupStatus={setupStatus} />
 
-            <main id="main" className="px-6 pb-16 pt-20 md:px-10 md:pt-8 md:pb-16">
+            <main id="main" className="deck-main px-6 pb-16 pt-20 md:px-10 md:pt-8 md:pb-16">
               {children}
             </main>
           </div>
-        </div>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){var p=function(){if(document.visibilityState==="visible")fetch("/api/heartbeat",{method:"POST",keepalive:true}).catch(function(){})};p();setInterval(p,10000);document.addEventListener("visibilitychange",p)})();`,
-          }}
-        />
+          </div>
+          <SettingsModal status={setupStatus} />
+        </DeckPreferences>
+        <Script id="deck-heartbeat" strategy="afterInteractive">{`(function(){var p=function(){if(document.visibilityState==="visible")fetch("/api/heartbeat",{method:"POST",keepalive:true}).catch(function(){})};p();setInterval(p,10000);document.addEventListener("visibilitychange",p)})();`}</Script>
       </body>
     </html>
   );

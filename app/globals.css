@@ -1,87 +1,66 @@
 @import "tailwindcss";
 
 @theme inline {
-  /* Canvas + surfaces (warm graphite, deepened) */
-  --color-background:     #0b0a09;
-  --color-surface-1a:     #1b1815;   /* card gradient top */
-  --color-surface-1b:     #141211;   /* card gradient bottom */
-  --color-surface-2:      #1c1916;   /* hover / raised */
-  --color-surface-cell-a: #1f1b18;   /* list-cell gradient top */
-  --color-surface-cell-b: #171513;   /* list-cell gradient bottom */
-
-  /* Back-compat aliases so existing utilities (bg-panel, bg-panel2) keep working. */
-  --color-panel:  var(--color-surface-1a);
+  --color-background: var(--deck-background);
+  --color-surface-1a: var(--deck-surface-1a);
+  --color-surface-1b: var(--deck-surface-1b);
+  --color-surface-2: var(--deck-surface-2);
+  --color-surface-cell-a: var(--deck-surface-cell-a);
+  --color-surface-cell-b: var(--deck-surface-cell-b);
+  --color-panel: var(--color-surface-1a);
   --color-panel2: var(--color-surface-2);
-
-  /* Hairlines */
-  --color-line:        #241f1b;
-  --color-line-soft:   #1f1b18;
-  --color-line-strong: #3a342c;
-
-  /* Foreground ramp */
-  --color-foreground: #f6f2ec;
-  --color-text:       #ece7df;
-  --color-muted:      #a29a8f;
-  --color-muted-2:    #8e867c;
-  --color-muted-3:    #8a8177;
-  /* muted-4 lifted to hit >=4.5:1 on surface-2 (was #827970 ~4.2:1) */
-  --color-muted-4:    #948a7f;
-
-  /* Accent ramp - terracotta, hue 46 */
-  --color-accent-50:  oklch(0.96 0.020 46);
-  --color-accent-100: oklch(0.92 0.036 46);
-  --color-accent-200: oklch(0.86 0.058 46);
-  --color-accent-300: oklch(0.81 0.078 46);
-  --color-accent-400: oklch(0.76 0.092 46);
-  --color-accent-500: #e08a5c;                /* anchor */
-  --color-accent-600: oklch(0.66 0.108 44);
-  --color-accent-700: oklch(0.56 0.100 42);
-  --color-accent-800: oklch(0.44 0.082 40);
-  --color-accent-900: oklch(0.32 0.062 38);
+  --color-line: var(--deck-line);
+  --color-line-soft: var(--deck-line-soft);
+  --color-line-strong: var(--deck-line-strong);
+  --color-foreground: var(--deck-foreground);
+  --color-text: var(--deck-text);
+  --color-muted: var(--deck-muted);
+  --color-muted-2: var(--deck-muted-2);
+  --color-muted-3: var(--deck-muted-3);
+  --color-muted-4: var(--deck-muted-4);
+  --color-accent-50: var(--deck-accent-50);
+  --color-accent-100: var(--deck-accent-100);
+  --color-accent-200: var(--deck-accent-200);
+  --color-accent-300: var(--deck-accent-300);
+  --color-accent-400: var(--deck-accent-400);
+  --color-accent-500: var(--deck-accent-500);
+  --color-accent-600: var(--deck-accent-600);
+  --color-accent-700: var(--deck-accent-700);
+  --color-accent-800: var(--deck-accent-800);
+  --color-accent-900: var(--deck-accent-900);
+  --color-accent-status: var(--deck-accent-status);
   --color-accent: var(--color-accent-500);
-  --color-accent-soft: oklch(0.44 0.082 40 / 0.14);
-  --color-accent-ring: oklch(0.56 0.100 42 / 0.6);
-
-  /* Signals - harmonised to one chroma/lightness band */
-  --color-green:        oklch(0.74 0.10 142);
-  --color-green-bright: oklch(0.82 0.09 142);
-  --color-yellow:       oklch(0.79 0.11 85);
-  --color-blue:         oklch(0.72 0.10 248);
-  --color-blue-deep:    oklch(0.55 0.09 250);
-  --color-red:          oklch(0.66 0.16 25);
-
-  /* Signal role-tints: -soft = pill bg (~14%), -ring = pill border (~45-50%),
-     -glow = status-dot / emphasis shadow. Referenced by inline styles
-     that can't consume Tailwind alpha utilities. */
-  --color-green-soft:   oklch(0.74 0.10 142 / 0.14);
-  --color-green-ring:   oklch(0.74 0.10 142 / 0.45);
-  --color-green-glow:   oklch(0.74 0.10 142 / 0.8);
-  --color-yellow-soft:  oklch(0.79 0.11 85 / 0.14);
-  --color-yellow-ring:  oklch(0.79 0.11 85 / 0.45);
-  --color-yellow-glow:  oklch(0.79 0.11 85 / 0.6);
-  --color-blue-soft:    oklch(0.72 0.10 248 / 0.14);
-  --color-blue-ring:    oklch(0.72 0.10 248 / 0.45);
-  --color-red-soft:     oklch(0.66 0.16 25 / 0.14);
-  --color-red-ring:     oklch(0.66 0.16 25 / 0.5);
-  --color-accent-glow:  oklch(0.66 0.108 44 / 0.65);
-
-  /* Ink for text/glyphs placed on an accent-500 (terracotta) surface. */
-  --color-on-accent:    #14100d;
-
-  /* shadcn Select tokens, remapped onto the existing palette (no new colors). */
-  --color-popover:            var(--color-panel);
+  --color-accent-soft: var(--deck-accent-soft);
+  --color-accent-ring: var(--deck-accent-ring);
+  --color-green: var(--deck-green);
+  --color-green-bright: var(--deck-green-bright);
+  --color-yellow: var(--deck-yellow);
+  --color-blue: var(--deck-blue);
+  --color-blue-deep: var(--deck-blue-deep);
+  --color-red: var(--deck-red);
+  --color-green-soft: var(--deck-green-soft);
+  --color-green-ring: var(--deck-green-ring);
+  --color-green-glow: var(--deck-green-glow);
+  --color-yellow-soft: var(--deck-yellow-soft);
+  --color-yellow-ring: var(--deck-yellow-ring);
+  --color-yellow-glow: var(--deck-yellow-glow);
+  --color-blue-soft: var(--deck-blue-soft);
+  --color-blue-ring: var(--deck-blue-ring);
+  --color-red-soft: var(--deck-red-soft);
+  --color-red-ring: var(--deck-red-ring);
+  --color-accent-glow: var(--deck-accent-glow);
+  --color-on-accent: var(--deck-on-accent);
+  --color-popover: var(--color-panel);
   --color-popover-foreground: var(--color-foreground);
-  --color-muted-foreground:   var(--color-muted);
-  --color-accent-foreground:  var(--color-on-accent);
-  --color-border:             var(--color-line);
-  --color-input:              var(--color-line);
-  --color-ring:               var(--color-accent);
-
-  /* Chart dim variants (kept from the pre-refresh charts.tsx palette) */
-  --color-accent-dim:  var(--color-accent-800);
-  --color-blue-dim:    var(--color-blue-deep);
-  --color-green-dim:   oklch(0.58 0.09 142);
-  --color-yellow-dim:  oklch(0.63 0.09 85);
+  --color-muted-foreground: var(--color-muted);
+  --color-accent-foreground: var(--color-on-accent);
+  --color-border: var(--color-line);
+  --color-input: var(--color-line);
+  --color-ring: var(--color-accent);
+  --color-accent-dim: var(--deck-accent-dim);
+  --color-blue-dim: var(--deck-blue-dim);
+  --color-green-dim: var(--deck-green-dim);
+  --color-yellow-dim: var(--deck-yellow-dim);
 
   /* Type */
   --font-display: var(--font-familjen),   ui-sans-serif, system-ui, sans-serif;
@@ -99,7 +78,119 @@
 /* Reused gradients / shells. Kept outside @theme (Tailwind's utility
    layer targets color/spacing/font tokens, not arbitrary gradients). */
 :root {
+  color-scheme: light;
+  --deck-background: #f7f6f2;
+  --deck-surface-1a: #f6f2ec;
+  --deck-surface-1b: #faf9f5;
+  --deck-surface-2: #f2f0ea;
+  --deck-surface-cell-a: #f6f2ec;
+  --deck-surface-cell-b: #f8f6f0;
+  --deck-line: #e5dfd6;
+  --deck-line-soft: #eeeae3;
+  --deck-line-strong: #d4ccc1;
+  --deck-foreground: #171513;
+  --deck-text: #34302c;
+  --deck-muted: #6f675f;
+  --deck-muted-2: #7e756c;
+  --deck-muted-3: #8d847a;
+  --deck-muted-4: #91877c;
+  --deck-accent-50: #fff4ee;
+  --deck-accent-100: #f9e2d7;
+  --deck-accent-200: #efc2af;
+  --deck-accent-300: #e6a084;
+  --deck-accent-400: #d98462;
+  --deck-accent-500: #c96f4c;
+  --deck-accent-600: #ae583a;
+  --deck-accent-700: #91452f;
+  --deck-accent-800: #713525;
+  --deck-accent-900: #552a20;
+  --deck-accent-status: #ae583a;
+  --deck-accent-soft: color-mix(in oklab, var(--deck-accent-500) 14%, transparent);
+  --deck-accent-ring: color-mix(in oklab, var(--deck-accent-500) 55%, transparent);
+  --deck-green: #5e8e77;
+  --deck-green-bright: #4f8068;
+  --deck-yellow: #ac7718;
+  --deck-blue: #456675;
+  --deck-blue-deep: #607f8a;
+  --deck-red: #b95543;
+  --deck-green-soft: color-mix(in oklab, var(--deck-green) 14%, transparent);
+  --deck-green-ring: color-mix(in oklab, var(--deck-green) 52%, transparent);
+  --deck-green-glow: color-mix(in oklab, var(--deck-green) 70%, transparent);
+  --deck-yellow-soft: color-mix(in oklab, var(--deck-yellow) 14%, transparent);
+  --deck-yellow-ring: color-mix(in oklab, var(--deck-yellow) 52%, transparent);
+  --deck-yellow-glow: color-mix(in oklab, var(--deck-yellow) 70%, transparent);
+  --deck-blue-soft: color-mix(in oklab, var(--deck-blue) 14%, transparent);
+  --deck-blue-ring: color-mix(in oklab, var(--deck-blue) 52%, transparent);
+  --deck-red-soft: color-mix(in oklab, var(--deck-red) 14%, transparent);
+  --deck-red-ring: color-mix(in oklab, var(--deck-red) 52%, transparent);
+  --deck-accent-glow: color-mix(in oklab, var(--deck-accent-500) 65%, transparent);
+  --deck-on-accent: #fffaf4;
+  --deck-accent-dim: #a95738;
+  --deck-blue-dim: #607f8a;
+  --deck-green-dim: #47715e;
+  --deck-yellow-dim: #866016;
+  --gradient-topbar: linear-gradient(180deg, #f6f2ec 0%, #f7f6f2 100%);
+  --deck-shadow-panel: 0 0.7rem 1.4rem -1.1rem rgb(45 36 27 / 0.26);
+  --deck-shadow-stat: 0 0.2rem 0.4rem rgb(45 36 27 / 0.08);
+  --deck-shadow-cell: 0 0.2rem 0.5rem -0.4rem rgb(45 36 27 / 0.12);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --deck-background: #0b0a09;
+  --deck-surface-1a: #1b1815;
+  --deck-surface-1b: #141211;
+  --deck-surface-2: #1c1916;
+  --deck-surface-cell-a: #1f1b18;
+  --deck-surface-cell-b: #171513;
+  --deck-line: #241f1b;
+  --deck-line-soft: #1f1b18;
+  --deck-line-strong: #3a342c;
+  --deck-foreground: #f6f2ec;
+  --deck-text: #ece7df;
+  --deck-muted: #a29a8f;
+  --deck-muted-2: #8e867c;
+  --deck-muted-3: #8a8177;
+  --deck-muted-4: #948a7f;
+  --deck-accent-50: oklch(0.96 0.020 46);
+  --deck-accent-100: oklch(0.92 0.036 46);
+  --deck-accent-200: oklch(0.86 0.058 46);
+  --deck-accent-300: oklch(0.81 0.078 46);
+  --deck-accent-400: oklch(0.76 0.092 46);
+  --deck-accent-500: #e08a5c;
+  --deck-accent-600: oklch(0.66 0.108 44);
+  --deck-accent-700: oklch(0.56 0.100 42);
+  --deck-accent-800: oklch(0.44 0.082 40);
+  --deck-accent-900: oklch(0.32 0.062 38);
+  --deck-accent-status: var(--deck-accent-200);
+  --deck-accent-soft: oklch(0.44 0.082 40 / 0.14);
+  --deck-accent-ring: oklch(0.56 0.100 42 / 0.6);
+  --deck-green: oklch(0.74 0.10 142);
+  --deck-green-bright: oklch(0.82 0.09 142);
+  --deck-yellow: oklch(0.79 0.11 85);
+  --deck-blue: oklch(0.72 0.10 248);
+  --deck-blue-deep: oklch(0.55 0.09 250);
+  --deck-red: oklch(0.66 0.16 25);
+  --deck-green-soft: oklch(0.74 0.10 142 / 0.14);
+  --deck-green-ring: oklch(0.74 0.10 142 / 0.45);
+  --deck-green-glow: oklch(0.74 0.10 142 / 0.8);
+  --deck-yellow-soft: oklch(0.79 0.11 85 / 0.14);
+  --deck-yellow-ring: oklch(0.79 0.11 85 / 0.45);
+  --deck-yellow-glow: oklch(0.79 0.11 85 / 0.6);
+  --deck-blue-soft: oklch(0.72 0.10 248 / 0.14);
+  --deck-blue-ring: oklch(0.72 0.10 248 / 0.45);
+  --deck-red-soft: oklch(0.66 0.16 25 / 0.14);
+  --deck-red-ring: oklch(0.66 0.16 25 / 0.5);
+  --deck-accent-glow: oklch(0.66 0.108 44 / 0.65);
+  --deck-on-accent: #14100d;
+  --deck-accent-dim: #a04d34;
+  --deck-blue-dim: #3f6c9c;
+  --deck-green-dim: oklch(0.58 0.09 142);
+  --deck-yellow-dim: oklch(0.63 0.09 85);
   --gradient-topbar: linear-gradient(180deg, #17141200 0%, #0e0d0c 100%), #131110;
+  --deck-shadow-panel: inset 0 0.0625rem 0 rgb(255 255 255 / 0.045), 0 1rem 2rem -1.25rem rgb(0 0 0 / 0.8);
+  --deck-shadow-stat: inset 0 0.0625rem 0 rgb(255 255 255 / 0.045), 0 0.0625rem 0.125rem rgb(0 0 0 / 0.5);
+  --deck-shadow-cell: inset 0 0.0625rem 0 rgb(255 255 255 / 0.03);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -114,6 +205,10 @@ body {
   font-feature-settings: "ss01", "cv11";
   font-optical-sizing: auto;
 }
+
+[data-density="compact"] .deck-card > header { padding-block: 0.7rem; }
+[data-density="compact"] .deck-main { padding-bottom: 2.5rem; }
+[data-density="compact"] .deck-main > * + * { margin-top: -0.25rem; }
 
 ::selection {
   background: var(--color-accent-800);

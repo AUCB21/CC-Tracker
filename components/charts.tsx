@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useEffect, useId, useState } from "react";
 import {
   ResponsiveContainer,
   BarChart,
@@ -56,6 +56,35 @@ const DEFAULT_COLORS: DeckColors = {
   dust3:     "#6d655c",
 };
 
+const LIGHT_COLORS: DeckColors = {
+  accent: "#c96f4c",
+  accentDim: "#a95738",
+  blue: "#385768",
+  blueDim: "#607f8a",
+  green: "#5e8e77",
+  greenDim: "#47715e",
+  yellow: "#ac7718",
+  yellowDim: "#866016",
+  ink: "#171513",
+  lift: "#f6f2ec",
+  hair: "#e5dfd6",
+  hairStrong: "#d4ccc1",
+  bone: "#28231f",
+  dust: "#746b62",
+  dust3: "#81776e",
+};
+
+function useDeckColors() {
+  const [dark, setDark] = useState(false);
+  useEffect(() => {
+    const sync = () => setDark(document.documentElement.dataset.theme === "dark");
+    sync();
+    window.addEventListener("deck-theme-change", sync);
+    return () => window.removeEventListener("deck-theme-change", sync);
+  }, []);
+  return dark ? DEFAULT_COLORS : LIGHT_COLORS;
+}
+
 function useDeckStyles(c: DeckColors) {
   return {
     tooltip: {
@@ -110,11 +139,11 @@ export function ActivityChart({
 }: {
   data: { day: string; prompts: number; toolUses: number; sessions: number }[];
 }) {
-  const c = DEFAULT_COLORS;
+  const c = useDeckColors();
   const s = useDeckStyles(c);
   const uid = useId().replace(/:/g, "");
   return (
-    <div role="img" aria-label="Daily activity: prompts, tool calls, and sessions over time.">
+    <div role="img" aria-label="Daily activity: prompts and tool calls over time.">
     <ResponsiveContainer width="100%" height={280}>
       <ComposedChart data={data} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
         <defs>
@@ -122,12 +151,11 @@ export function ActivityChart({
           {vGradient(`${uid}-tool`, c.blue)}
         </defs>
         <CartesianGrid stroke={c.hair} strokeOpacity={0.55} vertical={false} />
-        <XAxis dataKey="day" {...s.axis} interval="preserveStartEnd" minTickGap={30} />
+        <XAxis dataKey="day" {...s.axis} tickFormatter={(value) => String(value).slice(5)} interval={1} minTickGap={30} />
         <YAxis {...s.axis} allowDecimals={false} />
         <Tooltip contentStyle={s.tooltip} itemStyle={s.tooltipItem} labelStyle={s.tooltipLabel} cursor={{ fill: c.lift, opacity: 0.6 }} />
         <Bar dataKey="prompts"  name="Prompts"    stackId="a" fill={`url(#${uid}-prompts)`} />
         <Bar dataKey="toolUses" name="Tool calls" stackId="a" fill={`url(#${uid}-tool)`} radius={[3, 3, 0, 0]} />
-        <Line dataKey="sessions" name="Sessions" stroke={c.green} strokeWidth={1.75} dot={false} strokeLinecap="round" strokeLinejoin="round" />
       </ComposedChart>
     </ResponsiveContainer>
     </div>
@@ -135,7 +163,7 @@ export function ActivityChart({
 }
 
 export function ToolUsageChart({ data }: { data: { tool: string; count: number }[] }) {
-  const c = DEFAULT_COLORS;
+  const c = useDeckColors();
   const s = useDeckStyles(c);
   const uid = useId().replace(/:/g, "");
   return (
@@ -161,7 +189,7 @@ export function TokenCostChart({
 }: {
   data: { day: string; input: number; output: number; cacheRead: number; cost: number }[];
 }) {
-  const c = DEFAULT_COLORS;
+  const c = useDeckColors();
   const s = useDeckStyles(c);
   const uid = useId().replace(/:/g, "");
   return (
@@ -204,8 +232,16 @@ export function TokenCostChart({
   );
 }
 
-export function DonutChart({ data, ariaLabel }: { data: { name: string; value: number }[]; ariaLabel?: string }) {
-  const c = DEFAULT_COLORS;
+export function DonutChart({
+  data,
+  ariaLabel,
+  colors,
+}: {
+  data: { name: string; value: number }[];
+  ariaLabel?: string;
+  colors?: string[];
+}) {
+  const c = useDeckColors();
   const s = useDeckStyles(c);
   const total = data.reduce((a, d) => a + d.value, 0);
   return (
@@ -222,7 +258,7 @@ export function DonutChart({ data, ariaLabel }: { data: { name: string; value: n
             stroke="none"
           >
             {data.map((_, i) => (
-              <Cell key={i} fill={s.palette[i % s.palette.length]} />
+              <Cell key={i} fill={(colors ?? s.palette)[i % (colors ?? s.palette).length]} />
             ))}
           </Pie>
           <Tooltip contentStyle={s.tooltip} itemStyle={s.tooltipItem} labelStyle={s.tooltipLabel} />
@@ -262,9 +298,10 @@ export function DonutChart({ data, ariaLabel }: { data: { name: string; value: n
             <span
               aria-hidden
               className="inline-block h-2 w-2 rounded-[0.125rem]"
-              style={{ background: s.palette[i % s.palette.length] }}
+              style={{ background: (colors ?? s.palette)[i % (colors ?? s.palette).length] }}
             />
             {d.name}
+            <span className="font-mono tabular-nums text-muted-2">{d.value.toLocaleString()}</span>
           </span>
         ))}
       </div>
@@ -287,7 +324,7 @@ export function SimpleBarChart({
   height?: number;
   ariaLabel?: string;
 }) {
-  const c = DEFAULT_COLORS;
+  const c = useDeckColors();
   const s = useDeckStyles(c);
   const uid = useId().replace(/:/g, "");
   const fill = color ?? c.accent;

@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ThemeToggle } from "@/components/deck-preferences";
+import { SetupStatusDrawer } from "@/components/setup-status-drawer";
 
 const SECTION_LABEL: Record<string, string> = {
   "": "Overview",
@@ -20,7 +21,13 @@ function crumbFromPath(pathname: string): string {
   return SECTION_LABEL[seg] ?? "Command Deck";
 }
 
-export function DeckShelf({ connected }: { connected: boolean }) {
+export function DeckShelf({
+  connected,
+  setupStatus,
+}: {
+  connected: boolean;
+  setupStatus: { url: boolean; serviceRole: boolean; apiKey: boolean };
+}) {
   const pathname = usePathname();
   const label = crumbFromPath(pathname);
 
@@ -28,7 +35,7 @@ export function DeckShelf({ connected }: { connected: boolean }) {
     <div
       className="sticky top-0 z-30 hidden h-[5rem] items-center gap-4 border-b border-line px-6 md:flex md:px-11"
       style={{
-        background: "rgb(13 12 11 / 0.72)",
+        background: "color-mix(in oklab, var(--color-background) 88%, transparent)",
         backdropFilter: "blur(0.75rem) saturate(1.2)",
         WebkitBackdropFilter: "blur(0.75rem) saturate(1.2)",
       }}
@@ -56,51 +63,8 @@ export function DeckShelf({ connected }: { connected: boolean }) {
 
       <div className="flex-1" />
 
-      <Link
-        href="/setup"
-        aria-label={connected ? "Database connected" : "Database not configured"}
-        className="group inline-flex items-center gap-2 rounded-full border uppercase"
-        style={{
-          borderColor: "#2b2621",
-          background: "linear-gradient(180deg, #1c1916, #141210)",
-          padding: "0.375rem 0.875rem",
-          fontSize: "0.6875rem",
-          letterSpacing: "0.1em",
-          color: "var(--color-muted-2)",
-          boxShadow: "inset 0 0.0625rem 0 rgb(255 255 255 / 0.04)",
-          transition:
-            "border-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard)",
-        }}
-      >
-        <span aria-hidden className="relative inline-flex h-[0.4375rem] w-[0.4375rem]">
-          <span
-            className="motion-safe-pulse absolute inset-0 rounded-full"
-            style={{
-              background: connected ? "var(--color-green)" : "var(--color-yellow)",
-              animation: "beacon 2.4s var(--ease-standard) infinite",
-            }}
-          />
-          <span
-            className="absolute inset-0 rounded-full"
-            style={{
-              background: connected ? "var(--color-green)" : "var(--color-yellow)",
-              boxShadow: connected
-                ? "0 0 0.5rem var(--color-green-glow)"
-                : "0 0 0.5rem var(--color-yellow-glow)",
-            }}
-          />
-        </span>
-        <span className="transition-colors group-hover:text-foreground">
-          {connected ? "Database connected" : "Database not configured"}
-        </span>
-        <span
-          aria-hidden
-          className="opacity-0 transition-opacity group-hover:opacity-100"
-          style={{ fontFamily: "var(--font-mono)" }}
-        >
-          ↗
-        </span>
-      </Link>
+      <ThemeToggle />
+      <SetupStatusDrawer connected={connected} status={setupStatus} />
     </div>
   );
 }
