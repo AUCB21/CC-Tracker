@@ -26,7 +26,7 @@ export function SettingsModal({ status }: { status: SetupStatus }) {
       onCancel={closeSettings}
       onClick={(event) => { if (event.target === ref.current) closeSettings(); }}
       className="settings-modal fixed inset-0 m-auto [&::backdrop]:bg-[rgb(20_18_15_/_0.48)] [&::backdrop]:backdrop-blur-sm"
-      style={{ width: "min(78rem, calc(100% - 2rem))", maxWidth: "100%", maxHeight: "calc(100% - 2rem)", padding: 0, border: "0.0625rem solid var(--color-line-strong)", borderRadius: "1.125rem", background: "var(--color-background)", color: "var(--color-text)", overflow: "hidden", display: "flex", flexDirection: "column" }}
+      style={{ width: "min(78rem, calc(100% - 2rem))", maxWidth: "100%", maxHeight: "calc(100% - 2rem)", padding: 0, border: "0.0625rem solid var(--color-line-strong)", borderRadius: "1.125rem", background: "var(--color-background)", color: "var(--color-text)", overflow: "hidden" }}
     >
       <header className="flex shrink-0 items-start justify-between gap-6 border-b border-line px-6 py-5 md:px-8">
         <div>

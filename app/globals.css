@@ -350,6 +350,13 @@ body {
   .mobile-nav-drawer[open], .mobile-nav-drawer[open]::backdrop { animation: none; }
 }
 
+/* Settings modal: flex column only when open, so the closed <dialog> keeps the
+   UA `display:none` (an inline display would override it and leak the modal). */
+dialog.settings-modal[open] {
+  display: flex;
+  flex-direction: column;
+}
+
 /* Command palette: fade + lift on open, mirrors the dialogs above. */
 .command-palette[open] { animation: lift var(--duration-base) var(--ease-standard) both; }
 .command-palette[open]::backdrop { animation: veil var(--duration-base) var(--ease-standard) both; }
