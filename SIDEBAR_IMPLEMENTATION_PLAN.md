@@ -1,8 +1,14 @@
 # Implementation Plan — Sidebar redesign + two polish fixes
 
-**Status:** DRAFT for review. No code changed yet.
+**Status:** IMPLEMENTED - merged on branch feat/sidebar-and-polish.
 **Repo:** `AUCB21/CC-Tracker`, branch `main`.
 **Source of truth:** design file `Claude Control Light.dc.html` (Claude Design project `70447bef-…`), read live. Dev state verified in-browser at `localhost:3000` on 2026-09-14.
+
+## Update - implemented
+
+The collapsible rail described below shipped at `268px` expanded / `60px` collapsed. Task 5, listed below as deferred, was subsequently built: the workspace switcher and Ctrl/Cmd-K search are both live in the sidebar.
+
+Correction to the plan's unit conversion: the rem base on desktop is **18px**, not 16px (`html` font-size clamps to 112.5%, i.e. `1rem = 18px` at that breakpoint), so any px-to-rem conversion below that assumed `16px = 1rem` does not match what actually shipped. Treat the px figures in this historical plan as approximate design-file references, not the literal conversion basis.
 
 ## How this plan is meant to be run
 

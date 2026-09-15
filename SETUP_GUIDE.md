@@ -143,7 +143,7 @@ task and keeps task statuses current as it works, no manual bookkeeping.
 Once a session or two has been captured, open the app and walk the sidebar:
 
 - **Overview** (`/`) - the daily-driver page. Totals across everything
-  (sessions, plans, tasks, prompts, tokens, cost), a 30-day activity chart,
+  (sessions, plans, tasks, prompts, tokens, cost), a 14-day activity chart,
   your most recent sessions, active plans with progress bars, and open
   tasks. Start here to answer "what's going on right now."
 - **Analytics** (`/analytics`) - the deeper, backward-looking view: tokens
@@ -151,6 +151,9 @@ Once a session or two has been captured, open the app and walk the sidebar:
   models you're spending on, how long sessions tend to run, and which
   hours of the day you actually prompt. Use this to spot patterns, not to
   check on a single session.
+- **Live** (`/live`) - real-time feed of task runs and session events, in
+  two lanes, newest at top; filter either lane by project or session, or
+  pause one to stop auto-scroll.
 - **Projects** (`/projects`) - one card per working directory that's ever
   run Claude Code, with its session count, tokens and cost. Click into one
   for its own sessions, plans and tasks (`/projects/[id]`).
@@ -160,6 +163,10 @@ Once a session or two has been captured, open the app and walk the sidebar:
 - **Tasks** (`/tasks`) - every task across every project, filterable by
   project and status, newest first. Useful for "what's still pending
   anywhere."
+- **HITL** (`/hitl`) - the pending approvals queue: tool calls a run wants
+  to make that are waiting on a human decision before they proceed.
+- **Prompts** (`/prompts`) - the captured prompt library, grouped into
+  families by name and project, with versioning and per-family delete.
 - **Sessions** (`/sessions`) - a filterable table of every session
   (by project, model, time window). Click one for the detail view
   (`/sessions/[id]`): full tool-usage breakdown, the plans/tasks it

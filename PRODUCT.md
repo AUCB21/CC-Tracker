@@ -36,7 +36,7 @@ Confirmed capabilities:
 - Per-session capture: model, git branch, prompt count, tool-use count, tokens (input / output / cache_read / cache_creation), per-tool breakdown, estimated USD cost.
 - TodoWrite lists sync into `tasks` via a stable dedupe key.
 - Rough per-1M-token USD pricing by model family (opus / sonnet / haiku).
-- Dashboard surfaces: Overview, Projects (list + detail), Plans, Sessions (list + detail with a full event timeline), Analytics (activity, tokens & cost, tool ranking, task completion, model share, session-duration buckets, hour-of-day prompting), Setup.
+- Dashboard surfaces: Overview, Projects (list + detail), Plans, Sessions (list + detail with a full event timeline), Live (real-time feed of task runs and session events), Analytics (activity, tokens & cost, tool ranking, task completion, model share, session-duration buckets, hour-of-day prompting), HITL (pending tool-call approvals queue), Prompts (captured prompt library, versioned by family), Setup.
 - Server auto-boot + client-side heartbeat: opening a Claude Code session brings the tracker up if it is down; agent activity keeps it alive; silence past `IDLE_TIMEOUT` shuts it down. No manual `npm run start` and no always-on process.
 - Recharts is code-split via `next/dynamic` (SSR off) so first paint on non-chart routes stays out of the chart-library payload.
 
@@ -52,7 +52,7 @@ Undecided:
 
 ## Brand Commitments
 
-None binding. The current wordmark (CC-Track), the Claude-orange accent, and the dark-only theme are the incumbent implementation but not committed identity. Future design work may replace any of them.
+None binding. The current wordmark (CC-Track), the Claude-orange accent, and the light-default theme (with a dark theme retained as an alternate, switched via a toggle in the top bar) are the incumbent implementation but not committed identity. Future design work may replace any of them.
 
 ## Evidence on Hand
 
@@ -73,7 +73,7 @@ No customer testimonials, no benchmarks, no press coverage exist. Do not invent 
 
 ## Accessibility & Inclusion
 
-No product-specific standard was established beyond baseline: readable contrast on the dark surface, keyboard reachability of every link/button, and no color-only status conveyance (badges pair a color with a symbol or word).
+No product-specific standard was established beyond baseline: readable contrast in both the light-default and dark themes, keyboard reachability of every link/button, and no color-only status conveyance (badges pair a color with a symbol or word).
 
 Concrete implementations layered on that baseline:
 - **Touch targets:** interactive icon controls route through a shared `IconButton` primitive sized 2.75rem (WCAG 2.5.5 AAA). Same target size on modal close, pager Prev/Next, filter-drawer rows, and the mobile DB-status link. Inline filter-chip remove `×` keeps its 14px glyph but expands its hitbox to 44x44 via a transparent `::before` pseudo-element, so touch works without disturbing the chip's rhythm.

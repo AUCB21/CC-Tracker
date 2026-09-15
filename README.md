@@ -18,19 +18,19 @@ analytics over all of it.
 
 ## Screenshots
 
-**Overview** — totals, 30-day activity, recent sessions, active plans and open tasks at a glance.
+**Overview**: totals, 14-day activity, recent sessions, active plans and open tasks at a glance.
 ![Overview dashboard](docs/screenshots/overview.png)
 
-**Tasks** — filter by project/status; the **Attend** button queues a remote run for the local agent to pick up.
+**Tasks**: filter by project/status; the **Attend** button queues a remote run for the local agent to pick up.
 ![Tasks page](docs/screenshots/tasks.png)
 
-**Live** — real-time feed of task runs and session events, two lanes, filterable and pausable.
+**Live**: real-time feed of task runs and session events, two lanes, filterable and pausable.
 ![Live feed](docs/screenshots/live.png)
 
-**Analytics** — activity, tokens & cost per day, tool usage, session durations, hour-of-day prompting.
+**Analytics**: activity, tokens & cost per day, tool usage, session durations, hour-of-day prompting.
 ![Analytics](docs/screenshots/analytics.png)
 
-**Sessions** — every session captured by the hooks, with tokens, cost and status.
+**Sessions**: every session captured by the hooks, with tokens, cost and status.
 ![Sessions list](docs/screenshots/sessions.png)
 
 Setting this up on a new machine? [SETUP_GUIDE.md](SETUP_GUIDE.md) walks
@@ -189,12 +189,14 @@ This process polls for queued runs, claims one, and shells out to `claude -p <pr
 
 ## 6 · The dashboard
 
-- **Overview**: totals (sessions, plans, tasks, prompts, tokens, cost), 30-day activity, recent sessions, active plans, open tasks
+- **Overview**: totals (sessions, plans, tasks, prompts, tokens, cost), 14-day activity, recent sessions, active plans, open tasks
 - **Projects**: auto-detected from cwd; per-project sessions, tokens, cost, task progress
 - **Plans**: grouped by status with task checklists and progress bars
 - **Tasks**: the task list, filterable by project and status; the **Attend** button queues a remote run (see "Remote task runs" above) and shows its status inline as it executes
+- **HITL**: human-in-the-loop approvals queue; pending tool calls a run wants to make wait here until you approve or deny them
 - **Sessions**: table of every session; detail view has tool usage chart, plan/task lists and a full event timeline
 - **Live**: real-time feed of remote task runs and session events in two lanes, newest at top; filter either lane by project or session, pause a lane to stop auto-scroll
+- **Prompts**: the captured prompt library, grouped into families by name and project; edit, version, send, or delete a whole prompt family
 - **Analytics**: activity, tokens & cost per day, tool usage ranking, task completion, sessions by model, session durations, hour-of-day prompting
 - **Setup**: live env status + copy-paste instructions
 
