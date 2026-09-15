@@ -11,6 +11,7 @@ import { DeckPreferences, SettingsTrigger, ThemeToggle } from "@/components/deck
 import { SettingsModal } from "@/components/settings-modal";
 import { WorkspaceSwitcher } from "@/components/workspace-switcher";
 import { SearchTrigger } from "@/components/search-trigger";
+import { CommandPalette } from "@/components/command-palette";
 import { getSupabase, isDbConfigured, ingestionKeyConfigured } from "@/lib/supabase";
 import { getProjects } from "@/lib/queries";
 import "./globals.css";
@@ -212,6 +213,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           </div>
           </div>
           <SettingsModal status={setupStatus} />
+          <CommandPalette projects={workspaceProjects} />
         </DeckPreferences>
         <Script id="deck-heartbeat" strategy="afterInteractive">{`(function(){var p=function(){if(document.visibilityState==="visible")fetch("/api/heartbeat",{method:"POST",keepalive:true}).catch(function(){})};p();setInterval(p,10000);document.addEventListener("visibilitychange",p)})();`}</Script>
       </body>

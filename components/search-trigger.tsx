@@ -21,7 +21,7 @@ export function SearchTrigger() {
       data-search-trigger
       type="button"
       onClick={() => {
-        // TODO(part2): open command palette
+        window.dispatchEvent(new Event("deck-search-open"));
       }}
       className="flex w-full items-center gap-2 rounded-full px-3 text-left"
       style={{ ...CELL_STYLE, borderRadius: "9999px", minHeight: "2.75rem" }}
