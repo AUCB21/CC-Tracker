@@ -149,7 +149,7 @@ export function Stat({
     <>
       {spark && (
         <span
-          className="pointer-events-none absolute"
+          className="pointer-events-none absolute @max-[11rem]:hidden"
           style={{ top: "1.25rem", right: "1.25rem" }}
         >
           <Sparkline data={spark} className="text-muted-3" />
@@ -162,7 +162,6 @@ export function Stat({
           fontWeight: 600,
           letterSpacing: "0.14em",
           color: "var(--color-muted-2)",
-          paddingRight: spark ? "2.75rem" : undefined,
         }}
       >
         <span>{label}</span>
@@ -229,7 +228,7 @@ export function Stat({
     return (
       <Link
         href={href}
-        className="group relative flex flex-col hover:-translate-y-[0.1875rem]"
+        className="group @container relative flex flex-col hover:-translate-y-[0.1875rem]"
         style={baseStyle}
       >
         {content}
@@ -238,7 +237,7 @@ export function Stat({
   }
 
   return (
-    <article className="group relative flex flex-col" style={baseStyle}>
+    <article className="group @container relative flex flex-col" style={baseStyle}>
       {content}
     </article>
   );
