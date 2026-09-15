@@ -13,7 +13,7 @@ import { WorkspaceSwitcher } from "@/components/workspace-switcher";
 import { SearchTrigger } from "@/components/search-trigger";
 import { CommandPalette } from "@/components/command-palette";
 import { getSupabase, isDbConfigured, ingestionKeyConfigured } from "@/lib/supabase";
-import { getProjects } from "@/lib/queries";
+import { getProjects, getStats } from "@/lib/queries";
 import "./globals.css";
 
 const familjen = Familjen_Grotesk({ variable: "--font-familjen", subsets: ["latin"] });
@@ -43,16 +43,15 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   let pendingPlans = 0;
   if (db) {
     try {
-      const cutoff = new Date(Date.now() - 90_000).toISOString();
-      const [h, t, s, p] = await Promise.all([
+      const [h, t, stats, p] = await Promise.all([
         db.from("hitl_approvals").select("*", { count: "exact", head: true }).eq("status", "pending"),
         db.from("tasks").select("*", { count: "exact", head: true }).in("status", ["pending", "in_progress"]),
-        db.from("events").select("session_id", { count: "exact", head: true }).gte("created_at", cutoff),
+        getStats(),
         db.from("hitl_approvals").select("*", { count: "exact", head: true }).eq("status", "pending").eq("tool_name", "ExitPlanMode"),
       ]);
       pendingApprovals = h.count ?? 0;
       inProgressTasks = t.count ?? 0;
-      liveSessions = s.count ?? 0;
+      liveSessions = stats?.activeSessions ?? 0;
       pendingPlans = p.count ?? 0;
     } catch {}
   }
