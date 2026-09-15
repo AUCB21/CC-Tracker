@@ -7,6 +7,7 @@ import type { PromptRow } from "@/lib/types";
 import { PromptEditor } from "./prompt-editor";
 import { SendButton } from "./send-button";
 import { EditProjectInline } from "./edit-project-inline";
+import { DeleteEntityButton } from "@/components/delete-entity-button";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Prompts" };
@@ -86,9 +87,23 @@ export default async function PromptsPage() {
                   ) : (
                     <span className="text-[0.6875rem] text-muted">global</span>
                   )}
-                  <span className="ml-auto text-[0.6875rem] text-muted">
-                    v{latest.version} · {fmtDate(latest.created_at)}
-                  </span>
+                  <div className="ml-auto flex items-center gap-2">
+                    <span className="text-[0.6875rem] text-muted">
+                      v{latest.version} · {fmtDate(latest.created_at)}
+                    </span>
+                    <DeleteEntityButton
+                      apiPath={`/api/prompts/${latest.id}`}
+                      entityLabel="prompt"
+                      entityName={latest.name}
+                      extraNotice={
+                        versions.length > 1 ? (
+                          <p className="text-sm text-muted">
+                            This removes all {versions.length} versions.
+                          </p>
+                        ) : undefined
+                      }
+                    />
+                  </div>
                 </div>
                 <pre className="mt-3 max-h-40 overflow-y-auto whitespace-pre-wrap break-words rounded-md border border-line bg-panel2 p-2 font-mono text-[0.6875rem] leading-relaxed text-foreground">
                   {latest.body}
