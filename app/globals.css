@@ -81,14 +81,14 @@
 :root {
   color-scheme: light;
   --deck-background: #f7f6f2;
-  --deck-surface-1a: #f6f2ec;
-  --deck-surface-1b: #faf9f5;
+  --deck-surface-1a: #fffefb;
+  --deck-surface-1b: #fffefb;
   --deck-surface-2: #f2f0ea;
-  --deck-surface-cell-a: #f6f2ec;
-  --deck-surface-cell-b: #f8f6f0;
-  --deck-line: #e5dfd6;
-  --deck-line-soft: #eeeae3;
-  --deck-line-strong: #d4ccc1;
+  --deck-surface-cell-a: #fbfaf6;
+  --deck-surface-cell-b: #fbfaf6;
+  --deck-line: #e3dfd5;
+  --deck-line-soft: #edeae2;
+  --deck-line-strong: #cfc9bb;
   --deck-foreground: #171513;
   --deck-text: #34302c;
   --deck-muted: #6f675f;
@@ -131,10 +131,10 @@
   --deck-blue-dim: #607f8a;
   --deck-green-dim: #47715e;
   --deck-yellow-dim: #866016;
-  --gradient-topbar: linear-gradient(180deg, #f6f2ec 0%, #f7f6f2 100%);
-  --deck-shadow-panel: 0 0.7rem 1.4rem -1.1rem rgb(45 36 27 / 0.26);
-  --deck-shadow-stat: 0 0.2rem 0.4rem rgb(45 36 27 / 0.08);
-  --deck-shadow-cell: 0 0.2rem 0.5rem -0.4rem rgb(45 36 27 / 0.12);
+  --gradient-topbar: #fffefb;
+  --deck-shadow-panel: 0 0.0625rem 0.125rem rgb(23 21 18 / 0.04), 0 0.5rem 1.5rem -1.125rem rgb(23 21 18 / 0.18);
+  --deck-shadow-stat: 0 0.0625rem 0.125rem rgb(23 21 18 / 0.04);
+  --deck-shadow-cell: 0 0.0625rem 0.125rem rgb(23 21 18 / 0.03);
 }
 
 [data-theme="dark"] {
@@ -190,10 +190,10 @@
   --deck-blue-dim: #3f6c9c;
   --deck-green-dim: oklch(0.58 0.09 142);
   --deck-yellow-dim: oklch(0.63 0.09 85);
-  --gradient-topbar: linear-gradient(180deg, #17141200 0%, #0e0d0c 100%), #131110;
-  --deck-shadow-panel: inset 0 0.0625rem 0 rgb(255 255 255 / 0.045), 0 1rem 2rem -1.25rem rgb(0 0 0 / 0.8);
-  --deck-shadow-stat: inset 0 0.0625rem 0 rgb(255 255 255 / 0.045), 0 0.0625rem 0.125rem rgb(0 0 0 / 0.5);
-  --deck-shadow-cell: inset 0 0.0625rem 0 rgb(255 255 255 / 0.03);
+  --gradient-topbar: #1b1815;
+  --deck-shadow-panel: 0 0.0625rem 0.125rem rgb(0 0 0 / 0.4);
+  --deck-shadow-stat: 0 0.0625rem 0.125rem rgb(0 0 0 / 0.4);
+  --deck-shadow-cell: none;
 }
 
 *, *::before, *::after { box-sizing: border-box; }

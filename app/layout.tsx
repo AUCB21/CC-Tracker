@@ -77,7 +77,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             className="fixed inset-y-0 left-0 z-20 hidden w-[var(--rail-w)] flex-col border-r border-line md:flex"
             style={{
               background: "var(--gradient-topbar)",
-              boxShadow: "inset -0.0625rem 0 0 rgb(255 255 255 / 0.02)",
               transition: "width var(--duration-slow) var(--ease-standard)",
             }}
           >
@@ -87,8 +86,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
                   aria-hidden
                   className="inline-flex h-[2.125rem] w-[2.125rem] shrink-0 items-center justify-center rounded-[0.625rem] font-display font-bold"
                   style={{
-                    background:
-                      "linear-gradient(160deg, var(--color-accent-300), var(--color-accent-600))",
+                    background: "var(--color-accent-500)",
                     color: "var(--color-on-accent)",
                     fontSize: "0.9375rem",
                     letterSpacing: "-0.03em",
@@ -163,8 +161,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
                 aria-hidden
                 className="inline-flex h-7 w-7 items-center justify-center rounded-[0.5rem] font-display font-bold"
                 style={{
-                  background:
-                    "linear-gradient(160deg, var(--color-accent-300), var(--color-accent-600))",
+                  background: "var(--color-accent-500)",
                   color: "var(--color-on-accent)",
                   fontSize: "0.8125rem",
                   letterSpacing: "-0.03em",

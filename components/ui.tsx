@@ -10,27 +10,24 @@ import { SettingsTrigger } from "@/components/deck-preferences";
 --------------------------------------------------------------------------- */
 
 export const PANEL_STYLE: React.CSSProperties = {
-  borderRadius: "1.125rem",
+  borderRadius: "0.875rem",
   border: "0.0625rem solid var(--color-line)",
-  background:
-    "linear-gradient(180deg, var(--color-surface-1a), var(--color-surface-1b))",
+  background: "var(--color-panel)",
   boxShadow: "var(--deck-shadow-panel)",
 };
 
 const STAT_STYLE: React.CSSProperties = {
-  borderRadius: "0.875rem",
+  borderRadius: "0.75rem",
   border: "0.0625rem solid var(--color-line)",
-  background:
-    "linear-gradient(180deg, var(--color-surface-1a), var(--color-surface-1b))",
+  background: "var(--color-panel)",
   boxShadow: "var(--deck-shadow-stat)",
 };
 
 /* Cell style is applied by callers on each list item (Overview cells). */
 export const CELL_STYLE: React.CSSProperties = {
   borderRadius: "0.75rem",
-  border: "0.0625rem solid var(--color-line)",
-  background:
-    "linear-gradient(180deg, var(--color-surface-cell-a), var(--color-surface-cell-b))",
+  border: "0.0625rem solid var(--color-line-soft)",
+  background: "var(--color-surface-cell-a)",
   boxShadow: "var(--deck-shadow-cell)",
   overflow: "hidden",
   width: "100%",
@@ -149,11 +146,8 @@ export function Stat({
 }) {
   const emphasisStyle: React.CSSProperties = emphasis
     ? {
-        border: "0.0625rem solid color-mix(in oklab, var(--color-accent-800) 75%, transparent)",
-        background:
-          "linear-gradient(180deg, color-mix(in oklab, var(--color-accent-900) 50%, transparent), var(--color-surface-1b) 70%)",
-        boxShadow:
-          "inset 0 0.0625rem 0 color-mix(in oklab, var(--color-accent-200) 14%, transparent), 0 0.0625rem 0.125rem rgb(0 0 0 / 0.5)",
+        border: "0.0625rem solid color-mix(in oklab, var(--color-accent-500) 32%, transparent)",
+        background: "color-mix(in oklab, var(--color-accent-500) 7%, var(--color-panel))",
       }
     : {};
   const content = (
@@ -165,23 +159,6 @@ export function Stat({
         >
           <Sparkline data={spark} className="text-accent" />
         </span>
-      )}
-      {emphasis && (
-        <span
-          aria-hidden
-          className="pointer-events-none absolute"
-          style={{
-            top: "-45%",
-            right: "-20%",
-            height: "10rem",
-            width: "10rem",
-            borderRadius: "9999px",
-            background:
-              "radial-gradient(circle, var(--color-accent-600) 0%, transparent 68%)",
-            opacity: 0.5,
-            filter: "blur(0.5rem)",
-          }}
-        />
       )}
       <span
         className="relative flex items-center justify-between uppercase"
@@ -217,9 +194,7 @@ export function Stat({
           letterSpacing: "-0.03em",
           fontSize: "clamp(1.875rem, 2.3vw, 2.875rem)",
           color: emphasis ? "var(--color-accent-emphasis-text)" : "var(--color-foreground)",
-          textShadow: emphasis
-            ? "0 0 1.75rem var(--color-accent-glow)"
-            : undefined,
+          textShadow: undefined,
           fontVariantNumeric: "tabular-nums",
         }}
       >
