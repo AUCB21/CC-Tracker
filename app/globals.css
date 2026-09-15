@@ -228,7 +228,7 @@ body {
    because DeckNav/NavRow are shared with the mobile drawer (MobileNav) —
    collapse must never affect the mobile path. */
 :root {
-  --rail-w: clamp(12rem, 14vw, 15rem);
+  --rail-w: clamp(15rem, 16vw, 16.75rem);
 }
 [data-rail="collapsed"] {
   --rail-w: 3.75rem;

@@ -26,9 +26,9 @@ export function SettingsModal({ status }: { status: SetupStatus }) {
       onCancel={closeSettings}
       onClick={(event) => { if (event.target === ref.current) closeSettings(); }}
       className="settings-modal fixed inset-0 m-auto [&::backdrop]:bg-[rgb(20_18_15_/_0.48)] [&::backdrop]:backdrop-blur-sm"
-      style={{ width: "min(78rem, calc(100% - 2rem))", maxWidth: "100%", maxHeight: "calc(100% - 2rem)", padding: 0, border: "0.0625rem solid var(--color-line-strong)", borderRadius: "1.125rem", background: "var(--color-background)", color: "var(--color-text)", overflow: "hidden" }}
+      style={{ width: "min(78rem, calc(100% - 2rem))", maxWidth: "100%", maxHeight: "calc(100% - 2rem)", padding: 0, border: "0.0625rem solid var(--color-line-strong)", borderRadius: "1.125rem", background: "var(--color-background)", color: "var(--color-text)", overflow: "hidden", display: "flex", flexDirection: "column" }}
     >
-      <header className="flex items-start justify-between gap-6 border-b border-line px-6 py-5 md:px-8">
+      <header className="flex shrink-0 items-start justify-between gap-6 border-b border-line px-6 py-5 md:px-8">
         <div>
           <p className="mb-1.5 font-mono text-[0.625rem] uppercase tracking-[0.18em] text-accent">System</p>
           <h2 id="settings-title" className="font-display text-2xl font-semibold tracking-tight text-foreground">Settings</h2>
@@ -37,7 +37,7 @@ export function SettingsModal({ status }: { status: SetupStatus }) {
         <button type="button" onClick={closeSettings} aria-label="Close settings" className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line bg-panel2 text-lg text-muted transition-colors hover:text-foreground">×</button>
       </header>
 
-      <div className="max-h-[calc(100%_-_8rem)] overflow-y-auto px-6 py-6 md:px-8">
+      <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6 md:px-8">
         <section className="mb-6 rounded-xl border border-line bg-panel p-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
