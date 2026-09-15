@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
  *  DeckNav's siblings in the rail markup are shared). Part 1 of a 2-part
  *  handoff: this renders the pill and the platform-aware Cmd-K hint chip
  *  only. The actual command palette is wired up by a separate Part 2 pass
- *  via the `#deck-search-trigger` / `data-search-trigger` hook below. */
+ *  via the `data-search-trigger` hook below. */
 export function SearchTrigger() {
   const [isMac, setIsMac] = useState(false);
 
@@ -17,7 +17,6 @@ export function SearchTrigger() {
 
   return (
     <button
-      id="deck-search-trigger"
       data-search-trigger
       type="button"
       onClick={() => {

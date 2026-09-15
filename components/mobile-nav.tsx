@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { RailIcons, NavBadge } from "@/components/ui";
 import { useDeckPreferences } from "@/components/deck-preferences";
+import { SearchTrigger } from "@/components/search-trigger";
 
 const DRAWER_ID = "mobile-nav-drawer";
 
@@ -276,6 +277,9 @@ export function MobileNav({ counts }: { counts: NavCounts }) {
           overflowY: "auto",
         }}
       >
+        <div className="rail-workspace-search px-[0.6667rem]" onClick={close}>
+          <SearchTrigger />
+        </div>
         <DeckNav counts={counts} onNavigate={close} />
       </dialog>
     </div>

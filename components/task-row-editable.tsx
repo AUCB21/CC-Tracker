@@ -75,16 +75,16 @@ export function TaskRowEditable({
           >
             {task.content}
           </p>
-          {descriptionSlot}
+          <>{descriptionSlot}</>
           <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.6875rem] text-muted">
-            {projectSlot}
+            <>{projectSlot}</>
             {planLabel && <span className="max-w-full truncate">{planLabel}</span>}
-            {dateSlot}
+            <>{dateSlot}</>
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {chips}
-          {right}
+          <>{right}</>
         </div>
       </li>
     );

@@ -92,9 +92,12 @@
   --deck-foreground: #171513;
   --deck-text: #34302c;
   --deck-muted: #6f675f;
-  --deck-muted-2: #7e756c;
-  --deck-muted-3: #8d847a;
-  --deck-muted-4: #91877c;
+  /* Darkened to clear WCAG AA 4.5:1 for small text on the light ground; the
+     light muted ramp intentionally compresses at its lighter end because
+     readability caps how light muted text can go on this background. */
+  --deck-muted-2: #786f66;
+  --deck-muted-3: #786f65;
+  --deck-muted-4: #796f64;
   --deck-accent-50: #fff4ee;
   --deck-accent-100: #f9e2d7;
   --deck-accent-200: #efc2af;
@@ -201,7 +204,16 @@
    NOT the app's global --deck-* tokens (those were pixel-measured off a
    screenshot; these are exact). Scoped to `.rail` (desktop <aside> and the
    mobile drawer <dialog>) so nothing outside the sidebar is affected. Hex
-   literals are intentional here, kept in one place for future re-sync. */
+   literals are intentional here, kept in one place for future re-sync.
+
+   Which pairs are safe to consolidate vs must stay diverged:
+   - Byte-identical across --deck-* and --rail-* (safe to no-op consolidate,
+     kept separate only for scoping): surface-1a/panel (#fffefb),
+     surface-2/panel2 (#f2f0ea), surface-cell-a/cell (#fbfaf6),
+     line (#e3dfd5), line-soft (#edeae2), line-strong (#cfc9bb).
+   - Intentionally DIFFERENT (design-source-exact vs pixel-measured, do NOT
+     merge): ink/foreground, text, muted/muted2, accent*, sage vs green,
+     amber vs yellow, red. */
 .rail {
   /* The design's rows use `all:unset`, so they inherit line-height:normal.
      The app's body sets line-height:1.5, which was inflating every rail
@@ -215,8 +227,8 @@
   --rail-line-strong: #cfc9bb;
   --rail-ink: #171512;
   --rail-text: #2b2823;
-  --rail-muted: #7d776c;
-  --rail-muted2: #9a9488;
+  --rail-muted: #767065;
+  --rail-muted2: #767064;
   --rail-accent: #c2643f;
   --rail-accent-soft: #f7ebe4;
   --rail-accent-ring: #e8cbbc;

@@ -28,6 +28,7 @@ export function WorkspaceSwitcher({ projects }: { projects: WorkspaceProject[] }
   const [isOpenClass, setIsOpenClass] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Reset before mounting a fresh cycle (in the click handler, not an
@@ -39,6 +40,7 @@ export function WorkspaceSwitcher({ projects }: { projects: WorkspaceProject[] }
   };
   const closeMenu = () => {
     setMenuState((current) => (current === "closed" ? current : "closing"));
+    triggerRef.current?.focus();
   };
 
   // Open: `.t-dropdown` is already mounted at rest (pre-scale/opacity:0).
@@ -52,6 +54,7 @@ export function WorkspaceSwitcher({ projects }: { projects: WorkspaceProject[] }
     if (!el) return;
     void el.offsetWidth;
     setIsOpenClass(true);
+    el.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
   }, [menuState]);
 
   // Closing: hold `.is-closing` for --dropdown-close-dur, then unmount.
@@ -71,7 +74,21 @@ export function WorkspaceSwitcher({ projects }: { projects: WorkspaceProject[] }
       if (rootRef.current && !rootRef.current.contains(event.target as Node)) closeMenu();
     };
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") closeMenu();
+      if (event.key === "Escape") {
+        closeMenu();
+        return;
+      }
+      if (event.key !== "ArrowDown" && event.key !== "ArrowUp" && event.key !== "Home" && event.key !== "End") return;
+      const menuItems = Array.from(menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []);
+      if (menuItems.length === 0) return;
+      event.preventDefault();
+      const currentIndex = menuItems.indexOf(document.activeElement as HTMLElement);
+      let nextIndex: number;
+      if (event.key === "Home") nextIndex = 0;
+      else if (event.key === "End") nextIndex = menuItems.length - 1;
+      else if (event.key === "ArrowDown") nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % menuItems.length;
+      else nextIndex = currentIndex < 0 ? menuItems.length - 1 : (currentIndex - 1 + menuItems.length) % menuItems.length;
+      menuItems[nextIndex]?.focus();
     };
     document.addEventListener("mousedown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
@@ -84,6 +101,7 @@ export function WorkspaceSwitcher({ projects }: { projects: WorkspaceProject[] }
   return (
     <div ref={rootRef} className="rail-workspace-wrap relative mx-[0.6667rem]">
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => (menuState === "closed" ? openMenu() : closeMenu())}
         aria-haspopup="menu"
