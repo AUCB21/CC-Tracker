@@ -22,6 +22,14 @@ export const dynamic = "force-dynamic";
 
 const DAYS = 30;
 
+// Donut hues per the design handoff: task status maps by name, model donut is
+// positional (slate/accent/sage). Keys resolve to the theme palette in DonutChart.
+const TASK_STATUS_COLOR_KEYS: Record<string, string> = {
+  Completed: "green",
+  "In progress": "yellow",
+  Pending: "accent",
+};
+
 export default async function AnalyticsPage() {
   const [stats, sessions, tasks, events] = await Promise.all([
     getStats(),
@@ -44,6 +52,7 @@ export default async function AnalyticsPage() {
   const tokenCost = buildTokenCostSeries(DAYS, all);
   const tools = aggregateTools(all).slice(0, 12);
   const taskStatus = taskStatusBreakdown(tasks ?? []);
+  const taskStatusColorKeys = taskStatus.map((d) => TASK_STATUS_COLOR_KEYS[d.name]);
   const models = modelBreakdown(all);
   const durations = sessionDurationBuckets(all);
   const hourly = hourlyActivity((events ?? []).filter((e) => e.type === "prompt"));
@@ -147,11 +156,11 @@ export default async function AnalyticsPage() {
               {taskStatus.length === 0 ? (
                 <Empty>No tasks yet.</Empty>
               ) : (
-                <DonutChart data={taskStatus} />
+                <DonutChart data={taskStatus} colorKeys={taskStatusColorKeys} />
               )}
             </Card>
             <Card title="Sessions by model">
-              {models.length === 0 ? <Empty>No model data yet.</Empty> : <DonutChart data={models} />}
+              {models.length === 0 ? <Empty>No model data yet.</Empty> : <DonutChart data={models} colorKeys={["blue", "accent", "green"]} />}
             </Card>
             <Card title="Session durations">
               <SimpleBarChart data={durations} xKey="bucket" yKey="count" />

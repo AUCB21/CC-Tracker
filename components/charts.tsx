@@ -236,14 +236,21 @@ export function DonutChart({
   data,
   ariaLabel,
   colors,
+  colorKeys,
 }: {
   data: { name: string; value: number }[];
   ariaLabel?: string;
   colors?: string[];
+  colorKeys?: string[];
 }) {
   const c = useDeckColors();
   const s = useDeckStyles(c);
   const total = data.reduce((a, d) => a + d.value, 0);
+  const pal = colors ?? s.palette;
+  const colorAt = (i: number) => {
+    const key = colorKeys?.[i];
+    return key && key in c ? (c as Record<string, string>)[key] : pal[i % pal.length];
+  };
   return (
     <div className="relative" role="img" aria-label={ariaLabel ?? "Donut chart with segment legend below."}>
       <ResponsiveContainer width="100%" height={220}>
@@ -258,7 +265,7 @@ export function DonutChart({
             stroke="none"
           >
             {data.map((_, i) => (
-              <Cell key={i} fill={(colors ?? s.palette)[i % (colors ?? s.palette).length]} />
+              <Cell key={i} fill={colorAt(i)} />
             ))}
           </Pie>
           <Tooltip contentStyle={s.tooltip} itemStyle={s.tooltipItem} labelStyle={s.tooltipLabel} />
@@ -298,7 +305,7 @@ export function DonutChart({
             <span
               aria-hidden
               className="inline-block h-2 w-2 rounded-[0.125rem]"
-              style={{ background: (colors ?? s.palette)[i % (colors ?? s.palette).length] }}
+              style={{ background: colorAt(i) }}
             />
             {d.name}
             <span className="font-mono tabular-nums text-muted-2">{d.value.toLocaleString()}</span>
