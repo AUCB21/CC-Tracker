@@ -196,6 +196,59 @@
   --deck-shadow-cell: none;
 }
 
+/* Rail-scoped tokens: a 1:1 transcription of the approved design source's
+   own :root / [data-theme="dark"] blocks (Claude Control Light.dc.html),
+   NOT the app's global --deck-* tokens (those were pixel-measured off a
+   screenshot; these are exact). Scoped to `.rail` (desktop <aside> and the
+   mobile drawer <dialog>) so nothing outside the sidebar is affected. Hex
+   literals are intentional here, kept in one place for future re-sync. */
+.rail {
+  /* The design's rows use `all:unset`, so they inherit line-height:normal.
+     The app's body sets line-height:1.5, which was inflating every rail
+     control's measured height above spec. Reset it at the source. */
+  line-height: normal;
+  --rail-panel: #fffefb;
+  --rail-panel2: #f2f0ea;
+  --rail-cell: #fbfaf6;
+  --rail-line: #e3dfd5;
+  --rail-line-soft: #edeae2;
+  --rail-line-strong: #cfc9bb;
+  --rail-ink: #171512;
+  --rail-text: #2b2823;
+  --rail-muted: #7d776c;
+  --rail-muted2: #9a9488;
+  --rail-accent: #c2643f;
+  --rail-accent-soft: #f7ebe4;
+  --rail-accent-ring: #e8cbbc;
+  --rail-sage: #5d8a72;
+  --rail-sage-soft: #e6efe9;
+  --rail-amber: #a8781f;
+  --rail-amber-soft: #f4eddc;
+  --rail-red: #a8452f;
+  --rail-red-soft: #f6e6e1;
+}
+[data-theme="dark"] .rail {
+  --rail-panel: #1b1815;
+  --rail-panel2: #1c1916;
+  --rail-cell: #171513;
+  --rail-line: #241f1b;
+  --rail-line-soft: #1f1b18;
+  --rail-line-strong: #3a342c;
+  --rail-ink: #f6f2ec;
+  --rail-text: #ece7df;
+  --rail-muted: #a29a8f;
+  --rail-muted2: #8a8177;
+  --rail-accent: #e08a5c;
+  --rail-accent-soft: #2a1d16;
+  --rail-accent-ring: #4a3226;
+  --rail-sage: #7fb394;
+  --rail-sage-soft: #152019;
+  --rail-amber: #d7a94a;
+  --rail-amber-soft: #241d10;
+  --rail-red: #d2705a;
+  --rail-red-soft: #251411;
+}
+
 *, *::before, *::after { box-sizing: border-box; }
 
 html {
@@ -215,11 +268,36 @@ body {
 
 /* Flat-nav divider: replaces the removed uppercase group headings. Shared by
    the mobile drawer and the desktop rail (DeckNav renders both), so this is
-   a plain rule, not gated behind the rail media query below. */
+   a plain rule, not gated behind the rail media query below. Resolves
+   --rail-line-soft off the ancestor `.rail` class. */
 .rail-divider {
   height: 0;
-  margin-block: 0.625rem;
-  border-top: 0.0625rem solid var(--color-line-soft);
+  margin: 0.5rem 0.1111rem;
+  border-top: 0.0625rem solid var(--rail-line-soft);
+}
+
+/* Hidden in the expanded rail; appears only when collapsed, between the
+   icon-only workspace cube and the nav (matches the design's collapsed
+   aside, which has no equivalent divider in the expanded layout). */
+.rail-divider-collapsed {
+  display: none;
+}
+
+/* Workspace switcher popover: expanded opens below, full width; collapsed
+   opens to the right of the icon-only cube trigger. */
+.rail-workspace-menu {
+  position: absolute;
+  top: calc(100% + 0.3333rem);
+  left: 0;
+  right: 0;
+}
+
+/* NavBadge sets --badge-bg/--badge-fg inline (CSS vars only, never the
+   `background` property itself) precisely so this class-level rule - and
+   the higher-specificity collapsed override below - can still win. Inline
+   `style.background` would beat both unconditionally. */
+.rail-badge {
+  background: var(--badge-bg);
 }
 
 /* Collapsible desktop sidebar rail. Default (attribute absent) = expanded,
@@ -228,10 +306,10 @@ body {
    because DeckNav/NavRow are shared with the mobile drawer (MobileNav) —
    collapse must never affect the mobile path. */
 :root {
-  --rail-w: clamp(15rem, 16vw, 16.75rem);
+  --rail-w: 14.8889rem;
 }
 [data-rail="collapsed"] {
-  --rail-w: 3.75rem;
+  --rail-w: 3.3333rem;
 }
 
 @media (min-width: 48rem) {
@@ -242,36 +320,213 @@ body {
     display: none;
   }
   [data-rail="collapsed"] .rail-header {
-    flex-direction: column;
     height: auto;
     justify-content: center;
-    gap: 0.5rem;
-    padding: 0.75rem 0.5rem;
+    padding: 0.7222rem 0 0.4444rem;
+  }
+  /* The wordmark/tile/chevron group is empty when collapsed (all three are
+     .rail-label) but, unhidden itself, still occupies a flex slot with its
+     header `gap`, pushing the toggle off-center. Hide it outright. */
+  [data-rail="collapsed"] .rail-header-link {
+    display: none;
+  }
+  [data-rail="collapsed"] .rail-toggle {
+    padding: 0.2778rem;
+    margin-inline: auto;
+  }
+  [data-rail="collapsed"] .rail-divider-collapsed {
+    display: block;
+    width: 1.5556rem;
+    height: 0;
+    margin: 0.6111rem auto;
+    border-top: 0.0625rem solid var(--rail-line-soft);
+  }
+  [data-rail="collapsed"] .rail-workspace-wrap {
+    margin-inline: auto;
+    width: fit-content;
+  }
+  [data-rail="collapsed"] .rail-workspace-trigger {
+    width: auto;
+    padding: 0.4444rem;
+    justify-content: center;
+  }
+  [data-rail="collapsed"] .rail-workspace-menu {
+    top: 0;
+    left: calc(100% + 0.5rem);
+    right: auto;
+    min-width: 10.8889rem;
   }
   .rail-nav {
     transition: padding var(--duration-slow) var(--ease-standard);
   }
   [data-rail="collapsed"] .rail-nav {
-    padding-inline: 0.5rem;
+    align-items: center;
+    padding-inline: 0;
+    padding-top: 0;
+  }
+  [data-rail="collapsed"] .rail-nav-group {
+    align-items: center;
+  }
+  [data-rail="collapsed"] .rail-nav,
+  [data-rail="collapsed"] .rail-nav > div,
+  [data-rail="collapsed"] .rail-nav-group {
+    gap: 0.1667rem;
   }
   .rail-nav-row {
     position: relative;
   }
   [data-rail="collapsed"] .rail-nav-row {
+    height: auto;
     justify-content: center;
-    padding-inline: 0.375rem;
+    padding: 0.5rem;
+  }
+  [data-rail="collapsed"] .rail-divider {
+    width: 1.5556rem;
+    margin: 0.3889rem auto;
   }
   [data-rail="collapsed"] .rail-badge {
     position: absolute;
-    inset-block-start: 0.375rem;
-    inset-inline-end: 0.75rem;
-    min-width: 0.5rem;
-    width: 0.5rem;
-    height: 0.5rem;
+    inset-block-start: 0.3333rem;
+    inset-inline-end: 0.3333rem;
+    min-width: 0;
+    width: 0.3333rem;
+    height: 0.3333rem;
     padding: 0;
     font-size: 0;
+    border-radius: 50%;
+    background: var(--badge-fg, var(--rail-muted));
+    box-shadow: 0 0 0 0.1111rem var(--rail-panel);
     overflow: hidden;
   }
+}
+
+/* Touch tablets keep the dense desktop rail (they're md+ width) but need
+   real touch targets. Mouse desktops (pointer: fine) stay pixel-faithful
+   to the measured design. Kept small and additive. */
+@media (min-width: 48rem) and (pointer: coarse) {
+  .rail-nav-row {
+    height: auto;
+    min-height: 2.75rem;
+  }
+  .rail-hit {
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+  }
+}
+
+/* Motion tokens for the transitions.dev primitives used across the app
+   shell (icon-swap, card-resize, menu-dropdown). Each skill documents its
+   own :root defaults; consolidated into one block since several transitions
+   share it. Intentionally NOT merged with the app's own duration and
+   ease-standard tokens (different semantics, and the skill's own duration
+   token names would collide with them) - per .claude/skills/transitions-dev,
+   its _root.css is not imported for the same reason. --icon-swap-blur is
+   the skill's only px value, converted to rem (2px / 18 = 0.1111rem). */
+:root {
+  --icon-swap-dur: 250ms;
+  --icon-swap-blur: 0.1111rem;
+  --icon-swap-start-scale: 0.25;
+  --icon-swap-ease: ease-in-out;
+  --resize-dur: 300ms;
+  --resize-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --dropdown-open-dur: 250ms;
+  --dropdown-close-dur: 150ms;
+  --dropdown-pre-scale: 0.97;
+  --dropdown-closing-scale: 0.99;
+  --dropdown-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* transitions-dev 09-icon-swap.md, verbatim. */
+.t-icon-swap {
+  position: relative;
+  display: inline-grid;
+}
+.t-icon-swap .t-icon {
+  grid-area: 1 / 1;
+  transition:
+    opacity   var(--icon-swap-dur) var(--icon-swap-ease),
+    filter    var(--icon-swap-dur) var(--icon-swap-ease),
+    transform var(--icon-swap-dur) var(--icon-swap-ease);
+  will-change: opacity, filter, transform;
+}
+.t-icon-swap[data-state="a"] .t-icon[data-icon="a"],
+.t-icon-swap[data-state="b"] .t-icon[data-icon="b"] {
+  opacity: 1;
+  filter: blur(0);
+  transform: scale(1);
+}
+.t-icon-swap[data-state="a"] .t-icon[data-icon="b"],
+.t-icon-swap[data-state="b"] .t-icon[data-icon="a"] {
+  opacity: 0;
+  filter: blur(var(--icon-swap-blur));
+  transform: scale(var(--icon-swap-start-scale));
+}
+/* Not part of the base skill snippet: before mount there is no data-state
+   yet, so neither selector above matches and both icons would render at
+   their default opacity, visibly stacked. */
+.t-icon-swap:not([data-state]) .t-icon {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-icon-swap .t-icon { transition: none !important; }
+}
+
+/* transitions-dev 01-card-resize.md, verbatim. */
+.t-resize {
+  transition:
+    width  var(--resize-dur) var(--resize-ease),
+    height var(--resize-dur) var(--resize-ease);
+  will-change: width, height;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-resize { transition: none !important; }
+}
+
+/* Not from the skill: the sidebar's content offset shifts in step with the
+   rail's own resize (same tokens) but tweens margin-left, not width/height,
+   so it can't reuse .t-resize directly. */
+.rail-content-shift {
+  transition: margin-left var(--resize-dur) var(--resize-ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .rail-content-shift { transition: none !important; }
+}
+
+/* transitions-dev 05-menu-dropdown.md, verbatim. */
+.t-dropdown {
+  transform-origin: top left;
+  transform: scale(var(--dropdown-pre-scale));
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform var(--dropdown-open-dur) var(--dropdown-ease),
+    opacity   var(--dropdown-open-dur) var(--dropdown-ease);
+  will-change: transform, opacity;
+}
+.t-dropdown[data-origin="top-right"]     { transform-origin: top right; }
+.t-dropdown[data-origin="top-center"]    { transform-origin: top center; }
+.t-dropdown[data-origin="bottom-left"]   { transform-origin: bottom left; }
+.t-dropdown[data-origin="bottom-center"] { transform-origin: bottom center; }
+.t-dropdown[data-origin="bottom-right"]  { transform-origin: bottom right; }
+
+.t-dropdown.is-open {
+  transform: scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+.t-dropdown.is-closing {
+  transform: scale(var(--dropdown-closing-scale));
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform var(--dropdown-close-dur) var(--dropdown-ease),
+    opacity   var(--dropdown-close-dur) var(--dropdown-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-dropdown { transition: none !important; }
 }
 
 ::selection {
@@ -330,6 +585,14 @@ body {
 @keyframes slidein { from { opacity: 0; transform: translateX(1.5rem); } to { opacity: 1; transform: none; } }
 @keyframes draw    { from { stroke-dashoffset: 1200; } to { stroke-dashoffset: 0; } }
 @keyframes drawerIn { from { transform: translateX(100%); } to { transform: none; } }
+@keyframes crumbIn { from { opacity: 0; transform: translateY(0.2778rem); } to { opacity: 1; transform: translateY(0); } }
+
+/* Top-bar breadcrumb entrance. Keyed on pathname by the caller so React
+   remounts the span (restarting the animation) on every navigation. No
+   dedicated reduced-motion guard needed: the catch-all block further down
+   already neutralizes every animation except `.motion-safe-pulse`. */
+.rail-crumb { animation: crumbIn 260ms cubic-bezier(0.2, 0.7, 0.3, 1) both; }
+.rail-crumb-record { animation-delay: 50ms; }
 
 /* Migrated from LiveTimeline's <style> block: accent wash on freshly-arrived rows. */
 .deck-timeline li[data-new="1"] {

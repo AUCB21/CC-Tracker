@@ -87,6 +87,13 @@ export function SettingsTrigger({
   );
 }
 
+// Colors live in the class list, not inline style: inline `color`/`border`
+// always beat a `hover:` class, which was silencing the hover state.
+const THEME_TOGGLE_DEFAULT_CLASS =
+  "inline-flex items-center gap-[0.3333rem] rounded-[0.3889rem] border-[0.0625rem] border-[color:var(--rail-line-strong)] px-[0.5556rem] py-[0.3333rem] font-mono text-[0.5556rem] font-medium uppercase tracking-[0.1em] text-[color:var(--rail-text)] transition-colors hover:text-[color:var(--rail-ink)] hover:bg-[color:var(--rail-panel2)]";
+
+/** Icon swap follows transitions.dev "Icon swap" (.claude/skills/transitions-dev/09-icon-swap.md):
+ *  both icons stay mounted in the same grid cell, data-state picks which is visible. */
 export function ThemeToggle({ compact = false, className = "" }: { compact?: boolean; className?: string }) {
   const { theme, toggleTheme } = useDeckPreferences();
   const [mounted, setMounted] = useState(false);
@@ -96,35 +103,40 @@ export function ThemeToggle({ compact = false, className = "" }: { compact?: boo
   }, []);
 
   const next = theme === "light" ? "dark" : "light";
-  const resolvedClassName = className || "inline-flex items-center gap-1.5 rounded-lg border border-line bg-panel px-3 py-1.5 font-mono text-[0.625rem] uppercase tracking-[0.1em] text-muted transition-colors hover:text-foreground";
+  const isDefault = !className;
+  const resolvedClassName = isDefault ? THEME_TOGGLE_DEFAULT_CLASS : className;
+
+  const icons = (
+    <>
+      <span className="t-icon flex h-full w-full items-center justify-center" data-icon="a" aria-hidden>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-full w-full">
+          <path d="M10.8 2.3a5.8 5.8 0 1 0 2.9 10.8A5.8 5.8 0 0 1 10.8 2.3Z" />
+        </svg>
+      </span>
+      <span className="t-icon flex h-full w-full items-center justify-center" data-icon="b" aria-hidden>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-full w-full">
+          <circle cx="8" cy="8" r="2.7" />
+          <path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3 3l1.1 1.1M11.9 11.9 13 13M13 3l-1.1 1.1M4.1 11.9 3 13" />
+        </svg>
+      </span>
+    </>
+  );
 
   if (!mounted) {
     return (
-      <button
-        type="button"
-        onClick={toggleTheme}
-        aria-label="Toggle color theme"
-        className={resolvedClassName}
-      >
-        <svg aria-hidden viewBox="0 0 16 16" fill="none" className="h-3 w-3" stroke="currentColor" strokeWidth="1.4">
-          <circle cx="8" cy="8" r="5.8" />
-        </svg>
-        {!compact && "Theme"}
+      <button type="button" onClick={toggleTheme} aria-label="Toggle color theme" className={resolvedClassName}>
+        <span className="t-icon-swap h-[0.7222rem] w-[0.7222rem] shrink-0">{icons}</span>
+        {!compact && "THEME"}
       </button>
     );
   }
 
   return (
-    <button
-      type="button"
-      onClick={toggleTheme}
-      aria-label={`Switch to ${next} mode`}
-      className={resolvedClassName}
-    >
-      <svg aria-hidden viewBox="0 0 16 16" fill="none" className="h-3 w-3" stroke="currentColor" strokeWidth="1.4">
-        {theme === "light" ? <path d="M10.8 2.3a5.8 5.8 0 1 0 2.9 10.8A5.8 5.8 0 0 1 10.8 2.3Z" /> : <><circle cx="8" cy="8" r="2.7" /><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3 3l1.1 1.1M11.9 11.9 13 13M13 3l-1.1 1.1M4.1 11.9 3 13" /></>}
-      </svg>
-      {!compact && (theme === "light" ? "Dark" : "Light")}
+    <button type="button" onClick={toggleTheme} aria-label={`Switch to ${next} mode`} className={resolvedClassName}>
+      <span className="t-icon-swap h-[0.7222rem] w-[0.7222rem] shrink-0" data-state={theme === "light" ? "a" : "b"}>
+        {icons}
+      </span>
+      {!compact && (theme === "light" ? "DARK" : "LIGHT")}
     </button>
   );
 }

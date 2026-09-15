@@ -40,31 +40,38 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   let pendingApprovals = 0;
   let inProgressTasks = 0;
   let liveSessions = 0;
+  let pendingPlans = 0;
   if (db) {
     try {
       const cutoff = new Date(Date.now() - 90_000).toISOString();
-      const [h, t, s] = await Promise.all([
+      const [h, t, s, p] = await Promise.all([
         db.from("hitl_approvals").select("*", { count: "exact", head: true }).eq("status", "pending"),
         db.from("tasks").select("*", { count: "exact", head: true }).in("status", ["pending", "in_progress"]),
         db.from("events").select("session_id", { count: "exact", head: true }).gte("created_at", cutoff),
+        db.from("hitl_approvals").select("*", { count: "exact", head: true }).eq("status", "pending").eq("tool_name", "ExitPlanMode"),
       ]);
       pendingApprovals = h.count ?? 0;
       inProgressTasks = t.count ?? 0;
       liveSessions = s.count ?? 0;
+      pendingPlans = p.count ?? 0;
     } catch {}
   }
-  const navCounts: NavCounts = { pendingApprovals, inProgressTasks, liveSessions };
+  const navCounts: NavCounts = { pendingApprovals, inProgressTasks, liveSessions, pendingPlans };
 
   const projects = (await getProjects()) ?? [];
   const workspaceProjects = projects.map((p) => ({ id: p.id, name: p.name, path: p.path }));
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${familjen.variable} ${publicSans.variable} ${geistMono.variable}`}
+    >
       <head>
         <Script id="deck-preferences" strategy="beforeInteractive">{`(function(){try{var t=localStorage.getItem("cc-track-theme");var d=localStorage.getItem("cc-track-density");var r=localStorage.getItem("cc-track-rail");if(t==="dark"||t==="light")document.documentElement.dataset.theme=t;if(d==="compact"||d==="comfy")document.documentElement.dataset.density=d;if(r==="collapsed"||r==="expanded")document.documentElement.dataset.rail=r}catch(e){}})()`}</Script>
       </head>
       <body
-        className={`${familjen.variable} ${publicSans.variable} ${geistMono.variable} antialiased`}
+        className="antialiased"
         style={{
           fontFamily: "var(--font-sans)",
           background: "var(--color-background)",
@@ -74,75 +81,72 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <a href="#main" className="skip-link">Skip to content</a>
           <div className="flex min-h-screen">
           <aside
-            className="fixed inset-y-0 left-0 z-20 hidden w-[var(--rail-w)] flex-col border-r border-line md:flex"
+            className="rail t-resize fixed inset-y-0 left-0 z-20 hidden w-[var(--rail-w)] flex-col md:flex"
             style={{
-              background: "var(--gradient-topbar)",
-              transition: "width var(--duration-slow) var(--ease-standard)",
+              background: "var(--rail-panel)",
+              borderRight: "0.0625rem solid var(--rail-line)",
             }}
           >
-            <div className="rail-header flex h-[5rem] items-center justify-between gap-2 border-b border-line px-5">
-              <Link href="/" className="group flex min-w-0 items-center gap-2.5">
+            <div className="rail-header flex items-center gap-[0.5556rem] px-[0.6667rem] py-[0.7222rem]">
+              <Link href="/" className="rail-header-link group flex min-w-0 items-center gap-[0.625rem]">
                 <span
                   aria-hidden
-                  className="inline-flex h-[2.125rem] w-[2.125rem] shrink-0 items-center justify-center rounded-[0.625rem] font-display font-bold"
-                  style={{
-                    background: "var(--color-accent-500)",
-                    color: "var(--color-on-accent)",
-                    fontSize: "0.9375rem",
-                    letterSpacing: "-0.03em",
-                    boxShadow:
-                      "inset 0 0.0625rem 0 rgb(255 255 255 / 0.35), 0 0.375rem 1rem -0.375rem color-mix(in oklab, var(--color-accent-700) 70%, transparent)",
-                  }}
+                  className="rail-label inline-flex h-[1.5rem] w-[1.5rem] shrink-0 items-center justify-center rounded-[0.4444rem] font-mono font-semibold"
+                  style={{ background: "var(--rail-accent)", color: "var(--rail-panel)", fontSize: "0.5625rem", letterSpacing: "0.04em" }}
                 >
                   CC
                 </span>
                 <span
-                  className="rail-label truncate font-display font-semibold text-foreground"
-                  style={{ fontSize: "0.9375rem", letterSpacing: "-0.015em" }}
+                  className="rail-label min-w-0 truncate font-display font-semibold"
+                  style={{ fontSize: "0.8333rem", letterSpacing: "-0.015em", color: "var(--rail-ink)" }}
                 >
                   Claude Control
                 </span>
-                <span className="rail-label inline-flex shrink-0 items-center" aria-hidden>
-                  <svg
-                    aria-hidden
-                    viewBox="0 0 24 24"
-                    style={{ width: "0.8125rem", height: "0.8125rem", color: "var(--color-muted-3)" }}
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M8 9l4-4 4 4" />
-                    <path d="M16 15l-4 4-4-4" />
-                  </svg>
-                </span>
+                <svg
+                  aria-hidden
+                  viewBox="0 0 24 24"
+                  className="rail-label h-[0.7222rem] w-[0.7222rem] shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ color: "var(--rail-muted2)" }}
+                >
+                  <path d="M8 9l4-4 4 4M16 15l-4 4-4-4" />
+                </svg>
               </Link>
               <SidebarToggle />
             </div>
 
-            <div className="rail-workspace-search px-3 pb-1.5 pt-3">
-              <div className="mb-1.5 flex items-center justify-between">
-                <span
-                  className="uppercase"
-                  style={{ fontSize: "0.625rem", fontWeight: 600, letterSpacing: "0.16em", color: "var(--color-muted-4)" }}
+            <div className="rail-workspace-search flex items-center px-[0.7778rem] pb-[0.2778rem] pt-[0.4444rem]">
+              <span style={{ fontSize: "0.6944rem", color: "var(--rail-muted)" }}>Workspace</span>
+              <Link
+                href="/projects"
+                aria-label="View all projects"
+                title="View all projects"
+                className="rail-hit ml-auto inline-flex h-[1.1667rem] w-[1.1667rem] shrink-0 items-center justify-center rounded-[0.3333rem] transition-colors hover:bg-[color:var(--rail-panel2)] hover:text-[color:var(--rail-ink)]"
+                style={{ color: "var(--rail-muted)" }}
+              >
+                <svg
+                  aria-hidden
+                  viewBox="0 0 24 24"
+                  className="h-[0.8333rem] w-[0.8333rem]"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.9"
+                  strokeLinecap="round"
                 >
-                  Workspace
-                </span>
-                <Link
-                  href="/projects"
-                  aria-label="View all projects"
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-panel2 hover:text-foreground"
-                >
-                  <svg aria-hidden viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
-                    <path d="M10 4v12M4 10h12" />
-                  </svg>
-                </Link>
-              </div>
-              <WorkspaceSwitcher projects={workspaceProjects} />
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+              </Link>
             </div>
 
-            <div className="rail-workspace-search px-3 pb-2">
+            <WorkspaceSwitcher projects={workspaceProjects} />
+
+            <div className="rail-divider-collapsed" aria-hidden="true" />
+
+            <div className="rail-workspace-search px-[0.6667rem]">
               <SearchTrigger />
             </div>
 
@@ -150,15 +154,22 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             <NavAutoRefresh />
 
             <div
-              className="rail-footer border-t border-line px-5 py-3.5 uppercase"
-              style={{
-                fontSize: "0.625rem",
-                letterSpacing: "0.14em",
-                color: "var(--color-muted-4)",
-                fontFamily: "var(--font-mono)",
-              }}
+              className="rail-footer mt-auto flex items-center gap-[0.5556rem] border-t px-[0.8889rem] py-[0.6111rem]"
+              style={{ borderColor: "var(--rail-line-soft)" }}
             >
-              v0.1.0
+              <span className="font-mono" style={{ fontSize: "0.5556rem", letterSpacing: "0.1em", color: "var(--rail-muted2)" }}>
+                V0.1.0
+              </span>
+              <span
+                aria-hidden
+                className="flex-1"
+                style={{
+                  height: "0.2778rem",
+                  opacity: 0.5,
+                  background:
+                    "repeating-linear-gradient(90deg, var(--rail-line-strong) 0 0.0625rem, transparent 0.0625rem 0.3333rem)",
+                }}
+              />
             </div>
           </aside>
 
@@ -213,10 +224,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             <MobileNav counts={navCounts} />
           </header>
 
-          <div
-            className="w-full flex-1 min-w-0 md:ml-[var(--rail-w)]"
-            style={{ transition: "margin-left var(--duration-slow) var(--ease-standard)" }}
-          >
+          <div className="rail-content-shift w-full flex-1 min-w-0 md:ml-[var(--rail-w)]">
             <DeckShelf connected={connected} setupStatus={setupStatus} />
 
             <main id="main" className="deck-main px-6 pb-16 pt-20 md:px-10 md:pt-8 md:pb-16">

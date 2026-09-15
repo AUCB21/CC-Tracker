@@ -561,72 +561,54 @@ export function TaskLine({
   );
 }
 
-/* Sidebar / rail icons: authored SVG, one weight, one stroke */
+/* Sidebar / rail icons: authored SVG paths lifted verbatim from the approved
+   design source (Claude Control Light.dc.html, ICON constant), one weight,
+   one stroke. hitl/prompts aren't in that source (the design used "States",
+   which this app doesn't have) and are authored here in the same style.
+   Sized in rem so the rail scales with the app's root font-size. */
+const RAIL_ICON_PATHS = {
+  overview: "M4 10.5L12 4l8 6.5V20H4z",
+  projects: "M3 7a1 1 0 0 1 1-1h4.6l2 2H20a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z",
+  plans: "M4 6h16M4 12h16M4 18h10",
+  tasks: "M4.5 5h15v14h-15zM8 12l3 3 4.8-6",
+  sessions: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM10.2 8.4l5.4 3.6-5.4 3.6z",
+  analytics: "M5 20V11M10 20V5M15 20v-6M20 20v-9",
+  live: "M3 12h4l2.5-6 3.5 12 2.5-6h5.5",
+  setup: "M4 8h9M17 8h3M4 16h4M12 16h8M15 5.5v5M8 13.5v5",
+  hub: "M12 3c4.4 0 8 1.2 8 2.8S16.4 8.6 12 8.6 4 7.4 4 5.8 7.6 3 12 3zM4 5.8v12.4c0 1.6 3.6 2.8 8 2.8s8-1.2 8-2.8V5.8M4 12c0 1.6 3.6 2.8 8 2.8s8-1.2 8-2.8",
+  hitl: "M12 3l7 3v5c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6zM9 12l2 2 4-4",
+  prompts: "M4 5h16v11H9l-5 4z",
+} as const;
+
+function RailIcon({ path }: { path: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-[0.8889rem] w-[0.8889rem] shrink-0"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.6}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d={path} />
+    </svg>
+  );
+}
+
 export const RailIcons = {
-  overview: (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-      <rect x="3" y="3" width="6" height="6" rx="1.5" />
-      <rect x="11" y="3" width="6" height="6" rx="1.5" />
-      <rect x="3" y="11" width="6" height="6" rx="1.5" />
-      <rect x="11" y="11" width="6" height="6" rx="1.5" />
-    </svg>
-  ),
-  projects: (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-      <path d="M3 6.5a2 2 0 0 1 2-2h3l2 2h5a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-    </svg>
-  ),
-  plans: (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden>
-      <path d="M4 5h12M4 10h12M4 15h8" />
-    </svg>
-  ),
-  tasks: (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <rect x="3.5" y="3.5" width="13" height="13" rx="2.5" />
-      <path d="M6.5 10l2.5 2.5 5-5" />
-    </svg>
-  ),
-  sessions: (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" aria-hidden>
-      <path d="M6 4l10 6-10 6z" />
-    </svg>
-  ),
-  analytics: (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden>
-      <path d="M4 16V9M9 16V4M14 16v-8" />
-    </svg>
-  ),
-  live: (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden>
-      <circle cx="10" cy="10" r="2" />
-      <path d="M6.5 13.5a5 5 0 0 1 0-7M13.5 6.5a5 5 0 0 1 0 7" />
-      <path d="M4 16a9 9 0 0 1 0-12M16 4a9 9 0 0 1 0 12" strokeOpacity="0.4" />
-    </svg>
-  ),
-  setup: (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-      <circle cx="10" cy="10" r="2.5" />
-      <path d="M10 3v2M10 15v2M3 10h2M15 10h2M5 5l1.5 1.5M13.5 13.5L15 15M5 15l1.5-1.5M13.5 6.5L15 5" strokeLinecap="round" />
-    </svg>
-  ),
-  hub: (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <circle cx="10" cy="10" r="1.75" />
-      <path d="M10 8.25V4.5M10 11.75V15.5M8.25 10H4.5M11.75 10H15.5" />
-    </svg>
-  ),
-  hitl: (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M10 3.5l5.5 2v4c0 3.8-2.3 6.2-5.5 7-3.2-.8-5.5-3.2-5.5-7v-4z" />
-      <path d="M7.3 10l2 2 3.4-3.8" />
-    </svg>
-  ),
-  prompts: (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" aria-hidden>
-      <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h9A1.5 1.5 0 0 1 16 5.5v6A1.5 1.5 0 0 1 14.5 13H9l-3.5 3v-3H5.5A1.5 1.5 0 0 1 4 11.5z" />
-    </svg>
-  ),
+  overview: <RailIcon path={RAIL_ICON_PATHS.overview} />,
+  projects: <RailIcon path={RAIL_ICON_PATHS.projects} />,
+  plans: <RailIcon path={RAIL_ICON_PATHS.plans} />,
+  tasks: <RailIcon path={RAIL_ICON_PATHS.tasks} />,
+  sessions: <RailIcon path={RAIL_ICON_PATHS.sessions} />,
+  analytics: <RailIcon path={RAIL_ICON_PATHS.analytics} />,
+  live: <RailIcon path={RAIL_ICON_PATHS.live} />,
+  setup: <RailIcon path={RAIL_ICON_PATHS.setup} />,
+  hub: <RailIcon path={RAIL_ICON_PATHS.hub} />,
+  hitl: <RailIcon path={RAIL_ICON_PATHS.hitl} />,
+  prompts: <RailIcon path={RAIL_ICON_PATHS.prompts} />,
 } as const;
 
 /** Small inline-action glyphs (edit/delete chips) shared across entity rows. */
@@ -797,13 +779,34 @@ export function Textarea({
   return <textarea className={`${FIELD_CLASS} ${className}`} {...rest} />;
 }
 
-export function NavBadge({ count }: { count: number }) {
+const NAV_BADGE_TONE: Record<"neutral" | "sage" | "amber" | "red", { bg: string; fg: string }> = {
+  neutral: { bg: "var(--rail-line-strong)", fg: "var(--rail-muted)" },
+  sage: { bg: "var(--rail-sage-soft)", fg: "var(--rail-sage)" },
+  amber: { bg: "var(--rail-amber-soft)", fg: "var(--rail-amber)" },
+  red: { bg: "var(--rail-red-soft)", fg: "var(--rail-red)" },
+};
+
+/** Nav row count pill. Sets `--badge-fg` inline so the collapsed-rail dot
+ *  variant (globals.css) can recolor itself per tone without JS. */
+export function NavBadge({
+  count,
+  tone = "neutral",
+}: {
+  count: number;
+  tone?: "neutral" | "sage" | "amber" | "red";
+}) {
   if (count <= 0) return null;
   const display = count > 99 ? "99+" : String(count);
+  const { bg, fg } = NAV_BADGE_TONE[tone];
   return (
     <span
       aria-label={String(count)}
-      className="rail-badge inline-flex items-center justify-center rounded-full px-1.5 min-w-[1.25rem] h-[1.25rem] text-[0.6875rem] font-semibold tabular-nums bg-[color:var(--color-line-strong)] text-[color:var(--color-muted-2)]"
+      className="rail-badge ml-auto inline-flex items-center justify-center rounded-full px-[0.3889rem] py-[0.0556rem] text-[0.5556rem] font-mono font-semibold tabular-nums"
+      style={{
+        color: "var(--badge-fg)",
+        ["--badge-bg" as string]: bg,
+        ["--badge-fg" as string]: fg,
+      }}
     >
       {display}
     </span>

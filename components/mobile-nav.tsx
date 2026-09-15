@@ -8,11 +8,14 @@ import { useDeckPreferences } from "@/components/deck-preferences";
 
 const DRAWER_ID = "mobile-nav-drawer";
 
+type NavTone = "neutral" | "sage" | "amber" | "red";
+
 type NavItem = {
   href?: string;
   label: string;
   icon: React.ReactNode;
-  countKey?: "pendingApprovals" | "inProgressTasks" | "liveSessions";
+  countKey?: "pendingApprovals" | "inProgressTasks" | "liveSessions" | "pendingPlans";
+  tone?: NavTone;
   settings?: boolean;
 };
 
@@ -25,6 +28,7 @@ export type NavCounts = {
   pendingApprovals: number;
   inProgressTasks: number;
   liveSessions: number;
+  pendingPlans: number;
 };
 
 export const NAV: NavGroup[] = [
@@ -33,7 +37,7 @@ export const NAV: NavGroup[] = [
     items: [
       { href: "/",          label: "Overview",  icon: RailIcons.overview },
       { href: "/analytics", label: "Analytics", icon: RailIcons.analytics },
-      { href: "/live",      label: "Live", icon: RailIcons.live, countKey: "liveSessions" },
+      { href: "/live",      label: "Live", icon: RailIcons.live, countKey: "liveSessions", tone: "sage" },
       { href: "/projects",  label: "Projects", icon: RailIcons.projects },
       { href: "/sessions",  label: "Sessions", icon: RailIcons.sessions },
     ],
@@ -41,14 +45,14 @@ export const NAV: NavGroup[] = [
   {
     label: "Work",
     items: [
-      { href: "/plans", label: "Plans", icon: RailIcons.plans },
-      { href: "/tasks", label: "Tasks", icon: RailIcons.tasks, countKey: "inProgressTasks" },
+      { href: "/plans", label: "Plans", icon: RailIcons.plans, countKey: "pendingPlans", tone: "red" },
+      { href: "/tasks", label: "Tasks", icon: RailIcons.tasks, countKey: "inProgressTasks", tone: "amber" },
     ],
   },
   {
     label: "Control",
     items: [
-      { href: "/hitl",    label: "HITL",    icon: RailIcons.hitl, countKey: "pendingApprovals" },
+      { href: "/hitl",    label: "HITL",    icon: RailIcons.hitl, countKey: "pendingApprovals", tone: "red" },
       { href: "/prompts", label: "Prompts", icon: RailIcons.prompts },
     ],
   },
@@ -87,6 +91,10 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+/** Shared by the desktop rail and the mobile drawer (DeckNav renders both).
+ *  Desktop rows are auto-height (padding-driven, matching the design source);
+ *  below md they get a 2.75rem minimum for touch. Active state uses an inset
+ *  box-shadow ring (not a real border) so nothing shifts layout. */
 function NavRow({
   item,
   active,
@@ -98,24 +106,33 @@ function NavRow({
   count?: number;
   onNavigate?: () => void;
 }) {
-  const className = "group rail-nav-row flex items-center gap-3 rounded-[0.5rem] px-3 py-2.5";
-  const style = {
-    color: active ? "var(--color-foreground)" : "var(--color-muted-2)",
-    background: active ? "var(--color-surface-2)" : "transparent",
-    fontSize: "0.875rem",
-    transition: "color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard)",
-  };
+  const rowClass =
+    "group rail-nav-row flex items-center gap-[0.6111rem] rounded-[0.4444rem] px-[0.6111rem] py-[0.4444rem] text-[0.75rem] min-h-[2.75rem] md:min-h-0 hover:bg-[color:var(--rail-panel2)]";
+  // Only set background/boxShadow inline when active. Inline style always
+  // beats the `hover:bg-[...]` class, so leaving them unset (not merely
+  // "transparent"/"none") when inactive is what lets hover actually show.
+  const rowStyle: React.CSSProperties = active
+    ? {
+        background: "var(--rail-panel2)",
+        boxShadow: "inset 0 0 0 0.0625rem var(--rail-line-strong)",
+        transition: "background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard)",
+      }
+    : {
+        transition: "background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard)",
+      };
+  const ariaLabel = count ? `${item.label}, ${count}` : item.label;
   const content = (
     <>
-      <span
-        aria-hidden
-        className="inline-flex"
-        style={{ color: active ? "var(--color-foreground)" : "var(--color-muted-2)", opacity: 1 }}
-      >
+      <span aria-hidden className="inline-flex shrink-0" style={{ color: active ? "var(--rail-ink)" : "var(--rail-muted)" }}>
         {item.icon}
       </span>
-      <span className="rail-label flex-1">{item.label}</span>
-      <NavBadge count={count ?? 0} />
+      <span
+        className="rail-label min-w-0 flex-1 truncate"
+        style={{ color: active ? "var(--rail-ink)" : "var(--rail-text)", fontWeight: active ? 600 : 400 }}
+      >
+        {item.label}
+      </span>
+      <NavBadge count={count ?? 0} tone={item.tone} />
     </>
   );
 
@@ -124,8 +141,10 @@ function NavRow({
       <button
         type="button"
         onClick={onNavigate}
-        className={`${className} w-full text-left`}
-        style={style}
+        aria-label={ariaLabel}
+        title={item.label}
+        className={`${rowClass} w-full text-left`}
+        style={rowStyle}
       >
         {content}
       </button>
@@ -137,8 +156,10 @@ function NavRow({
       href={item.href ?? "/"}
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
-      className={className}
-      style={style}
+      aria-label={ariaLabel}
+      title={item.label}
+      className={rowClass}
+      style={rowStyle}
     >
       {content}
     </Link>
@@ -155,7 +176,7 @@ export function DeckNav({
   const pathname = usePathname();
   const { openSettings } = useDeckPreferences();
   return (
-    <nav className="rail-nav flex-1 px-3 py-5" aria-label="Primary">
+    <nav className="rail-nav flex flex-1 flex-col px-[0.6667rem] pb-[0.8889rem] pt-[0.2222rem]" aria-label="Primary">
       {OVERVIEW_ITEM && (
         <NavRow
           item={OVERVIEW_ITEM}
@@ -166,9 +187,9 @@ export function DeckNav({
       )}
       <div className="rail-divider" aria-hidden="true" />
       {REST_GROUPS.map((group, i) => (
-        <div key={group.label}>
+        <div key={group.label} className="flex flex-col">
           {i > 0 && <div className="rail-divider" aria-hidden="true" />}
-          <ul className="space-y-0.5 py-1.5">
+          <ul className="rail-nav-group flex flex-col">
             {group.items.map((item) => (
               <li key={item.label}>
                 <NavRow
@@ -236,7 +257,7 @@ export function MobileNav({ counts }: { counts: NavCounts }) {
         onClick={(e) => {
           if (e.target === ref.current) close();
         }}
-        className="mobile-nav-drawer [&::backdrop]:bg-[rgb(13_12_11_/_0.6)]"
+        className="rail mobile-nav-drawer [&::backdrop]:bg-[rgb(13_12_11_/_0.6)]"
         style={{
           position: "fixed",
           inset: "0 0 0 auto",
@@ -246,9 +267,9 @@ export function MobileNav({ counts }: { counts: NavCounts }) {
           maxHeight: "100dvh",
           padding: 0,
           border: 0,
-          borderLeft: "0.0625rem solid var(--color-line)",
-          background: "var(--gradient-topbar)",
-          color: "var(--color-text)",
+          borderLeft: "0.0625rem solid var(--rail-line)",
+          background: "var(--rail-panel)",
+          color: "var(--rail-text)",
           overflowY: "auto",
         }}
       >
