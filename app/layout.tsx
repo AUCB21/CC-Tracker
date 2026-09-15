@@ -182,7 +182,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
               WebkitBackdropFilter: "blur(0.75rem) saturate(1.2)",
             }}
           >
-            <Link href="/" className="flex items-center gap-2">
+            <Link href="/" className="min-h-11 flex items-center gap-2">
               <span
                 aria-hidden
                 className="inline-flex h-7 w-7 items-center justify-center rounded-[0.5rem] font-display font-bold"

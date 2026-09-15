@@ -232,9 +232,9 @@
   --rail-accent: #c2643f;
   --rail-accent-soft: #f7ebe4;
   --rail-accent-ring: #e8cbbc;
-  --rail-sage: #5d8a72;
+  --rail-sage: #3f6553; /* darkened for WCAG AA contrast on the light ground */
   --rail-sage-soft: #e6efe9;
-  --rail-amber: #a8781f;
+  --rail-amber: #7d5610; /* darkened for WCAG AA contrast on the light ground */
   --rail-amber-soft: #f4eddc;
   --rail-red: #a8452f;
   --rail-red-soft: #f6e6e1;
@@ -384,6 +384,7 @@ body {
   .rail-nav-row {
     position: relative;
   }
+  .rail-nav { scrollbar-gutter: stable; }
   [data-rail="collapsed"] .rail-nav-row {
     height: auto;
     justify-content: center;
