@@ -12,8 +12,8 @@ export default function Loading() {
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="min-w-0 rounded-2xl border border-line bg-panel p-5">
             <div className="skeleton h-3 w-20" />
-            <div className="skeleton mt-3 h-10 w-24" />
-            <div className="skeleton mt-2 h-3 w-32" />
+            <div className="skeleton mt-3 h-10 w-full max-w-[6rem]" />
+            <div className="skeleton mt-2 h-3 w-full max-w-[8rem]" />
           </div>
         ))}
       </div>
