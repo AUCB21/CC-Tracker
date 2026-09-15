@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import localFont from "next/font/local";
+import { Familjen_Grotesk, Public_Sans, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { DeckRail } from "@/components/deck-rail";
 import { SidebarToggle } from "@/components/sidebar-toggle";
@@ -16,31 +16,9 @@ import { getSupabase, isDbConfigured, ingestionKeyConfigured } from "@/lib/supab
 import { getProjects } from "@/lib/queries";
 import "./globals.css";
 
-// Self-hosted: `next dev` was silently failing to fetch these from Google
-// Fonts and falling back to bare Arial on every page. The three files in
-// app/fonts/ are the same latin-subset variable-weight woff2s next/font/google
-// would have downloaded; see app/fonts/README.md for provenance.
-const familjen = localFont({
-  src: "./fonts/familjen-grotesk-latin-wght.woff2",
-  weight: "400 700",
-  style: "normal",
-  display: "swap",
-  variable: "--font-familjen",
-});
-const publicSans = localFont({
-  src: "./fonts/public-sans-latin-wght.woff2",
-  weight: "100 900",
-  style: "normal",
-  display: "swap",
-  variable: "--font-public-sans",
-});
-const geistMono = localFont({
-  src: "./fonts/geist-mono-latin-wght.woff2",
-  weight: "100 900",
-  style: "normal",
-  display: "swap",
-  variable: "--font-geist-mono",
-});
+const familjen = Familjen_Grotesk({ variable: "--font-familjen", subsets: ["latin"] });
+const publicSans = Public_Sans({ variable: "--font-public-sans", subsets: ["latin"] });
+const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: {
