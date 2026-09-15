@@ -162,6 +162,7 @@ export function Stat({
           fontWeight: 600,
           letterSpacing: "0.14em",
           color: "var(--color-muted-2)",
+          paddingRight: spark ? "2.75rem" : undefined,
         }}
       >
         <span>{label}</span>
@@ -183,10 +184,10 @@ export function Stat({
         className="relative"
         style={{
           marginTop: "0.5rem",
-          fontFamily: "var(--font-mono)",
-          fontWeight: 400,
+          fontFamily: "var(--font-display)",
+          fontWeight: 700,
           lineHeight: 1,
-          letterSpacing: "-0.03em",
+          letterSpacing: "-0.04em",
           fontSize: "clamp(1.875rem, 2.3vw, 2.875rem)",
           color: "var(--color-foreground)",
           fontVariantNumeric: "tabular-nums",
@@ -502,11 +503,11 @@ export function PageHeader({
           </p>
         )}
         <h1
-          className="font-display font-semibold"
+          className="font-display font-bold"
           style={{
             margin: 0,
             fontSize: "clamp(2rem, 3vw, 3.25rem)",
-            lineHeight: 1.02,
+            lineHeight: 1,
             letterSpacing: "-0.035em",
             color: "var(--color-foreground)",
           }}
