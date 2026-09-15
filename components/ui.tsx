@@ -144,12 +144,7 @@ export function Stat({
   spark?: number[];
   delta?: { pct: number | null; goodDirection?: "up" | "down"; sub?: string };
 }) {
-  const emphasisStyle: React.CSSProperties = emphasis
-    ? {
-        border: "0.0625rem solid color-mix(in oklab, var(--color-accent-500) 32%, transparent)",
-        background: "color-mix(in oklab, var(--color-accent-500) 7%, var(--color-panel))",
-      }
-    : {};
+  const emphasisStyle: React.CSSProperties = {};
   const content = (
     <>
       {spark && (
@@ -157,7 +152,7 @@ export function Stat({
           className="pointer-events-none absolute"
           style={{ top: "1.25rem", right: "1.25rem" }}
         >
-          <Sparkline data={spark} className="text-accent" />
+          <Sparkline data={spark} className="text-muted-3" />
         </span>
       )}
       <span
@@ -193,8 +188,7 @@ export function Stat({
           lineHeight: 1,
           letterSpacing: "-0.03em",
           fontSize: "clamp(1.875rem, 2.3vw, 2.875rem)",
-          color: emphasis ? "var(--color-accent-emphasis-text)" : "var(--color-foreground)",
-          textShadow: undefined,
+          color: "var(--color-foreground)",
           fontVariantNumeric: "tabular-nums",
         }}
       >

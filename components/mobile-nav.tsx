@@ -34,15 +34,15 @@ export const NAV: NavGroup[] = [
       { href: "/",          label: "Overview",  icon: RailIcons.overview },
       { href: "/analytics", label: "Analytics", icon: RailIcons.analytics },
       { href: "/live",      label: "Live", icon: RailIcons.live, countKey: "liveSessions" },
+      { href: "/projects",  label: "Projects", icon: RailIcons.projects },
+      { href: "/sessions",  label: "Sessions", icon: RailIcons.sessions },
     ],
   },
   {
     label: "Work",
     items: [
-      { href: "/projects", label: "Projects", icon: RailIcons.projects },
-      { href: "/plans",    label: "Plans",    icon: RailIcons.plans },
-      { href: "/tasks",    label: "Tasks",    icon: RailIcons.tasks, countKey: "inProgressTasks" },
-      { href: "/sessions", label: "Sessions", icon: RailIcons.sessions },
+      { href: "/plans", label: "Plans", icon: RailIcons.plans },
+      { href: "/tasks", label: "Tasks", icon: RailIcons.tasks, countKey: "inProgressTasks" },
     ],
   },
   {
@@ -55,8 +55,8 @@ export const NAV: NavGroup[] = [
   {
     label: "System",
     items: [
-      { href: "/hub",   label: "Hub",   icon: RailIcons.hub },
-      { label: "Settings", icon: RailIcons.setup, settings: true },
+      { href: "/hub", label: "Hub", icon: RailIcons.hub },
+      { label: "Setup", icon: RailIcons.setup, settings: true },
     ],
   },
 ];
@@ -110,7 +110,7 @@ function NavRow({
       <span
         aria-hidden
         className="inline-flex"
-        style={{ color: "var(--color-accent-600)", opacity: active ? 1 : 0.62, transition: "opacity var(--duration-fast) var(--ease-standard)" }}
+        style={{ color: active ? "var(--color-foreground)" : "var(--color-muted-2)", opacity: 1 }}
       >
         {item.icon}
       </span>
