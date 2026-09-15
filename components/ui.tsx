@@ -216,7 +216,7 @@ export function Stat({
           lineHeight: 1,
           letterSpacing: "-0.03em",
           fontSize: "clamp(1.875rem, 2.3vw, 2.875rem)",
-          color: emphasis ? "var(--color-accent-200)" : "var(--color-foreground)",
+          color: emphasis ? "var(--color-accent-emphasis-text)" : "var(--color-foreground)",
           textShadow: emphasis
             ? "0 0 1.75rem var(--color-accent-glow)"
             : undefined,

@@ -28,6 +28,7 @@
   --color-accent-700: var(--deck-accent-700);
   --color-accent-800: var(--deck-accent-800);
   --color-accent-900: var(--deck-accent-900);
+  --color-accent-emphasis-text: var(--deck-accent-emphasis-text);
   --color-accent-status: var(--deck-accent-status);
   --color-accent: var(--color-accent-500);
   --color-accent-soft: var(--deck-accent-soft);
@@ -104,6 +105,7 @@
   --deck-accent-700: #91452f;
   --deck-accent-800: #713525;
   --deck-accent-900: #552a20;
+  --deck-accent-emphasis-text: color-mix(in oklab, var(--deck-accent-900) 70%, black);
   --deck-accent-status: #ae583a;
   --deck-accent-soft: color-mix(in oklab, var(--deck-accent-500) 14%, transparent);
   --deck-accent-ring: color-mix(in oklab, var(--deck-accent-500) 55%, transparent);
@@ -162,6 +164,7 @@
   --deck-accent-700: oklch(0.56 0.100 42);
   --deck-accent-800: oklch(0.44 0.082 40);
   --deck-accent-900: oklch(0.32 0.062 38);
+  --deck-accent-emphasis-text: var(--deck-accent-200);
   --deck-accent-status: var(--deck-accent-200);
   --deck-accent-soft: oklch(0.44 0.082 40 / 0.14);
   --deck-accent-ring: oklch(0.56 0.100 42 / 0.6);
