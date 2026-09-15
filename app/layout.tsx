@@ -3,6 +3,7 @@ import Script from "next/script";
 import { Familjen_Grotesk, Public_Sans, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { DeckRail } from "@/components/deck-rail";
+import { SidebarToggle } from "@/components/sidebar-toggle";
 import { MobileNav, type NavCounts } from "@/components/mobile-nav";
 import { DeckShelf } from "@/components/deck-shelf";
 import { NavAutoRefresh } from "@/components/nav-auto-refresh";
@@ -53,7 +54,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <Script id="deck-preferences" strategy="beforeInteractive">{`(function(){try{var t=localStorage.getItem("cc-track-theme");var d=localStorage.getItem("cc-track-density");if(t==="dark"||t==="light")document.documentElement.dataset.theme=t;if(d==="compact"||d==="comfy")document.documentElement.dataset.density=d}catch(e){}})()`}</Script>
+        <Script id="deck-preferences" strategy="beforeInteractive">{`(function(){try{var t=localStorage.getItem("cc-track-theme");var d=localStorage.getItem("cc-track-density");var r=localStorage.getItem("cc-track-rail");if(t==="dark"||t==="light")document.documentElement.dataset.theme=t;if(d==="compact"||d==="comfy")document.documentElement.dataset.density=d;if(r==="collapsed"||r==="expanded")document.documentElement.dataset.rail=r}catch(e){}})()`}</Script>
       </head>
       <body
         className={`${familjen.variable} ${publicSans.variable} ${geistMono.variable} antialiased`}
@@ -66,17 +67,18 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <a href="#main" className="skip-link">Skip to content</a>
           <div className="flex min-h-screen">
           <aside
-            className="fixed inset-y-0 left-0 z-20 hidden w-[clamp(12rem,14vw,15rem)] flex-col border-r border-line md:flex"
+            className="fixed inset-y-0 left-0 z-20 hidden w-[var(--rail-w)] flex-col border-r border-line md:flex"
             style={{
               background: "var(--gradient-topbar)",
               boxShadow: "inset -0.0625rem 0 0 rgb(255 255 255 / 0.02)",
+              transition: "width var(--duration-slow) var(--ease-standard)",
             }}
           >
-            <div className="flex h-[5rem] items-center border-b border-line px-5">
+            <div className="rail-header flex h-[5rem] items-center border-b border-line px-5">
               <Link href="/" className="group flex items-center gap-2.5">
                 <span
                   aria-hidden
-                  className="inline-flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-[0.625rem] font-display font-bold"
+                  className="inline-flex h-[2.125rem] w-[2.125rem] shrink-0 items-center justify-center rounded-[0.625rem] font-display font-bold"
                   style={{
                     background:
                       "linear-gradient(160deg, var(--color-accent-300), var(--color-accent-600))",
@@ -89,7 +91,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
                 >
                   CC
                 </span>
-                <span className="flex flex-col leading-[1.15]">
+                <span className="rail-label flex flex-col leading-[1.15]">
                   <span className="font-display font-semibold text-foreground" style={{ fontSize: "0.9375rem", letterSpacing: "-0.015em" }}>
                     Claude Control
                   </span>
@@ -100,11 +102,15 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
               </Link>
             </div>
 
+            <div className="rail-toggle-row flex items-center px-5 py-2">
+              <SidebarToggle />
+            </div>
+
             <DeckRail counts={navCounts} />
             <NavAutoRefresh />
 
             <div
-              className="border-t border-line px-5 py-3.5 uppercase"
+              className="rail-footer border-t border-line px-5 py-3.5 uppercase"
               style={{
                 fontSize: "0.625rem",
                 letterSpacing: "0.14em",
@@ -168,7 +174,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             <MobileNav counts={navCounts} />
           </header>
 
-          <div className="w-full flex-1 min-w-0 md:ml-[clamp(12rem,14vw,15rem)]">
+          <div
+            className="w-full flex-1 min-w-0 md:ml-[var(--rail-w)]"
+            style={{ transition: "margin-left var(--duration-slow) var(--ease-standard)" }}
+          >
             <DeckShelf connected={connected} setupStatus={setupStatus} />
 
             <main id="main" className="deck-main px-6 pb-16 pt-20 md:px-10 md:pt-8 md:pb-16">

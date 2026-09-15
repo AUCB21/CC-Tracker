@@ -77,7 +77,7 @@ function NavRow({
   count?: number;
   onNavigate?: () => void;
 }) {
-  const className = "group flex items-center gap-3 rounded-[0.5rem] px-3 py-2.5";
+  const className = "group rail-nav-row flex items-center gap-3 rounded-[0.5rem] px-3 py-2.5";
   const style = {
     color: active ? "var(--color-foreground)" : "var(--color-muted-2)",
     background: active ? "var(--color-surface-2)" : "transparent",
@@ -93,7 +93,7 @@ function NavRow({
       >
         {item.icon}
       </span>
-      <span className="flex-1">{item.label}</span>
+      <span className="rail-label flex-1">{item.label}</span>
       <NavBadge count={count ?? 0} />
     </>
   );
@@ -134,11 +134,11 @@ export function DeckNav({
   const pathname = usePathname();
   const { openSettings } = useDeckPreferences();
   return (
-    <nav className="flex-1 space-y-7 px-3 py-5" aria-label="Primary">
+    <nav className="rail-nav flex-1 space-y-7 px-3 py-5" aria-label="Primary">
       {NAV.map((group) => (
         <div key={group.label}>
           <p
-            className="mb-2 px-3 uppercase"
+            className="rail-group-label mb-2 px-3 uppercase"
             style={{
               fontSize: "0.625rem",
               fontWeight: 600,

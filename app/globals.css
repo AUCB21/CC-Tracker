@@ -213,6 +213,58 @@ body {
 [data-density="compact"] .deck-main { padding-bottom: 2.5rem; }
 [data-density="compact"] .deck-main > * + * { margin-top: -0.25rem; }
 
+/* Collapsible desktop sidebar rail. Default (attribute absent) = expanded,
+   matching what the server renders, so there is never a flash on load.
+   Every rule that hides/rearranges content is gated behind the md breakpoint
+   because DeckNav/NavRow are shared with the mobile drawer (MobileNav) —
+   collapse must never affect the mobile path. */
+:root {
+  --rail-w: clamp(12rem, 14vw, 15rem);
+}
+[data-rail="collapsed"] {
+  --rail-w: 3.75rem;
+}
+
+@media (min-width: 48rem) {
+  [data-rail="collapsed"] .rail-label,
+  [data-rail="collapsed"] .rail-group-label,
+  [data-rail="collapsed"] .rail-footer {
+    display: none;
+  }
+  [data-rail="collapsed"] .rail-header {
+    justify-content: center;
+    padding-inline: 0.5rem;
+  }
+  [data-rail="collapsed"] .rail-toggle-row {
+    justify-content: center;
+    padding-inline: 0.375rem;
+  }
+  .rail-nav {
+    transition: padding var(--duration-slow) var(--ease-standard);
+  }
+  [data-rail="collapsed"] .rail-nav {
+    padding-inline: 0.5rem;
+  }
+  .rail-nav-row {
+    position: relative;
+  }
+  [data-rail="collapsed"] .rail-nav-row {
+    justify-content: center;
+    padding-inline: 0.375rem;
+  }
+  [data-rail="collapsed"] .rail-badge {
+    position: absolute;
+    inset-block-start: 0.375rem;
+    inset-inline-end: 0.75rem;
+    min-width: 0.5rem;
+    width: 0.5rem;
+    height: 0.5rem;
+    padding: 0;
+    font-size: 0;
+    overflow: hidden;
+  }
+}
+
 ::selection {
   background: var(--color-accent-800);
   color: var(--color-text);
