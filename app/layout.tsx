@@ -9,7 +9,10 @@ import { DeckShelf } from "@/components/deck-shelf";
 import { NavAutoRefresh } from "@/components/nav-auto-refresh";
 import { DeckPreferences, SettingsTrigger, ThemeToggle } from "@/components/deck-preferences";
 import { SettingsModal } from "@/components/settings-modal";
+import { WorkspaceSwitcher } from "@/components/workspace-switcher";
+import { SearchTrigger } from "@/components/search-trigger";
 import { getSupabase, isDbConfigured, ingestionKeyConfigured } from "@/lib/supabase";
+import { getProjects } from "@/lib/queries";
 import "./globals.css";
 
 const familjen = Familjen_Grotesk({ variable: "--font-familjen", subsets: ["latin"] });
@@ -51,6 +54,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   }
   const navCounts: NavCounts = { pendingApprovals, inProgressTasks, liveSessions };
 
+  const projects = (await getProjects()) ?? [];
+  const workspaceProjects = projects.map((p) => ({ id: p.id, name: p.name, path: p.path }));
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -74,8 +80,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
               transition: "width var(--duration-slow) var(--ease-standard)",
             }}
           >
-            <div className="rail-header flex h-[5rem] items-center border-b border-line px-5">
-              <Link href="/" className="group flex items-center gap-2.5">
+            <div className="rail-header flex h-[5rem] items-center justify-between gap-2 border-b border-line px-5">
+              <Link href="/" className="group flex min-w-0 items-center gap-2.5">
                 <span
                   aria-hidden
                   className="inline-flex h-[2.125rem] w-[2.125rem] shrink-0 items-center justify-center rounded-[0.625rem] font-display font-bold"
@@ -91,19 +97,39 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
                 >
                   CC
                 </span>
-                <span className="rail-label flex flex-col leading-[1.15]">
-                  <span className="font-display font-semibold text-foreground" style={{ fontSize: "0.9375rem", letterSpacing: "-0.015em" }}>
-                    Claude Control
-                  </span>
-                  <span className="uppercase text-muted-4" style={{ fontSize: "0.625rem", letterSpacing: "0.14em" }}>
-                    Progress Tracker
-                  </span>
+                <span
+                  className="rail-label truncate font-display font-semibold text-foreground"
+                  style={{ fontSize: "0.9375rem", letterSpacing: "-0.015em" }}
+                >
+                  Claude Control
                 </span>
               </Link>
+              <SidebarToggle />
             </div>
 
-            <div className="rail-toggle-row flex items-center px-5 py-2">
-              <SidebarToggle />
+            <div className="rail-workspace-search px-3 pb-1.5 pt-3">
+              <div className="mb-1.5 flex items-center justify-between">
+                <span
+                  className="uppercase"
+                  style={{ fontSize: "0.625rem", fontWeight: 600, letterSpacing: "0.16em", color: "var(--color-muted-4)" }}
+                >
+                  Workspace
+                </span>
+                <Link
+                  href="/projects"
+                  aria-label="View all projects"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-panel2 hover:text-foreground"
+                >
+                  <svg aria-hidden viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+                    <path d="M10 4v12M4 10h12" />
+                  </svg>
+                </Link>
+              </div>
+              <WorkspaceSwitcher projects={workspaceProjects} />
+            </div>
+
+            <div className="rail-workspace-search px-3 pb-2">
+              <SearchTrigger />
             </div>
 
             <DeckRail counts={navCounts} />

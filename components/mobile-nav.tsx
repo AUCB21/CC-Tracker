@@ -33,7 +33,7 @@ export const NAV: NavGroup[] = [
     items: [
       { href: "/",          label: "Overview",  icon: RailIcons.overview },
       { href: "/analytics", label: "Analytics", icon: RailIcons.analytics },
-      { href: "/live",      label: "Live",      icon: RailIcons.live, countKey: "liveSessions" },
+      { href: "/live",      label: "Live", icon: RailIcons.live, countKey: "liveSessions" },
     ],
   },
   {
@@ -60,6 +60,27 @@ export const NAV: NavGroup[] = [
     ],
   },
 ];
+
+/** Splits the standalone "Overview" item (href === "/") out of NAV so it can
+ *  render as a pinned top-of-nav row, and drops any group left empty after
+ *  the split. Computed once at module load since NAV is a static constant. */
+function splitOverview(nav: NavGroup[]): { overview: NavItem | undefined; rest: NavGroup[] } {
+  let overview: NavItem | undefined;
+  const rest: NavGroup[] = [];
+  for (const group of nav) {
+    const items = group.items.filter((item) => {
+      if (item.href === "/") {
+        overview = item;
+        return false;
+      }
+      return true;
+    });
+    if (items.length > 0) rest.push({ ...group, items });
+  }
+  return { overview, rest };
+}
+
+const { overview: OVERVIEW_ITEM, rest: REST_GROUPS } = splitOverview(NAV);
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
@@ -134,21 +155,20 @@ export function DeckNav({
   const pathname = usePathname();
   const { openSettings } = useDeckPreferences();
   return (
-    <nav className="rail-nav flex-1 space-y-7 px-3 py-5" aria-label="Primary">
-      {NAV.map((group) => (
+    <nav className="rail-nav flex-1 px-3 py-5" aria-label="Primary">
+      {OVERVIEW_ITEM && (
+        <NavRow
+          item={OVERVIEW_ITEM}
+          active={isActive(pathname, OVERVIEW_ITEM.href ?? "/")}
+          count={OVERVIEW_ITEM.countKey ? counts[OVERVIEW_ITEM.countKey] : undefined}
+          onNavigate={onNavigate}
+        />
+      )}
+      <div className="rail-divider" aria-hidden="true" />
+      {REST_GROUPS.map((group, i) => (
         <div key={group.label}>
-          <p
-            className="rail-group-label mb-2 px-3 uppercase"
-            style={{
-              fontSize: "0.625rem",
-              fontWeight: 600,
-              letterSpacing: "0.16em",
-              color: "var(--color-muted-4)",
-            }}
-          >
-            {group.label}
-          </p>
-          <ul className="space-y-0.5">
+          {i > 0 && <div className="rail-divider" aria-hidden="true" />}
+          <ul className="space-y-0.5 py-1.5">
             {group.items.map((item) => (
               <li key={item.label}>
                 <NavRow

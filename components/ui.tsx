@@ -834,7 +834,7 @@ export function NavBadge({ count }: { count: number }) {
   return (
     <span
       aria-label={String(count)}
-      className="rail-badge inline-flex items-center justify-center rounded-full px-1.5 min-w-[1.25rem] h-[1.25rem] text-[0.6875rem] font-semibold tabular-nums bg-accent text-background"
+      className="rail-badge inline-flex items-center justify-center rounded-full px-1.5 min-w-[1.25rem] h-[1.25rem] text-[0.6875rem] font-semibold tabular-nums bg-[color:var(--color-line-strong)] text-[color:var(--color-muted-2)]"
     >
       {display}
     </span>
