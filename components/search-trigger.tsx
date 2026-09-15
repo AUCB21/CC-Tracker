@@ -23,8 +23,8 @@ export function SearchTrigger() {
       onClick={() => {
         window.dispatchEvent(new Event("deck-search-open"));
       }}
-      className="rail-hit flex w-full items-center gap-[0.4444rem] rounded-[0.5rem] px-[0.5556rem] py-[0.3889rem] text-left mt-[0.6667rem] mb-[0.2222rem]"
-      style={{ background: "var(--rail-cell)", boxShadow: "inset 0 0 0 0.0625rem var(--rail-line)" }}
+      className="rail-hit flex w-full items-center gap-[0.4444rem] rounded-[0.5rem] px-[0.5556rem] py-[0.3889rem] text-left mt-[0.6667rem] mb-[0.2222rem] shadow-[inset_0_0_0_0.0625rem_var(--rail-line)]"
+      style={{ background: "var(--rail-cell)" }}
     >
       <svg
         aria-hidden

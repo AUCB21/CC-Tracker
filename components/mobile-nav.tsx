@@ -106,15 +106,18 @@ function NavRow({
   count?: number;
   onNavigate?: () => void;
 }) {
-  const rowClass =
-    "group rail-nav-row flex items-center gap-[0.6111rem] rounded-[0.4444rem] px-[0.6111rem] py-[0.4444rem] text-[0.75rem] min-h-[2.75rem] md:min-h-0 hover:bg-[color:var(--rail-panel2)]";
-  // Only set background/boxShadow inline when active. Inline style always
-  // beats the `hover:bg-[...]` class, so leaving them unset (not merely
+  // The active ring is a Tailwind arbitrary-value class (not an inline
+  // style) so the global unlayered `:focus-visible` rule can still win on
+  // keyboard focus - inline styles always beat layered Tailwind utilities.
+  const rowClass = `group rail-nav-row flex items-center gap-[0.6111rem] rounded-[0.4444rem] px-[0.6111rem] py-[0.4444rem] text-[0.75rem] min-h-[2.75rem] md:min-h-0 hover:bg-[color:var(--rail-panel2)]${
+    active ? " shadow-[inset_0_0_0_0.0625rem_var(--rail-line-strong)]" : ""
+  }`;
+  // Only set background inline when active. Inline style always beats the
+  // `hover:bg-[...]` class, so leaving it unset (not merely
   // "transparent"/"none") when inactive is what lets hover actually show.
   const rowStyle: React.CSSProperties = active
     ? {
         background: "var(--rail-panel2)",
-        boxShadow: "inset 0 0 0 0.0625rem var(--rail-line-strong)",
         transition: "background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard)",
       }
     : {
@@ -176,7 +179,7 @@ export function DeckNav({
   const pathname = usePathname();
   const { openSettings } = useDeckPreferences();
   return (
-    <nav className="rail-nav flex flex-1 flex-col px-[0.6667rem] pb-[0.8889rem] pt-[0.2222rem]" aria-label="Primary">
+    <nav className="rail-nav flex flex-1 min-h-0 flex-col overflow-y-auto px-[0.6667rem] pb-[0.8889rem] pt-[0.2222rem]" aria-label="Primary">
       {OVERVIEW_ITEM && (
         <NavRow
           item={OVERVIEW_ITEM}

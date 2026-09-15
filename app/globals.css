@@ -356,9 +356,6 @@ body {
     right: auto;
     min-width: 10.8889rem;
   }
-  .rail-nav {
-    transition: padding var(--duration-slow) var(--ease-standard);
-  }
   [data-rail="collapsed"] .rail-nav {
     align-items: center;
     padding-inline: 0;

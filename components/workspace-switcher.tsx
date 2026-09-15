@@ -89,8 +89,8 @@ export function WorkspaceSwitcher({ projects }: { projects: WorkspaceProject[] }
         aria-haspopup="menu"
         aria-expanded={menuState === "open"}
         title="All projects"
-        className="rail-hit rail-workspace-trigger flex w-full items-center gap-[0.5rem] rounded-[0.5rem] px-[0.6111rem] py-[0.5rem] text-left"
-        style={{ background: "var(--rail-accent-soft)", boxShadow: "inset 0 0 0 0.0625rem var(--rail-accent-ring)" }}
+        className="rail-hit rail-workspace-trigger flex w-full items-center gap-[0.5rem] rounded-[0.5rem] px-[0.6111rem] py-[0.5rem] text-left shadow-[inset_0_0_0_0.0625rem_var(--rail-accent-ring)]"
+        style={{ background: "var(--rail-accent-soft)" }}
       >
         <svg
           aria-hidden
