@@ -28,7 +28,7 @@ export function useDeckPreferences() {
 
 export function DeckPreferences({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => typeof document !== "undefined" && document.documentElement.dataset.theme === "dark" ? "dark" : "light");
-  const [density, setDensity] = useState<Density>(() => typeof document !== "undefined" && document.documentElement.dataset.density === "compact" ? "compact" : "comfy");
+  const [density, setDensity] = useState<Density>("comfy");
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
