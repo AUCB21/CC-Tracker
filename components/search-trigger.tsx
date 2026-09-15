@@ -57,7 +57,7 @@ export function SearchTrigger() {
           border: "0.0625rem solid var(--color-line)",
         }}
       >
-        {isMac ? "⌘K" : "K"}
+        {isMac ? "⌘K" : "Ctrl K"}
       </span>
     </button>
   );

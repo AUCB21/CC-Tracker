@@ -54,17 +54,19 @@ export function Modal({
         if (e.target === ref.current) onClose();
       }}
       style={{
+        position: "fixed",
+        inset: 0,
+        margin: "auto",
         width: "calc(100% - 2rem)",
         maxWidth,
         maxHeight: "82%",
         overflow: "auto",
-        border: "0.0625rem solid #322c25",
+        border: "0.0625rem solid var(--color-line-strong)",
         borderRadius: "1.25rem",
         padding: 0,
-        background: "linear-gradient(180deg, #201c19, #151312)",
+        background: "var(--color-panel)",
         color: "var(--color-text)",
-        boxShadow:
-          "inset 0 0.0625rem 0 rgb(255 255 255 / 0.06), 0 2.5rem 5rem -1rem rgb(0 0 0 / 0.9)",
+        boxShadow: "var(--deck-shadow-panel)",
         animation: "lift 320ms var(--ease-standard) both",
       }}
       className="[&::backdrop]:bg-[rgb(6_5_5_/_0.72)] [&::backdrop]:backdrop-blur-sm [&::backdrop]:animate-[veil_240ms_var(--ease-standard)_both]"

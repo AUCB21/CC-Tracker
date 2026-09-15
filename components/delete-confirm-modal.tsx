@@ -77,7 +77,7 @@ export function DeleteConfirmModal({
             type="button"
             onClick={confirm}
             disabled={pending || !canConfirm}
-            className="rounded-md bg-[color:var(--color-red)] px-4 py-2 text-[0.75rem] font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="rounded-md bg-[color:var(--color-red)] px-4 py-2 text-[0.75rem] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {pending ? "Deleting…" : "Delete"}
           </button>
