@@ -230,7 +230,10 @@ export async function processHook(
       const patch: Record<string, unknown> = {
         prompt_count: (sess?.prompt_count ?? 0) + 1,
       };
-      if (!sess?.title && prompt) patch.title = prompt.slice(0, 120);
+      if (!sess?.title && prompt) {
+        const clean = prompt.replace(/\s+/g, " ").trim();
+        if (clean) patch.title = clean.slice(0, 60).trimEnd();
+      }
       await db.from("sessions").update(patch).eq("id", sessionId);
       await addEvent(db, sessionId, "prompt", { data: withPid({ prompt }) });
       break;
