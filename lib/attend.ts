@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Project, Plan, Task, TaskRun, RunLineage } from "./types";
+import { computeLineage, type LineageRow } from "./lineage";
 
 /**
  * Build the prompt Claude Code will receive when the user hits "Attend" on a task.
@@ -134,36 +135,20 @@ export async function getLineageStatsByTask(
     .select("id,task_id,parent_run_id,requested_at")
     .in("task_id", taskIds)
     .order("requested_at", { ascending: false });
-  type Row = { id: string; task_id: string | null; parent_run_id: string | null; requested_at: string };
-  const rows = (data as Row[] | null) ?? [];
+  const rows = (data as LineageRow[] | null) ?? [];
 
-  const byTask = new Map<string, Row[]>();
+  const lineageById = computeLineage(rows);
+
+  // rows are ordered requested_at desc, so the first row seen per task is its latest.
+  const latestByTask = new Map<string, LineageRow>();
   for (const r of rows) {
-    if (!r.task_id) continue;
-    const list = byTask.get(r.task_id) ?? [];
-    list.push(r);
-    byTask.set(r.task_id, list);
+    if (!r.task_id || latestByTask.has(r.task_id)) continue;
+    latestByTask.set(r.task_id, r);
   }
 
-  for (const [taskId, taskRuns] of byTask) {
-    const parentOf = new Map<string, string | null>();
-    for (const r of taskRuns) parentOf.set(r.id, r.parent_run_id);
-    const depthOf = (id: string): number => {
-      let d = 1;
-      const seen = new Set<string>([id]);
-      let cur = parentOf.get(id) ?? null;
-      while (cur && parentOf.has(cur) && !seen.has(cur)) {
-        seen.add(cur);
-        d += 1;
-        cur = parentOf.get(cur) ?? null;
-      }
-      return d;
-    };
-    const latest = taskRuns[0]; // ordered requested_at desc
-    const n = depthOf(latest.id);
-    let m = n;
-    for (const r of taskRuns) m = Math.max(m, depthOf(r.id));
-    if (n > 1 || m > 1 || latest.parent_run_id) out.set(taskId, { n, m });
+  for (const [taskId, latest] of latestByTask) {
+    const lineage = lineageById.get(latest.id);
+    if (lineage) out.set(taskId, lineage);
   }
   return out;
 }

@@ -8,6 +8,8 @@ import { getBrowserSupabase } from "@/lib/supabase-browser";
 import { fmtCost, fmtRelative, truncate } from "@/lib/format";
 import { Badge, CELL_STYLE, LiveDot, PANEL_STYLE as LANE_PANEL } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { EventRow as EventRowComponent } from "@/components/event-row";
+import { computeLineage } from "@/lib/lineage";
 
 const ALL_FILTER = "__all__";
 
@@ -24,56 +26,6 @@ function verdictBadge(v: NonNullable<TaskRun["verdict"]>): BadgeColor {
   if (v === "pass") return "green";
   if (v === "fail") return "red";
   return "yellow";
-}
-
-function eventTone(type: string): string {
-  if (type === "prompt") return "text-[color:var(--color-accent)]";
-  if (type === "tool_use") return "text-[color:var(--color-blue)]";
-  if (type === "tasks_synced" || type === "session_start") return "text-[color:var(--color-green)]";
-  if (type === "subagent_dispatch") return "text-[color:var(--color-green)]";
-  if (type === "subagent_kill") return "text-[color:var(--color-red)]";
-  if (type === "subagent_poll") return "text-[color:var(--color-blue)]";
-  return "text-muted";
-}
-
-const EVENT_MARK: Record<string, string> = {
-  prompt: "P", tool_use: "T", tasks_synced: "S", session_start: "▶", session_end: "■",
-  subagent_dispatch: "→", subagent_kill: "×", subagent_poll: "?",
-};
-
-// Depth of `id` within the parent chain restricted to runs currently loaded
-// in the feed. When the row's parent_run_id isn't loaded (older than the tail)
-// we still know depth ≥ 2, so the chip won't lie about being a retry.
-function computeLineageMap(runs: TaskRun[]): Map<string, { n: number; m: number }> {
-  const byId = new Map<string, TaskRun>();
-  for (const r of runs) byId.set(r.id, r);
-  const cache = new Map<string, number>();
-  const depth = (id: string): number => {
-    const cached = cache.get(id);
-    if (cached != null) return cached;
-    const r = byId.get(id);
-    if (!r) return 1;
-    let d = 1;
-    if (r.parent_run_id) {
-      d = byId.has(r.parent_run_id) ? depth(r.parent_run_id) + 1 : 2;
-    }
-    cache.set(id, d);
-    return d;
-  };
-  const maxByTask = new Map<string, number>();
-  for (const r of runs) {
-    if (!r.task_id) continue;
-    const d = depth(r.id);
-    maxByTask.set(r.task_id, Math.max(maxByTask.get(r.task_id) ?? 0, d));
-  }
-  const out = new Map<string, { n: number; m: number }>();
-  for (const r of runs) {
-    if (!r.task_id) continue;
-    const n = depth(r.id);
-    const m = maxByTask.get(r.task_id) ?? n;
-    if (n > 1 || m > 1 || r.parent_run_id) out.set(r.id, { n, m });
-  }
-  return out;
 }
 
 // ---- run card -------------------------------------------------------------
@@ -173,77 +125,6 @@ const RunCard = memo(
     (a.lineage?.m ?? -1) === (b.lineage?.m ?? -1),
 );
 
-// ---- event row (memoised so a single insert doesn't rerender the tail) ----
-
-const FeedEventRow = memo(function FeedEventRow({ e }: { e: EventRow }) {
-  return (
-    <li className="flex items-start gap-2 rounded-md px-2 py-1 text-[0.75rem] hover:bg-panel2/60">
-      <span className={`w-4 shrink-0 text-center font-mono ${eventTone(e.type)}`}>
-        {EVENT_MARK[e.type] ?? "."}
-      </span>
-      <span className="w-16 shrink-0 font-mono tabular-nums text-muted text-[0.6875rem] leading-[1.6]">
-        {new Date(e.created_at).toLocaleTimeString("en-GB", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        })}
-      </span>
-      <span className="w-16 shrink-0 font-mono text-[0.6875rem] text-muted leading-[1.6] truncate">
-        {e.session_id?.slice(0, 8)}
-      </span>
-      <span className="min-w-0 flex-1 break-words">
-        <span className="text-muted">{e.type === "tool_use" ? e.tool_name : e.type}</span>
-        {e.type === "prompt" &&
-          typeof (e.data as { prompt?: string })?.prompt === "string" && (
-            <span className="ml-2 text-foreground">
-              {truncate((e.data as { prompt: string }).prompt, 70)}
-            </span>
-          )}
-        {e.type === "tool_use" &&
-          typeof (e.data as { input?: string })?.input === "string" && (
-            <span className="ml-2 font-mono text-muted">
-              {truncate((e.data as { input: string }).input, 50)}
-            </span>
-          )}
-        {e.type === "subagent_dispatch" && (() => {
-          const d = e.data as { subagent_type?: string; description?: string; agent_id?: string };
-          const text = d.description
-            ? `${d.subagent_type ?? "?"} · ${d.description}`
-            : d.agent_id ?? "";
-          return text ? (
-            <span className="ml-2 text-foreground">{truncate(text, 70)}</span>
-          ) : null;
-        })()}
-        {e.type === "subagent_kill" && (() => {
-          const d = e.data as { task_id?: string; command?: string };
-          const text = [d.task_id, d.command ? truncate(d.command, 60) : undefined]
-            .filter(Boolean)
-            .join(" · ");
-          return text ? (
-            <span className="ml-2 font-mono text-muted">{text}</span>
-          ) : null;
-        })()}
-        {e.type === "subagent_poll" && (() => {
-          const d = e.data as { to?: string; summary?: string; message?: string; task_id?: string };
-          if (d.to) {
-            const detail = d.summary ?? d.message;
-            return (
-              <span className="ml-2 text-foreground">
-                {`→ ${d.to}`}
-                {detail ? ` · ${truncate(detail, 60)}` : ""}
-              </span>
-            );
-          }
-          if (d.task_id) {
-            return <span className="ml-2 font-mono text-muted">{d.task_id}</span>;
-          }
-          return null;
-        })()}
-      </span>
-    </li>
-  );
-});
-
 // ---- feed (two-column tail) -----------------------------------------------
 
 const LANE_H = "h-[calc(100dvh-16rem)]";
@@ -326,7 +207,7 @@ export function LiveFeed({
 
   // Depth chip source; recomputed as runs stream in so realtime rows pick up
   // their attempt number as soon as the parent is visible in the tail.
-  const lineageMap = useMemo(() => computeLineageMap(runs), [runs]);
+  const lineageMap = useMemo(() => computeLineage(runs), [runs]);
 
   // Distinct session ids present in the current event tail, most recent first,
   // for the session filter dropdown. If the current filter isn't in the list
@@ -495,7 +376,7 @@ export function LiveFeed({
               <ul className="space-y-0.5">
                 <div ref={eventsTopRef} />
                 {events.map((e) => (
-                  <FeedEventRow key={e.id} e={e} />
+                  <EventRowComponent key={e.id} event={e} timeFormat="hms" showSessionId truncate={{ prompt: 70, toolInput: 50, agent: 70 }} />
                 ))}
               </ul>
             )}
