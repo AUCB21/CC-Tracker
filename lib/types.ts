@@ -103,6 +103,17 @@ export type TaskRun = {
   finished_at: string | null;
 };
 
+export type TaskRunTrigger = "manual" | "retry_on_fail" | "followup";
+
+// Triggers whose child rows resume the parent's claude session via --resume.
+// "chain" was speculative -- nothing ever inserts trigger: "chain" -- so it's
+// not included here.
+export const RESUMES: Record<TaskRunTrigger, boolean> = {
+  manual: false,
+  retry_on_fail: true,
+  followup: true,
+};
+
 /**
  * Lineage stats for a task_run within its retry/followup chain.
  * `n` = this run's position (root = 1); `m` = max position seen across

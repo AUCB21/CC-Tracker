@@ -1,6 +1,7 @@
 // Run: npx tsx tests/agent-verify.test.mts
 import assert from "node:assert/strict";
-import { parseShortstat, parseVerdict, capDiff, buildVerifyPrompt } from "../lib/agent-verify";
+import { parseShortstat } from "../lib/agent-git";
+import { parseVerdict, capDiff, buildVerifyPrompt } from "../lib/agent-verify";
 
 // ---- parseShortstat -------------------------------------------------------
 assert.deepEqual(

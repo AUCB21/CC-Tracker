@@ -1,26 +1,10 @@
-// Pure helpers for the post-run verifier (Gap 2). Split from bin/agent.mts so
-// tests can exercise prompt shape and diff parsing without spawning claude.
+// Pure helpers for the post-run verifier (Gap 2), plus the verifier itself.
+// Split from bin/agent.mts so tests can exercise prompt shape and diff
+// parsing without spawning claude.
+import { spawn } from "node:child_process";
 import { parseTrailingJson } from "./agent-parse";
+import { gitShortstat, gitDiffText } from "./agent-git";
 import type { DiffSummary, TaskRunVerdict } from "./types";
-
-// The final line of `git diff --shortstat` looks like:
-//   " 3 files changed, 42 insertions(+), 7 deletions(-)"
-// Any field can be absent (a rename-only diff has no ins/del; a pure delete
-// has no insertions). Returns null when nothing matches so callers can
-// distinguish "empty diff" from "unparseable".
-export function parseShortstat(line: string): DiffSummary | null {
-  const s = line.trim();
-  if (!s) return null;
-  const num = (re: RegExp): number => {
-    const m = s.match(re);
-    return m ? Number(m[1]) : 0;
-  };
-  const files = num(/(\d+)\s+files?\s+changed/);
-  const ins = num(/(\d+)\s+insertions?\(\+\)/);
-  const del = num(/(\d+)\s+deletions?\(-\)/);
-  if (files === 0 && ins === 0 && del === 0) return null;
-  return { files_changed: files, insertions: ins, deletions: del };
-}
 
 // Verdict parser: the verifier's assistant reply should contain a JSON object
 // like {"verdict":"pass","reason":"..."}. Delegates the brace walk to
@@ -76,4 +60,102 @@ export function buildVerifyPrompt(input: {
   ]
     .filter(Boolean)
     .join("\n");
+}
+
+// ---------- verifier ----------
+// Spawns a cheap, short-turn claude to grade the diff. Best-effort: any failure
+// leaves verdict null and the caller proceeds as before Gap 2.
+const VERIFIER_BUDGET_USD = 0.10;
+const VERIFIER_MAX_TURNS = 3;
+
+export type VerifierTaskContext = {
+  content: string;
+  description: string | null;
+  planTitle: string | null;
+};
+
+export type VerifyOutcome = {
+  verdict: TaskRunVerdict;
+  reason: string;
+  diffSummary: DiffSummary | null;
+};
+
+type SpawnResult =
+  | { kind: "spawnerr"; msg: string }
+  | { kind: "exit"; code: number | null };
+
+// Minimal one-shot spawn for the verifier's own claude child. This is not the
+// primary run's spawnOnce (which also supports kill() for cancellation) --
+// that stays private to lib/agent-run.ts and isn't shared here.
+function spawnVerifierClaude(
+  bin: string,
+  args: string[],
+  cwd: string,
+  onStdout: (chunk: string) => void,
+): Promise<SpawnResult> {
+  return new Promise((resolve) => {
+    const child = spawn(bin, args, {
+      cwd,
+      env: process.env,
+      stdio: ["ignore", "pipe", "pipe"],
+      windowsHide: true,
+    });
+    child.stdout.on("data", (d: Buffer) => onStdout(d.toString("utf8")));
+    child.stderr.on("data", () => {});
+    child.on("error", (err) => resolve({ kind: "spawnerr", msg: err.message }));
+    child.on("close", (code) => resolve({ kind: "exit", code }));
+  });
+}
+
+export async function runVerifier(
+  taskCtx: VerifierTaskContext | null,
+  cwd: string,
+  parentCommit: string,
+  headCommit: string,
+  claudeBin: string,
+  permissionMode: string,
+): Promise<VerifyOutcome | null> {
+  // The run finished ok but touched nothing tracked. Not "pass" (nothing to
+  // show for it) and not "fail" (may have been read-only investigation).
+  if (parentCommit === headCommit) {
+    return {
+      verdict: "needs_review",
+      reason: "no committed changes since the run started",
+      diffSummary: null,
+    };
+  }
+
+  if (!taskCtx) return null;
+
+  const diffSummary = gitShortstat(cwd, parentCommit, headCommit);
+  const diff = gitDiffText(cwd, parentCommit, headCommit);
+  // No code changes -> nothing to grade against; caller decides what to do.
+  if (!diffSummary && !diff.trim()) return null;
+
+  const prompt = buildVerifyPrompt({
+    taskContent: taskCtx.content,
+    taskDescription: taskCtx.description,
+    planTitle: taskCtx.planTitle,
+    diffStat: diffSummary,
+    diff,
+  });
+  const args = [
+    "-p", prompt,
+    "--output-format", "json",
+    "--max-turns", String(VERIFIER_MAX_TURNS),
+    "--max-budget-usd", String(VERIFIER_BUDGET_USD),
+  ];
+  if (permissionMode) args.push("--permission-mode", permissionMode);
+
+  let stdoutFull = "";
+  const result = await spawnVerifierClaude(claudeBin, args, cwd, (chunk) => {
+    stdoutFull += chunk;
+  });
+  if (result.kind !== "exit" || result.code !== 0) return null;
+
+  const parsed = parseTrailingJson(stdoutFull) as { result?: string } | null;
+  const replyText = typeof parsed?.result === "string" ? parsed.result : "";
+  const verdict = parseVerdict(replyText);
+  if (!verdict) return null;
+  return { ...verdict, diffSummary };
 }
