@@ -1,38 +1,27 @@
-import { createHash } from "crypto";
-import { checkApiKey, getSupabase } from "@/lib/supabase";
+import { handlerWithDb } from "@/lib/api";
+import { dedupeKeyFor } from "@/lib/dedupe";
 import { ensureSession } from "@/lib/ingest";
 
-const sha1 = (s: string) => createHash("sha1").update(s).digest("hex");
-
 export const dynamic = "force-dynamic";
+
+type TaskBody = {
+  id?: string;
+  session_id?: string;
+  plan_id?: string | null;
+  content?: string;
+  description?: string | null;
+  status?: "pending" | "in_progress" | "completed";
+};
 
 /**
  * Create or update a task.
  * POST { id?, session_id?, plan_id?, content?, status? }
  * Without an id, upserts by (session_id, content) so repeated calls don't duplicate.
  */
-export async function POST(req: Request) {
-  const authErr = checkApiKey(req);
-  if (authErr) return authErr;
-  const db = getSupabase();
-  if (!db) return Response.json({ error: "Supabase is not configured" }, { status: 503 });
-
-  let body: {
-    id?: string;
-    session_id?: string;
-    plan_id?: string | null;
-    content?: string;
-    description?: string | null;
-    status?: "pending" | "in_progress" | "completed";
-  };
-  try {
-    body = await req.json();
-  } catch {
-    return Response.json({ error: "invalid JSON body" }, { status: 400 });
-  }
-
-  const now = new Date().toISOString();
-  try {
+export const POST = handlerWithDb(
+  (raw): TaskBody | null => (raw && typeof raw === "object" ? (raw as TaskBody) : null),
+  async ({ db, body }) => {
+    const now = new Date().toISOString();
     if (body.id) {
       const patch: Record<string, unknown> = { updated_at: now };
       if (body.content !== undefined) patch.content = body.content;
@@ -82,7 +71,7 @@ export async function POST(req: Request) {
     // task text continues as one row across sessions instead of duplicating per session.
     // Historical rows keep their old session-scoped dedupe_key; this is forward-only, no backfill.
     const scopeId = projectId ?? sessionId;
-    const dedupeKey = scopeId ? `cli:${scopeId}:${sha1(body.content)}` : null;
+    const dedupeKey = scopeId ? dedupeKeyFor("cli", scopeId, body.content) : null;
 
     if (dedupeKey) {
       const { data: existing } = await db
@@ -127,8 +116,5 @@ export async function POST(req: Request) {
       .single();
     if (error) throw error;
     return Response.json({ ok: true, task: data });
-  } catch (e) {
-    console.error("[ingest/task]", e);
-    return Response.json({ error: e instanceof Error ? e.message : "failed" }, { status: 500 });
-  }
-}
+  },
+);

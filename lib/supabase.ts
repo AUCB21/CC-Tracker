@@ -27,6 +27,17 @@ export function isDbConfigured(): boolean {
   return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && serverSecret());
 }
 
+/**
+ * Runs `fn` against a live Supabase client, or returns `null` when the db
+ * isn't configured. Collapses the `const db = getSupabase(); if (!db) return
+ * null;` preamble every queries.ts function used to repeat.
+ */
+export async function withDb<T>(fn: (db: SupabaseClient) => Promise<T>): Promise<T | null> {
+  const db = getSupabase();
+  if (!db) return null;
+  return fn(db);
+}
+
 export function ingestionKeyConfigured(): boolean {
   return Boolean(process.env.CC_TRACKER_API_KEY);
 }

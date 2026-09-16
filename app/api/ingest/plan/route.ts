@@ -1,32 +1,23 @@
-import { checkApiKey, getSupabase } from "@/lib/supabase";
+import { handlerWithDb } from "@/lib/api";
 import { ensureSession } from "@/lib/ingest";
 
 export const dynamic = "force-dynamic";
+
+type PlanBody = {
+  id?: string;
+  session_id?: string;
+  title?: string;
+  description?: string;
+  status?: "active" | "completed" | "abandoned";
+};
 
 /**
  * Create or update a plan.
  * POST { id?, session_id, title?, description?, status? }
  */
-export async function POST(req: Request) {
-  const authErr = checkApiKey(req);
-  if (authErr) return authErr;
-  const db = getSupabase();
-  if (!db) return Response.json({ error: "Supabase is not configured" }, { status: 503 });
-
-  let body: {
-    id?: string;
-    session_id?: string;
-    title?: string;
-    description?: string;
-    status?: "active" | "completed" | "abandoned";
-  };
-  try {
-    body = await req.json();
-  } catch {
-    return Response.json({ error: "invalid JSON body" }, { status: 400 });
-  }
-
-  try {
+export const POST = handlerWithDb(
+  (raw): PlanBody | null => (raw && typeof raw === "object" ? (raw as PlanBody) : null),
+  async ({ db, body }) => {
     if (body.id) {
       const patch: Record<string, unknown> = {};
       if (body.title !== undefined) patch.title = body.title;
@@ -82,8 +73,5 @@ export async function POST(req: Request) {
       .single();
     if (error) throw error;
     return Response.json({ ok: true, plan: data });
-  } catch (e) {
-    console.error("[ingest/plan]", e);
-    return Response.json({ error: e instanceof Error ? e.message : "failed" }, { status: 500 });
-  }
-}
+  },
+);
