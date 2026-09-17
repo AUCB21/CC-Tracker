@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { SettingsTrigger } from "@/components/deck-preferences";
-import { PANEL_STYLE } from "./tokens";
 
 export function Card({
   title,
@@ -16,7 +15,7 @@ export function Card({
   style?: React.CSSProperties;
 }) {
   return (
-    <section className={`deck-card min-w-0 ${className}`} style={{ ...PANEL_STYLE, ...style }}>
+    <section className={`deck-card min-w-0 ${className}`} style={style}>
       {(title || right) && (
         <header
           className="flex items-center justify-between gap-4 px-5 py-4"
@@ -64,11 +63,10 @@ export function Fold({
 }) {
   const headerPad = level === 1 ? "px-5 py-4" : "px-4 py-3";
   const bodyPad = level === 1 ? "px-5 pb-5" : "px-4 pb-4";
-  const style = level === 1 ? PANEL_STYLE : undefined;
-  const shellClass = level === 1 ? "" : "rounded-[0.875rem] bg-panel2/40";
+  const shellClass = level === 1 ? "deck-card" : "rounded-[0.875rem] bg-panel2/40";
 
   return (
-    <details open={open} className={`group min-w-0 ${shellClass} ${className}`} style={style}>
+    <details open={open} className={`group min-w-0 ${shellClass} ${className}`}>
       <summary
         className={`flex min-h-11 cursor-pointer list-none flex-wrap items-center gap-3 ${headerPad} [&::-webkit-details-marker]:hidden`}
         style={level === 1 ? { borderBottom: "0.0625rem solid var(--color-line-soft)" } : undefined}

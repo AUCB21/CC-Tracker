@@ -1,4 +1,3 @@
-export { PANEL_STYLE, STAT_STYLE, CELL_STYLE } from "./tokens";
 export { Card, Fold, PageHeader, Breadcrumbs, SetupBanner, Empty } from "./card";
 export { Chip, Badge, NavBadge, IconButton, ErrorAlert, InlineError } from "./chip";
 export type { ChipProps, ChipVariant, ChipSize } from "./chip";

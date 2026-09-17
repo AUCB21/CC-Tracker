@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { STAT_STYLE } from "./tokens";
 
 export function Stat({
   label,
@@ -18,7 +17,6 @@ export function Stat({
   spark?: number[];
   delta?: { pct: number | null; goodDirection?: "up" | "down"; sub?: string };
 }) {
-  const emphasisStyle: React.CSSProperties = {};
   const content = (
     <>
       {spark && (
@@ -89,8 +87,6 @@ export function Stat({
   );
 
   const baseStyle: React.CSSProperties = {
-    ...STAT_STYLE,
-    ...emphasisStyle,
     padding: "1.25rem 1.25rem 1.125rem",
     position: "relative",
     overflow: "hidden",
@@ -102,7 +98,7 @@ export function Stat({
     return (
       <Link
         href={href}
-        className="group @container relative flex flex-col hover:-translate-y-[0.1875rem]"
+        className="group @container relative flex flex-col deck-stat hover:-translate-y-[0.1875rem]"
         style={baseStyle}
       >
         {content}
@@ -111,7 +107,7 @@ export function Stat({
   }
 
   return (
-    <article className="group @container relative flex flex-col" style={baseStyle}>
+    <article className="group @container relative flex flex-col deck-stat" style={baseStyle}>
       {content}
     </article>
   );

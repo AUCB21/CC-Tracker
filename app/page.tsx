@@ -8,7 +8,6 @@ import {
   PageHeader,
   Empty,
   LiveDot,
-  CELL_STYLE,
 } from "@/components/ui";
 import { ActivityChart } from "@/components/charts-lazy";
 import {
@@ -197,7 +196,7 @@ export default async function OverviewPage() {
             ) : (
               <ul className="flex flex-col gap-2 py-1">
                 {recent.map((s) => (
-                  <li key={s.id} style={CELL_STYLE}>
+                  <li key={s.id} className="deck-cell">
                     <Link
                       href={`/sessions/${s.id}`}
                       className="group relative flex items-start gap-4 px-4 py-3.5 transition-all hover:-translate-y-[0.0625rem]"
@@ -272,7 +271,7 @@ export default async function OverviewPage() {
                     const pTasks = (tasks ?? []).filter((t) => t.plan_id === p.id);
                     const done = pTasks.filter((t) => t.status === "completed").length;
                     return (
-                      <li key={p.id} style={CELL_STYLE}>
+                      <li key={p.id} className="deck-cell">
                         <div className="px-4 py-3.5">
                           <div className="flex items-center justify-between gap-3">
                             <p className="min-w-0 flex-1 truncate text-[0.9375rem]" style={{ color: "var(--color-foreground)" }}>
@@ -324,7 +323,7 @@ export default async function OverviewPage() {
                       pending: { glyph: "○", tone: "text-muted" },
                     }[t.status];
                     return (
-                      <li key={t.id} style={{ ...CELL_STYLE, borderRadius: "0.625rem" }}>
+                      <li key={t.id} className="deck-cell" style={{ borderRadius: "0.625rem" }}>
                         <div className="flex items-start gap-2 px-3.5 py-2.5 text-sm">
                           <span className={`mt-0.5 inline-flex w-4 shrink-0 justify-center ${spec.tone}`}>
                             {spec.glyph}

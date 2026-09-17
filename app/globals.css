@@ -274,6 +274,32 @@ body {
   font-optical-sizing: auto;
 }
 
+/* Material recipes for .deck-card / .deck-stat / .deck-cell — replaced the
+   PANEL_STYLE / STAT_STYLE / CELL_STYLE constants formerly in
+   components/ui/tokens.ts. */
+.deck-card {
+  border-radius: 0.875rem;
+  border: 0.0625rem solid var(--color-line);
+  background: var(--color-panel);
+  box-shadow: var(--deck-shadow-panel);
+}
+
+.deck-stat {
+  border-radius: 0.75rem;
+  border: 0.0625rem solid var(--color-line);
+  background: var(--color-panel);
+  box-shadow: var(--deck-shadow-stat);
+}
+
+.deck-cell {
+  border-radius: 0.75rem;
+  border: 0.0625rem solid var(--color-line-soft);
+  background: var(--color-surface-cell-a);
+  box-shadow: var(--deck-shadow-cell);
+  overflow: hidden;
+  width: 100%;
+}
+
 [data-density="compact"] .deck-card > header { padding-block: 0.7rem; }
 [data-density="compact"] .deck-main { padding-bottom: 2.5rem; }
 [data-density="compact"] .deck-main > * + * { margin-top: -0.25rem; }

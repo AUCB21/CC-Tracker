@@ -6,7 +6,7 @@ import Link from "next/link";
 import type { TaskRun, EventRow, Project } from "@/lib/types";
 import { getBrowserSupabase } from "@/lib/supabase-browser";
 import { fmtCost, fmtRelative, truncate } from "@/lib/format";
-import { Badge, CELL_STYLE, LiveDot, PANEL_STYLE as LANE_PANEL } from "@/components/ui";
+import { Badge, LiveDot } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EventRow as EventRowComponent } from "@/components/event-row";
 import { computeLineage } from "@/lib/lineage";
@@ -36,7 +36,7 @@ function RunCardImpl({ run, lineage }: { run: TaskRun; lineage?: { n: number; m:
   const hasOutput = !!(run.stdout_tail || run.error);
 
   return (
-    <li className="p-4" style={CELL_STYLE}>
+    <li className="deck-cell p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-[0.75rem] leading-relaxed text-foreground">
@@ -350,7 +350,7 @@ export function LiveFeed({
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[3fr_2fr]">
 
         {/* Task Runs lane */}
-        <section className="flex flex-col overflow-hidden" style={LANE_PANEL}>
+        <section className="deck-card flex flex-col overflow-hidden">
           <LaneHeader label="Task Runs" paused={pausedRuns} onToggle={toggleRuns} />
           <div className={`${LANE_H} overflow-y-auto px-5 pb-5`}>
             {runs.length === 0 ? (
@@ -367,7 +367,7 @@ export function LiveFeed({
         </section>
 
         {/* Events lane */}
-        <section className="flex flex-col overflow-hidden" style={LANE_PANEL}>
+        <section className="deck-card flex flex-col overflow-hidden">
           <LaneHeader label="Events" count={events.length} paused={pausedEvents} onToggle={toggleEvents} />
           <div className={`${LANE_H} overflow-y-auto px-5 pb-5`}>
             {events.length === 0 ? (
