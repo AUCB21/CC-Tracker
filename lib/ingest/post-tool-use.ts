@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { dedupeKeyFor } from "../dedupe";
-import { ensureSession } from "../ingest";
+import { ensureSession } from "./db";
 import { asRecord, truncField, truncStr } from "./handlers";
 import type { HandlerContext } from "./handlers";
 

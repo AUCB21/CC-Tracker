@@ -1,5 +1,5 @@
 import { estimateCost } from "../cost";
-import { ensureSession } from "../ingest";
+import { ensureSession } from "./db";
 import type { HandlerContext } from "./handlers";
 
 export async function handleStop(ctx: HandlerContext): Promise<void> {

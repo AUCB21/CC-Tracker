@@ -1,4 +1,4 @@
-import { ensureSession } from "../ingest";
+import { ensureSession } from "./db";
 import type { HandlerContext } from "./handlers";
 
 export async function handleSubagentStart(ctx: HandlerContext): Promise<void> {
