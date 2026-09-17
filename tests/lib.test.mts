@@ -27,9 +27,16 @@ assert.ok(Math.abs(opus - 25) < 1e-6, `opus output cost = ${opus}`);
 assert.equal(estimateCost(null, { input: 0, output: 0, cacheRead: 0, cacheCreation: 0 }), 0);
 
 // ---- fixtures ----
+// Fixed reference "now" so day-bucket assertions don't drift with the wall
+// clock or the runner's timezone. lastNDays and slice(0,10) bucketing both
+// live on the UTC calendar, so we anchor the day-boundary to UTC noon: the
+// hour argument is then applied via local setHours, which keeps hourlyActivity
+// (uses Date#getHours) stable across TZs without pushing the ISO date across
+// midnight in any timezone the runner might be in.
+const NOW = new Date(Date.UTC(2026, 0, 15, 12, 0, 0));
 const day = (offset: number, h = 12) => {
-  const d = new Date();
-  d.setDate(d.getDate() - offset);
+  const d = new Date(NOW);
+  d.setUTCDate(NOW.getUTCDate() - offset);
   d.setHours(h, 30, 0, 0);
   return d.toISOString();
 };
@@ -70,7 +77,8 @@ const activity = buildActivitySeries(
     { type: "tool_use", created_at: day(0, 10) },
     { type: "prompt", created_at: day(5, 10) }, // outside window → ignored
   ],
-  sessions
+  sessions,
+  NOW,
 );
 assert.equal(activity.length, 3);
 assert.equal(activity[2].prompts, 2);
@@ -80,7 +88,7 @@ assert.equal(activity[0].prompts, 0);
 
 // ---- token/cost series ----
 // sessions[0] started yesterday (index 1), sessions[1] started today (index 2)
-const tc = buildTokenCostSeries(3, sessions);
+const tc = buildTokenCostSeries(3, sessions, NOW);
 assert.equal(tc[1].input, 110, "input = input + cache_creation (yesterday's session)");
 assert.equal(tc[1].cacheRead, 1000);
 assert.ok(Math.abs(tc[1].cost - 0.5) < 1e-9);

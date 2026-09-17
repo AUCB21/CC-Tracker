@@ -6,12 +6,11 @@ function dayKey(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-export function lastNDays(n: number): string[] {
+export function lastNDays(n: number, now: Date = new Date()): string[] {
   const out: string[] = [];
-  const today = new Date();
   for (let i = n - 1; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - i);
+    const d = new Date(now);
+    d.setUTCDate(now.getUTCDate() - i);
     out.push(dayKey(d));
   }
   return out;
@@ -20,9 +19,10 @@ export function lastNDays(n: number): string[] {
 export function buildActivitySeries(
   days: number,
   events: { type: string; created_at: string }[],
-  sessions: { started_at: string }[]
+  sessions: { started_at: string }[],
+  now: Date = new Date()
 ): { day: string; dayLabel: string; prompts: number; toolUses: number; sessions: number }[] {
-  const keys = lastNDays(days);
+  const keys = lastNDays(days, now);
   const byDay = new Map(keys.map((k) => [k, { prompts: 0, toolUses: 0, sessions: 0 }]));
   for (const e of events) {
     const k = e.created_at.slice(0, 10);
@@ -44,9 +44,10 @@ export function buildActivitySeries(
 
 export function buildTokenCostSeries(
   days: number,
-  sessions: Session[]
+  sessions: Session[],
+  now: Date = new Date()
 ): { day: string; dayLabel: string; input: number; output: number; cacheRead: number; cost: number }[] {
-  const keys = lastNDays(days);
+  const keys = lastNDays(days, now);
   const byDay = new Map(keys.map((k) => [k, { input: 0, output: 0, cacheRead: 0, cost: 0 }]));
   for (const s of sessions) {
     const row = byDay.get(s.started_at.slice(0, 10));
