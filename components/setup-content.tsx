@@ -6,19 +6,31 @@ import { CopyButton } from "@/components/copy-button";
 const HOOKS_JSON = `{
   "hooks": {
     "SessionStart": [
-      { "hooks": [{ "type": "command", "command": "node $HOME/cc-track/hooks/claude-tracker.mjs" }] }
+      { "hooks": [{ "type": "command", "command": "node $HOME/cc-track/hooks/claude-tracker.mjs", "async": true }] }
     ],
     "UserPromptSubmit": [
-      { "hooks": [{ "type": "command", "command": "node $HOME/cc-track/hooks/claude-tracker.mjs" }] }
+      { "hooks": [{ "type": "command", "command": "node $HOME/cc-track/hooks/claude-tracker.mjs", "async": true }] }
     ],
     "PostToolUse": [
-      { "matcher": "*", "hooks": [{ "type": "command", "command": "node $HOME/cc-track/hooks/claude-tracker.mjs" }] }
+      { "matcher": "*", "hooks": [{ "type": "command", "command": "node $HOME/cc-track/hooks/claude-tracker.mjs", "async": true }] }
     ],
     "Stop": [
-      { "hooks": [{ "type": "command", "command": "node $HOME/cc-track/hooks/claude-tracker.mjs" }] }
+      { "hooks": [{ "type": "command", "command": "node $HOME/cc-track/hooks/claude-tracker.mjs", "async": true }] }
+    ],
+    "StopFailure": [
+      { "hooks": [{ "type": "command", "command": "node $HOME/cc-track/hooks/claude-tracker.mjs", "async": true }] }
+    ],
+    "SubagentStart": [
+      { "hooks": [{ "type": "command", "command": "node $HOME/cc-track/hooks/claude-tracker.mjs", "async": true }] }
+    ],
+    "SubagentStop": [
+      { "hooks": [{ "type": "command", "command": "node $HOME/cc-track/hooks/claude-tracker.mjs", "async": true }] }
+    ],
+    "Notification": [
+      { "hooks": [{ "type": "command", "command": "node $HOME/cc-track/hooks/claude-tracker.mjs", "async": true }] }
     ],
     "SessionEnd": [
-      { "hooks": [{ "type": "command", "command": "node $HOME/cc-track/hooks/claude-tracker.mjs" }] }
+      { "hooks": [{ "type": "command", "command": "node $HOME/cc-track/hooks/claude-tracker.mjs", "async": true }] }
     ]
   }
 }`;
@@ -138,7 +150,7 @@ export function SetupContent({
           </Card>
 
           <Card title="3. HITL matchers (optional)" right={<CopyButton text={HITL_CONFIG_SNIPPET} label="Copy HITL config" />}>
-            <p className="max-w-[75ch] text-sm leading-relaxed text-muted">HITL intercepts specific tool calls, holds them, and lets you approve or deny them from the dashboard before Claude Code proceeds. It requires an entry in <code className="font-mono text-foreground">~/.cc-track/config.json</code>. Timeout is 60s in code but the sample below sets it to 600000ms (10 minutes) so you have time to approve; on a tracker error it can either fail-open (allow the tool call) or fail-closed (deny it), depending on <code className="font-mono text-foreground">hitl_fail_closed</code>.</p>
+            <p className="max-w-[75ch] text-sm leading-relaxed text-muted">HITL intercepts specific tool calls, holds them, and lets you approve or deny them from the dashboard before Claude Code proceeds. It requires an entry in <code className="font-mono text-foreground">~/.cc-track/config.json</code>. Timeout is 60s in code but the sample below sets it to 600000ms (10 minutes) so you have time to approve; on a tracker error it can either fail-open (allow the tool call) or fail-closed (deny it), depending on <code className="font-mono text-foreground">hitl_fail_closed</code>. HITL also needs the synchronous <code className="font-mono text-foreground">PreToolUse</code> hook wired to <code className="font-mono text-foreground">hooks/hitl.mjs</code>, which <code className="font-mono text-foreground">install.mjs</code> adds automatically; without it, the matchers below do nothing.</p>
             <pre className="mt-3 overflow-x-auto rounded-lg border border-line bg-background p-4 font-mono text-[0.75rem] leading-relaxed">{HITL_CONFIG_SNIPPET}</pre>
             <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-muted"><li>A matcher is either <code className="font-mono text-foreground">ToolName</code> (any use of that tool) or <code className="font-mono text-foreground">ToolName:&lt;substring&gt;</code> (only when that substring shows up in the tool call).</li><li>The substring is searched against the JSON serialization of <code className="font-mono text-foreground">tool_input</code>, so it can match a flag, a path fragment, or part of a command string.</li><li>Matching is case-sensitive.</li></ul>
           </Card>
