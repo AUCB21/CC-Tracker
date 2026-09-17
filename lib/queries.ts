@@ -62,7 +62,7 @@ async function computeStats(): Promise<Stats | null> {
 export const getStats: () => Promise<Stats | null> = unstable_cache(
   computeStats,
   ["cc-track:stats:v1"],
-  { revalidate: 15, tags: ["stats"] },
+  { revalidate: 15 },
 );
 
 export async function getProjects(): Promise<Project[] | null> {
@@ -209,7 +209,7 @@ export const getRecentActivityEventsCached: (
 ) => Promise<EventRow[] | null> = unstable_cache(
   (days: number, types: string[]) => fetchRecentActivityEvents(days, types),
   ["cc-track:recent-activity-events:v1"],
-  { revalidate: 15, tags: ["events"] },
+  { revalidate: 15 },
 );
 
 // ponytail: only Analytics still needs the full session set; narrow the
@@ -247,7 +247,7 @@ async function fetchRecentSessions(limit: number): Promise<Session[] | null> {
 export const getRecentSessions: (limit?: number) => Promise<Session[] | null> = unstable_cache(
   (limit = 8) => fetchRecentSessions(limit),
   ["cc-track:recent-sessions:v1"],
-  { revalidate: 15, tags: ["sessions"] },
+  { revalidate: 15 },
 );
 
 /**
@@ -270,7 +270,7 @@ export const getSessionStartsSince: (sinceIso: string) => Promise<{ started_at: 
   unstable_cache(
     (sinceIso: string) => fetchSessionStartsSince(sinceIso),
     ["cc-track:session-starts-since:v1"],
-    { revalidate: 15, tags: ["sessions"] },
+    { revalidate: 15 },
   );
 
 export type Page<T> = { rows: T[]; total: number };
@@ -313,7 +313,7 @@ async function fetchSessionFacetRows(): Promise<Pick<Session, "project_id" | "mo
 export const getSessionFacetRows: () => Promise<Pick<Session, "project_id" | "model">[]> = unstable_cache(
   fetchSessionFacetRows,
   ["cc-track:session-facet-rows:v1"],
-  { revalidate: 15, tags: ["sessions"] },
+  { revalidate: 15 },
 );
 
 export async function getTasksPage(opts: {
@@ -340,7 +340,7 @@ async function fetchTaskFacetRows(): Promise<Pick<Task, "project_id" | "status">
 export const getTaskFacetRows: () => Promise<Pick<Task, "project_id" | "status">[]> = unstable_cache(
   fetchTaskFacetRows,
   ["cc-track:task-facet-rows:v1"],
-  { revalidate: 15, tags: ["tasks"] },
+  { revalidate: 15 },
 );
 
 export async function getPlansPage(opts: {
@@ -367,7 +367,7 @@ async function fetchPlanFacetRows(): Promise<Pick<Plan, "project_id" | "status">
 export const getPlanFacetRows: () => Promise<Pick<Plan, "project_id" | "status">[]> = unstable_cache(
   fetchPlanFacetRows,
   ["cc-track:plan-facet-rows:v1"],
-  { revalidate: 15, tags: ["plans"] },
+  { revalidate: 15 },
 );
 
 export async function getProjectsPage(opts: {
