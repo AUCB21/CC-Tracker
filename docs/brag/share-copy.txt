@@ -1,0 +1,1 @@
+My Claude Code bill had no receipts, so I built one. CC-Track picks up every session, prompt, tool call and token through Claude Code's own hooks, and an Attend button hands a task to a local agent. It even tracked the session that made this video.

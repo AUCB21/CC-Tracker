@@ -96,3 +96,6 @@ src/plugins/impeccable-live.client.ts
 .agents/
 .claude/skills/
 skills-lock.json
+
+# /brag Hyperframes source project (regenerable; the rendered video lives in docs/brag/)
+/brag-output/
