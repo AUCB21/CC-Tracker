@@ -248,7 +248,36 @@ Manual thermo-nuclear rubric:
 - **Cycle-free by construction**: `lib/api.ts` and `lib/supabase.ts` are dependency-graph leaves. All routes import from `lib/api.ts`; nothing imports back.
 - **19 of 22 queries use withDb**. The 3 that don't (`getProjectDailySpend` and similar) return non-nullable values (Map or []), which don't fit `withDb`'s `T | null` shape. Those stay with the direct `getSupabase()` pattern by design.
 
+---
 
+## Follow-ups · 2026-09-16
 
+Picked up 3 of the 5 follow-ups listed in `scope.md`; the other 2 declined. Uncommitted at time of writing.
 
+### Change
+1. **CSS-class migration (follow-up 2)** — `components/ui/tokens.ts` deleted; `PANEL_STYLE`/`STAT_STYLE`/`CELL_STYLE` replaced by `.deck-card`/`.deck-stat`/`.deck-cell` rules in `app/globals.css`, placed just above the existing `[data-density="compact"] .deck-card` rule, property-for-property identical, rem units.
+2. **Cache-tag config dropped (follow-up 4)** — all 7 `unstable_cache` option objects in `lib/queries.ts` are now `{ revalidate: 15 }`; tags removed rather than wiring `revalidateTag`.
+3. **Barrel-fanout cleanup (follow-up 5)** — the 7 handler files now import `ensureSession` from `./db` instead of the `../ingest` barrel.
+
+### Files modified
+- **Deleted**: `components/ui/tokens.ts` (-32 LOC)
+- **Modified**: `app/globals.css` (+26 LOC, new `.deck-card`/`.deck-stat`/`.deck-cell` rules), `components/ui/card.tsx` (Card keeps `deck-card`, `style={style}` only; Fold level 1 shell class is now `deck-card`), `components/ui/stat.tsx` (`deck-stat` on both the `<Link>` and `<article>` branches; dead empty `emphasisStyle` object deleted), `app/page.tsx` (three `<li className="deck-cell">`, task row keeps its inline `borderRadius: "0.625rem"` override), `app/live/live-feed.tsx` (run card `<li className="deck-cell p-4">`, both lane `<section>`s `deck-card`), `components/ui/index.ts` (tokens re-export removed)
+- **Modified**: `lib/queries.ts` (7 `unstable_cache` option objects: tags dropped, `{ revalidate: 15 }` kept)
+- **Modified**: `lib/ingest/misc.ts`, `post-tool-use.ts`, `session-end.ts`, `session-start.ts`, `stop.ts`, `subagent.ts`, `user-prompt.ts` (one-line import change each, `../ingest` → `./db`); `lib/ingest/handlers.ts` untouched (its `import type { HookPayload } from "../ingest"` is type-only, no runtime edge)
+
+### Decisions
+- **CSS-class migration**: new rules are unlayered plain classes, so they still beat Tailwind utilities (which live in `@layer utilities`) — same precedence outcome as the old inline styles for the props they set.
+- **Cache tags**: chose "drop the tags" over "wire revalidateTag" — every ingest write would have had to call `revalidateTag`, firing on every hook and busting the cache continuously, defeating the 15s window. If on-demand invalidation is ever wanted, add tags back together with the `revalidateTag` call, not before.
+- **Declined — full API response envelope (follow-up 1)**: no consumer needs a uniform `{ok, data}` shape; would be cross-boundary churn (`hooks/hitl.mjs`, `bin/cctrack.mjs`, `components/hub-toggle.tsx`) for zero behavior gain. Revisit only if a second generic API client appears.
+- **Declined — ingest cast-boundary narrowing (follow-up 3)**: `asRecord` already narrows once at the switch boundary in `handlePostToolUse`; the only remaining casts are the two in `handleTodoWrite`, and `syncTodoWrite` already filters rows lacking `content`. A per-tool discriminated union would add ~40 lines of types to remove two casts. Revisit if hook payload shapes start drifting between Claude Code versions.
+
+### Quality gate
+- `tsc --noEmit` — clean.
+- `next build` — green.
+- Computed styles checked in the browser on `/` and `/live`: radii 0.875rem / 0.75rem / 0.625rem override, borders, backgrounds, shadows all identical to the pre-migration inline styles.
+- Net: -32 LOC `tokens.ts`, +26 LOC CSS, callers slightly shorter.
+
+### Notes for the next session
+- Follow-ups 2, 4, and 5 are closed; drop them from `scope.md`'s open list if a future session wants a clean slate.
+- Follow-ups 1 and 3 are declined, not deferred-forever — each has an explicit revisit trigger noted above.
 

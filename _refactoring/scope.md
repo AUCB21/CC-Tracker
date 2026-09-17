@@ -44,14 +44,14 @@ None declared — let Phase 1 surface them.
 - 6 total subagents fired across Phase 4; all builds green, all tests pass.
 
 ## Current State
-All 4 phases complete. `_refactoring/` holds the full record: `00-architecture-map.md`, `01-quality-audit.md`, `02-architecture-rfcs/*.md`, `03-refactor-log.md`, `scope.md`.
+All 4 phases complete. `_refactoring/` holds the full record: `00-architecture-map.md`, `01-quality-audit.md`, `02-architecture-rfcs/*.md`, `03-refactor-log.md`, `scope.md`. A follow-up pass landed 2026-09-16 (uncommitted at time of writing): 3 of the 5 listed follow-ups done, 2 declined. See `03-refactor-log.md`'s "Follow-ups · 2026-09-16" section.
 
 ## Follow-ups for future sessions
-- **RFC 05 full envelope** (`{ok, data}` on every route) — needs updating `hooks/hitl.mjs`, `bin/cctrack.mjs`, `components/hub-toggle.tsx` in lockstep.
-- **CSS-class migration for `PANEL_STYLE`/`STAT_STYLE`/`CELL_STYLE`** — deferred from RFC 01. Expand `.deck-card`/`.deck-stat`/`.deck-cell` in `globals.css`, delete the JS style constants, update the 4 callers (`components/ui/card.tsx`, `components/ui/stat.tsx`, `app/page.tsx`, `app/live/live-feed.tsx`).
-- **Ingest cast-boundary narrowing** — Phase 2 finding deferred from RFC 03. Introduce discriminated union parsers at the switch boundary of `lib/ingest/handlers.ts` so `asRecord`/`truncStr` casts inside handlers can go away.
-- **Cache tag wiring** — Phase 2 finding: `unstable_cache` tags in `lib/queries.ts` are declared but `revalidateTag(...)` is never called. Either wire it on ingest writes (`revalidateTag("stats")` in `processHook`) or drop the tags.
-- **Handler-file barrel-fanout imports** — `lib/ingest/misc.ts`, `post-tool-use.ts`, `session-end.ts`, `session-start.ts`, `stop.ts`, `subagent.ts`, `user-prompt.ts` still import `ensureSession` etc. from `../ingest` (the barrel). Runtime-safe (DAG via re-exports), but changing them to import directly from `./db` is a mechanical 6-line cleanup for future taste.
+- [ ] declined — **RFC 05 full envelope** (`{ok, data}` on every route) — needs updating `hooks/hitl.mjs`, `bin/cctrack.mjs`, `components/hub-toggle.tsx` in lockstep. No consumer needs a uniform shape; would be cross-boundary churn for zero behavior gain. Revisit only if a second generic API client appears.
+- [x] done — **CSS-class migration for `PANEL_STYLE`/`STAT_STYLE`/`CELL_STYLE`** — deferred from RFC 01. Expand `.deck-card`/`.deck-stat`/`.deck-cell` in `globals.css`, delete the JS style constants, update the 4 callers (`components/ui/card.tsx`, `components/ui/stat.tsx`, `app/page.tsx`, `app/live/live-feed.tsx`).
+- [ ] declined — **Ingest cast-boundary narrowing** — Phase 2 finding deferred from RFC 03. Introduce discriminated union parsers at the switch boundary of `lib/ingest/handlers.ts` so `asRecord`/`truncStr` casts inside handlers can go away. `asRecord` already narrows once at the switch boundary in `handlePostToolUse`; only the two casts in `handleTodoWrite` remain, and `syncTodoWrite` already filters rows lacking `content`. A discriminated union would add ~40 lines of types to remove two casts. Revisit if hook payload shapes start drifting between Claude Code versions.
+- [x] done — **Cache tag wiring** — Phase 2 finding: `unstable_cache` tags in `lib/queries.ts` are declared but `revalidateTag(...)` is never called. Either wire it on ingest writes (`revalidateTag("stats")` in `processHook`) or drop the tags. Chose drop: every ingest write would have had to call `revalidateTag`, firing on every hook and busting the cache continuously, defeating the 15s window.
+- [x] done — **Handler-file barrel-fanout imports** — `lib/ingest/misc.ts`, `post-tool-use.ts`, `session-end.ts`, `session-start.ts`, `stop.ts`, `subagent.ts`, `user-prompt.ts` still import `ensureSession` etc. from `../ingest` (the barrel). Runtime-safe (DAG via re-exports), but changing them to import directly from `./db` is a mechanical 6-line cleanup for future taste.
 
 ## Key Decisions
 - Branch: `feat/sidebar-and-polish` — scan operates against this working tree.
