@@ -45,6 +45,9 @@ Manual application of the `thermo-nuclear-code-quality-review` rubric (skill its
 - Barrel completeness cross-checked: every symbol exported from the original `components/ui.tsx` (30 identifiers + 4 types) is re-exported from `components/ui/index.ts`.
 
 ### Notes for the next session
+
+> **Superseded 2026-09-16.** The two style-constant notes below were acted on in the follow-up pass: `components/ui/tokens.ts` is deleted and `PANEL_STYLE` / `STAT_STYLE` / `CELL_STYLE` are now `.deck-card` / `.deck-stat` / `.deck-cell` rules in `app/globals.css`. Kept for the audit trail; do not act on them. See "Follow-ups · 2026-09-16" at the end of this file.
+
 - `STAT_STYLE` is now a public export. Previously it was module-private in `ui.tsx`. If a future consumer starts importing it, that's fine; if the design decides `STAT_STYLE` should stay conceptually internal, drop it from `components/ui/index.ts`'s re-export list and it becomes private again (only `stat.tsx` uses it today).
 - CSS-class migration (moving `PANEL_STYLE`/`STAT_STYLE`/`CELL_STYLE` into globals.css `.deck-*` classes) is deferred. When picked up, grep for the four callers first: `components/ui/card.tsx`, `components/ui/stat.tsx`, `app/page.tsx`, `app/live/live-feed.tsx`.
 - Sub-agent completed in ~225s with 19 tool uses; no visible errors.
