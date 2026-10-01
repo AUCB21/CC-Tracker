@@ -642,7 +642,10 @@ body {
   .deck-timeline li[data-new="1"] { animation: none; }
 }
 
-/* Migrated from MobileNav's <style> block: slide-in drawer + backdrop veil. */
+/* Migrated from MobileNav's <style> block: slide-in drawer + backdrop veil.
+   Flex column only when open (same reason as .settings-modal below), so the
+   search row stays pinned and the nav scrolls inside the full-height drawer. */
+.mobile-nav-drawer[open] { display: flex; flex-direction: column; }
 .mobile-nav-drawer[open] { animation: drawerIn var(--duration-base) var(--ease-standard) both; }
 .mobile-nav-drawer[open]::backdrop { animation: veil var(--duration-base) var(--ease-standard) both; }
 @media (prefers-reduced-motion: reduce) {

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { RailIcons, NavBadge } from "@/components/ui";
@@ -211,8 +212,12 @@ export function DeckNav({
   );
 }
 
+const noopSubscribe = () => () => {};
+
 export function MobileNav({ counts }: { counts: NavCounts }) {
   const [open, setOpen] = useState(false);
+  // false during SSR/hydration, true after: the portal target only exists client-side.
+  const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false);
   const pathname = usePathname();
   const ref = useRef<HTMLDialogElement>(null);
 
@@ -223,7 +228,7 @@ export function MobileNav({ counts }: { counts: NavCounts }) {
     if (!el) return;
     if (open && !el.open) el.showModal();
     else if (!open && el.open) el.close();
-  }, [open]);
+  }, [open, mounted]);
 
   useEffect(() => setOpen(false), [pathname]);
 
@@ -253,35 +258,44 @@ export function MobileNav({ counts }: { counts: NavCounts }) {
         </svg>
       </button>
 
-      <dialog
-        id={DRAWER_ID}
-        ref={ref}
-        aria-label="Navigation"
-        onClose={close}
-        onClick={(e) => {
-          if (e.target === ref.current) close();
-        }}
-        className="rail mobile-nav-drawer [&::backdrop]:bg-[rgb(13_12_11_/_0.6)]"
-        style={{
-          position: "fixed",
-          inset: "0 0 0 auto",
-          margin: 0,
-          width: "18rem",
-          maxWidth: "85vw",
-          maxHeight: "100dvh",
-          padding: 0,
-          border: 0,
-          borderLeft: "0.0625rem solid var(--rail-line)",
-          background: "var(--rail-panel)",
-          color: "var(--rail-text)",
-          overflowY: "auto",
-        }}
-      >
-        <div className="rail-workspace-search px-[0.6667rem]" onClick={close}>
-          <SearchTrigger />
-        </div>
-        <DeckNav counts={counts} onNavigate={close} />
-      </dialog>
+      {/* Rendered into <body>, not inside the top bar: the bar's
+          backdrop-filter makes it the containing block for fixed
+          descendants, so the drawer must not rely on top-layer promotion
+          to escape it. */}
+      {mounted &&
+        createPortal(
+          <dialog
+            id={DRAWER_ID}
+            ref={ref}
+            aria-label="Navigation"
+            onClose={close}
+            onClick={(e) => {
+              if (e.target === ref.current) close();
+            }}
+            className="rail mobile-nav-drawer [&::backdrop]:bg-[rgb(13_12_11_/_0.6)]"
+            style={{
+              position: "fixed",
+              inset: "0 0 0 auto",
+              margin: 0,
+              width: "18rem",
+              maxWidth: "85vw",
+              height: "100dvh",
+              maxHeight: "100dvh",
+              padding: 0,
+              border: 0,
+              borderLeft: "0.0625rem solid var(--rail-line)",
+              background: "var(--rail-panel)",
+              color: "var(--rail-text)",
+              overflow: "hidden",
+            }}
+          >
+            <div className="rail-workspace-search shrink-0 px-[0.6667rem]" onClick={close}>
+              <SearchTrigger />
+            </div>
+            <DeckNav counts={counts} onNavigate={close} />
+          </dialog>,
+          document.body,
+        )}
     </div>
   );
 }
