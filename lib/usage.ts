@@ -20,8 +20,8 @@ export type UsageView = {
   /** The reading is over STALE_MS old: shown muted. */
   stale: boolean;
   windows: UsageWindowView[];
-  /** The fullest window, for the collapsed rail's single indicator. */
-  peak: UsageWindowView;
+  /** The fullest window, for the collapsed rail's single indicator; null with no windows. */
+  peak: UsageWindowView | null;
 };
 
 export const STALE_MS = 6 * 60 * 60_000;
@@ -41,12 +41,12 @@ function fmtIn(ms: number): string {
   return `${Math.floor(hours / 24)}d ${hours % 24}h`;
 }
 
-/** Shape the `data` column of the newest `session_usage` event; null when it has no windows. */
+/** Shape the `data` column of the newest `session_usage` event; null when it has neither
+ *  rate-limit windows nor a cost (API-key sessions report cost alone). */
 export function buildUsageView(data: unknown, at: string, now = Date.now()): UsageView | null {
   const { rate_limits: limits, cost_usd: cost } = (data ?? {}) as { rate_limits?: unknown; cost_usd?: unknown };
-  if (!Array.isArray(limits)) return null;
   const windows: UsageWindowView[] = [];
-  for (const w of limits) {
+  for (const w of Array.isArray(limits) ? limits : []) {
     if (!w || typeof w !== "object") continue;
     const { kind, percentUsed, resetsAt } = w as { kind?: unknown; percentUsed?: unknown; resetsAt?: unknown };
     if (typeof kind !== "string" || typeof percentUsed !== "number") continue;
@@ -63,14 +63,15 @@ export function buildUsageView(data: unknown, at: string, now = Date.now()): Usa
       resetsIn: Number.isFinite(resetMs) && !hasReset ? fmtIn(resetMs - now) : null,
     });
   }
-  if (windows.length === 0) return null;
+  const costUsd = typeof cost === "number" ? cost : null;
+  if (windows.length === 0 && costUsd === null) return null;
   const rank = (k: string) => (ORDER.includes(k) ? ORDER.indexOf(k) : ORDER.length);
   windows.sort((a, b) => rank(a.kind) - rank(b.kind));
-  const peak = windows.reduce((a, b) => (b.raw > a.raw ? b : a));
+  const peak = windows.reduce<UsageWindowView | null>((a, b) => (a && a.raw >= b.raw ? a : b), null);
   const atMs = new Date(at).getTime();
   return {
     at,
-    costUsd: typeof cost === "number" ? cost : null,
+    costUsd,
     stale: !Number.isFinite(atMs) || now - atMs > STALE_MS,
     windows,
     peak,

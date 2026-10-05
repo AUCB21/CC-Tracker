@@ -269,6 +269,10 @@ const reset = buildUsageView({ rate_limits: [{ kind: "five_hour", percentUsed: 8
 assert.equal(reset?.windows[0].raw, 0);
 assert.equal(reset?.windows[0].resetsIn, null);
 assert.equal(buildUsageView({ rate_limits: [] }, "x", NOW), null);
+// API-key sessions report cost with no rate-limit windows: still shown
+const costOnly = buildUsageView({ cost_usd: 2.5, rate_limits: [] }, "2026-10-05T11:59:00Z", NOW);
+assert.equal(costOnly?.costUsd, 2.5);
+assert.equal(costOnly?.peak, null);
 assert.equal(buildUsageView(null, "x", NOW), null);
 
 console.log("✔ tests/lib.test.mts — all assertions passed");

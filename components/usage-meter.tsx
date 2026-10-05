@@ -75,15 +75,23 @@ export function UsageMeter({ usage }: { usage: UsageView | null }) {
 
       <div
         className="rail-usage-mini flex-col items-center gap-[0.2778rem]"
-        title={`${peak.label} ${Math.round(peak.raw)}% · ${asOf}`}
+        title={peak ? `${peak.label} ${Math.round(peak.raw)}% · ${asOf}` : `Session cost · ${asOf}`}
       >
-        <span
-          className="font-mono tabular-nums"
-          style={{ fontSize: "0.5556rem", color: peak.tone === "ok" ? "var(--rail-muted)" : TONE[peak.tone] }}
-        >
-          {Math.round(peak.raw)}%
-        </span>
-        <Bar w={peak} label={peak.label} />
+        {peak ? (
+          <>
+            <span
+              className="font-mono tabular-nums"
+              style={{ fontSize: "0.5556rem", color: peak.tone === "ok" ? "var(--rail-muted)" : TONE[peak.tone] }}
+            >
+              {Math.round(peak.raw)}%
+            </span>
+            <Bar w={peak} label={peak.label} />
+          </>
+        ) : (
+          <span className="font-mono tabular-nums" style={{ fontSize: "0.5556rem", color: "var(--rail-muted)" }}>
+            ${Math.round(usage.costUsd ?? 0)}
+          </span>
+        )}
       </div>
     </section>
   );
