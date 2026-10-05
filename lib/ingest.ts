@@ -44,6 +44,12 @@ export type HookPayload = {
     cache_read_tokens?: number;
     cache_creation_tokens?: number;
   };
+  /** sent by the cc-track mod (mods/cc-track) on Stop and SessionUsage */
+  usage?: {
+    cost_usd?: number | null;
+    rate_limits?: { kind: string; percentUsed: number; resetsAt?: string }[];
+    context?: { tokens?: number; window: number; percent?: number } | null;
+  };
 };
 
 /** Main entry point for POST /api/ingest/hook */

@@ -28,3 +28,19 @@ export async function handleNotification(ctx: HandlerContext): Promise<void> {
     }),
   });
 }
+
+/**
+ * Mod-only event (mods/cc-track): the engine's own usage figures after a turn
+ * moved cost or a rate-limit window. Settings hooks have no equivalent.
+ */
+export async function handleSessionUsage(ctx: HandlerContext): Promise<void> {
+  const { db, payload, sessionId, projectId, addEvent, withPid } = ctx;
+  await ensureSession(db, sessionId, projectId);
+  await addEvent("session_usage", {
+    data: withPid({
+      cost_usd: payload.usage?.cost_usd ?? null,
+      rate_limits: payload.usage?.rate_limits ?? [],
+      context: payload.usage?.context ?? null,
+    }),
+  });
+}

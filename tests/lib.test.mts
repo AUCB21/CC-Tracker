@@ -12,6 +12,7 @@ import {
   hourlyActivity,
 } from "../lib/series";
 import type { Session, Task } from "../lib/types";
+import { buildUsageView } from "../lib/usage";
 
 // ---- cost ----
 assert.deepEqual(pricingFor("claude-opus-4-1"), pricingFor("opus"));
@@ -226,5 +227,48 @@ await processHook(dbRead, {
 const readEvents = stateRead.events.filter((e) => e.session_id === "sess-read");
 assert.equal(readEvents.length, 1);
 assert.equal(readEvents[0].type, "tool_use");
+
+// ---- session usage (cc-track mod) ----
+const { db: dbUsage, state: stateUsage } = makeFakeDb();
+await processHook(dbUsage, {
+  hook_event_name: "SessionUsage",
+  session_id: "sess-usage",
+  usage: { cost_usd: 1.5, rate_limits: [{ kind: "five_hour", percentUsed: 30 }], context: { window: 200000, tokens: 10 } },
+});
+const usageEvents = stateUsage.events.filter((e) => e.type === "session_usage");
+assert.equal(usageEvents.length, 1);
+assert.deepEqual((usageEvents[0].data as { rate_limits: unknown }).rate_limits, [{ kind: "five_hour", percentUsed: 30 }]);
+
+const NOW = Date.parse("2026-10-05T12:00:00Z");
+const view = buildUsageView(
+  {
+    cost_usd: 0.42,
+    rate_limits: [
+      { kind: "seven_day", percentUsed: 92.5, resetsAt: "2026-10-08T12:00:00Z" },
+      { kind: "five_hour", percentUsed: 41, resetsAt: "2026-10-05T14:14:00Z" },
+      { kind: "spend_limit", percentUsed: 120 },
+    ],
+  },
+  "2026-10-05T11:59:00Z",
+  NOW,
+);
+assert.deepEqual(view?.windows.map((w) => w.kind), ["five_hour", "seven_day", "spend_limit"]);
+assert.equal(view?.windows[0].resetsIn, "2h 14m");
+assert.equal(view?.windows[0].tone, "ok");
+assert.equal(view?.windows[1].tone, "hot");
+assert.equal(view?.windows[1].resetsIn, "3d 0h");
+assert.equal(view?.windows[2].percent, 100); // bar clamps
+assert.equal(view?.windows[2].raw, 120); // label keeps the real figure
+assert.equal(view?.peak.kind, "spend_limit");
+assert.equal(view?.costUsd, 0.42);
+assert.equal(view?.stale, false);
+assert.equal(buildUsageView({ rate_limits: [{ kind: "five_hour", percentUsed: 80 }] }, "2026-10-05T11:00:00Z", NOW)?.windows[0].tone, "warn");
+assert.equal(buildUsageView({ rate_limits: [{ kind: "five_hour", percentUsed: 5 }] }, "2026-10-05T05:00:00Z", NOW)?.stale, true);
+// a window whose reset passed since the reading reads as started over
+const reset = buildUsageView({ rate_limits: [{ kind: "five_hour", percentUsed: 88, resetsAt: "2026-10-05T11:00:00Z" }] }, "x", NOW);
+assert.equal(reset?.windows[0].raw, 0);
+assert.equal(reset?.windows[0].resetsIn, null);
+assert.equal(buildUsageView({ rate_limits: [] }, "x", NOW), null);
+assert.equal(buildUsageView(null, "x", NOW), null);
 
 console.log("✔ tests/lib.test.mts — all assertions passed");

@@ -12,8 +12,10 @@ import { SettingsModal } from "@/components/settings-modal";
 import { WorkspaceSwitcher } from "@/components/workspace-switcher";
 import { SearchTrigger } from "@/components/search-trigger";
 import { CommandPalette } from "@/components/command-palette";
+import { UsageMeter } from "@/components/usage-meter";
 import { getSupabase, isDbConfigured, ingestionKeyConfigured } from "@/lib/supabase";
-import { getProjects, getStats } from "@/lib/queries";
+import { getLatestUsage, getProjects, getStats } from "@/lib/queries";
+import type { UsageView } from "@/lib/usage";
 import "./globals.css";
 
 const familjen = Familjen_Grotesk({ variable: "--font-familjen", subsets: ["latin"] });
@@ -41,18 +43,21 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   let inProgressTasks = 0;
   let liveSessions = 0;
   let pendingPlans = 0;
+  let usage: UsageView | null = null;
   if (db) {
     try {
-      const [h, t, stats, p] = await Promise.all([
+      const [h, t, stats, p, u] = await Promise.all([
         db.from("hitl_approvals").select("*", { count: "exact", head: true }).eq("status", "pending"),
         db.from("tasks").select("*", { count: "exact", head: true }).in("status", ["pending", "in_progress"]),
         getStats(),
         db.from("hitl_approvals").select("*", { count: "exact", head: true }).eq("status", "pending").eq("tool_name", "ExitPlanMode"),
+        getLatestUsage(),
       ]);
       pendingApprovals = h.count ?? 0;
       inProgressTasks = t.count ?? 0;
       liveSessions = stats?.activeSessions ?? 0;
       pendingPlans = p.count ?? 0;
+      usage = u;
     } catch {}
   }
   const navCounts: NavCounts = { pendingApprovals, inProgressTasks, liveSessions, pendingPlans };
@@ -152,8 +157,12 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             <DeckRail counts={navCounts} />
             <NavAutoRefresh />
 
+            <div className="mt-auto">
+              <UsageMeter usage={usage} />
+            </div>
+
             <div
-              className="rail-footer mt-auto flex items-center gap-[0.5556rem] border-t px-[0.8889rem] py-[0.6111rem]"
+              className="rail-footer flex items-center gap-[0.5556rem] border-t px-[0.8889rem] py-[0.6111rem]"
               style={{ borderColor: "var(--rail-line-soft)" }}
             >
               <span className="font-mono" style={{ fontSize: "0.5556rem", letterSpacing: "0.1em", color: "var(--rail-muted2)" }}>
@@ -220,7 +229,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
                 />
               </span>
             </SettingsTrigger>
-            <MobileNav counts={navCounts} />
+            <MobileNav counts={navCounts} footer={<UsageMeter usage={usage} />} />
           </header>
 
           <div className="rail-content-shift w-full flex-1 min-w-0 md:ml-[var(--rail-w)]">

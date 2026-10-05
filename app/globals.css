@@ -350,6 +350,16 @@ body {
   --rail-w: 3.3333rem;
 }
 
+/* Usage meter (components/usage-meter.tsx): full panel normally, one mini bar
+   for the fullest window in the collapsed rail. */
+.rail-usage-full { display: flex; }
+.rail-usage-mini { display: none; }
+@media (min-width: 48rem) {
+  [data-rail="collapsed"] .rail-usage { padding-inline: 0.6667rem; }
+  [data-rail="collapsed"] .rail-usage-full { display: none; }
+  [data-rail="collapsed"] .rail-usage-mini { display: flex; }
+}
+
 @media (min-width: 48rem) {
   [data-rail="collapsed"] .rail-label,
   [data-rail="collapsed"] .rail-group-label,

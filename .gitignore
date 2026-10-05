@@ -97,5 +97,11 @@ src/plugins/impeccable-live.client.ts
 .claude/skills/
 skills-lock.json
 
+<<<<<<< HEAD
 # /brag Hyperframes source project (regenerable; the rendered video lives in docs/brag/)
 /brag-output/
+=======
+# Written by Claude Code when it loads the cc-track mod
+mods/*/.claude-plugin/types/
+mods/*/tsconfig.json
+>>>>>>> e83dda26fc0c17cc019e3cc05de41cce54e3982e

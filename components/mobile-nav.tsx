@@ -211,7 +211,7 @@ export function DeckNav({
   );
 }
 
-export function MobileNav({ counts }: { counts: NavCounts }) {
+export function MobileNav({ counts, footer }: { counts: NavCounts; footer?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const ref = useRef<HTMLDialogElement>(null);
@@ -281,6 +281,7 @@ export function MobileNav({ counts }: { counts: NavCounts }) {
           <SearchTrigger />
         </div>
         <DeckNav counts={counts} onNavigate={close} />
+        {footer}
       </dialog>
     </div>
   );

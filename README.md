@@ -153,6 +153,41 @@ What gets captured automatically:
 
 The hook script fails silently and exits 0; it can never block Claude Code.
 
+### Alternative: the `cc-track` mod (no settings hooks)
+
+On Claude Code builds with function-hook plugins ("mods"), `mods/cc-track`
+does the forwarder's job from inside Claude Code: the engine hands it each
+event's payload (the same JSON a settings hook gets on stdin) and it POSTs to
+`/api/ingest/hook`. No `node` process is spawned per event, events arrive in
+order, and it reuses `~/.cc-track/config.json`.
+
+It also sends one thing settings hooks cannot: a `SessionUsage` event after any
+turn that moved the session's cost or a rate-limit window (5-hour / 7-day %),
+stored as a `session_usage` event. `Stop` payloads also carry `usage`
+(`cost_usd`, `rate_limits`).
+The newest reading shows at the foot of the sidebar (and the mobile menu):
+5h / 7d limit bars with reset times and the session cost, muted once it is
+over 6 hours old. Nothing shows until the mod has sent one.
+
+One command does the setup below (backs up `settings.json` first):
+
+```bash
+node hooks/install.mjs --mod            # reuses ~/.cc-track/config.json; add --url/--key on a fresh machine
+```
+
+By hand: load it from this checkout, so the `.heartbeat` / `start-hidden.vbs` paths
+resolve. In `~/.claude/settings.json`:
+
+```json
+{ "env": { "CLAUDE_CODE_PLUGIN_DIRS": "/ABS/PATH/cc-track/mods/cc-track" } }
+```
+
+(or `claude --plugin-dir /ABS/PATH/cc-track/mods/cc-track` for one session).
+Then **remove the `claude-tracker.mjs` entries** from your settings hooks; keep
+the HITL `PreToolUse` one. While `claude-tracker.mjs` is still wired, the mod
+stays idle and shows a toast, so events are never double-counted. Tests:
+`claude plugin test mods/cc-track`.
+
 ## 4 · Plans & tasks: `cctrack` CLI
 
 ```bash
