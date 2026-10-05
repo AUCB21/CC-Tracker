@@ -165,6 +165,9 @@ It also sends one thing settings hooks cannot: a `SessionUsage` event after any
 turn that moved the session's cost or a rate-limit window (5-hour / 7-day %),
 stored as a `session_usage` event. `Stop` payloads also carry `usage`
 (`cost_usd`, `rate_limits`).
+The newest reading shows at the foot of the sidebar (and the mobile menu):
+5h / 7d limit bars with reset times and the session cost, muted once it is
+over 6 hours old. Nothing shows until the mod has sent one.
 
 Load it from this checkout, so the `.heartbeat` / `start-hidden.vbs` paths
 resolve. In `~/.claude/settings.json`:

@@ -2,6 +2,7 @@ import "server-only";
 import { unstable_cache } from "next/cache";
 import { getSupabase, withDb } from "./supabase";
 import type { Project, Session, Plan, Task, EventRow, TaskRun } from "./types";
+import { buildUsageView, type UsageView } from "./usage";
 
 export type Stats = {
   sessions: number;
@@ -424,4 +425,19 @@ export async function getProjectDailySpend(projectIds: string[]): Promise<Map<st
   return new Map(
     ((data ?? []) as { project_id: string; spend_usd: number }[]).map((r) => [r.project_id, Number(r.spend_usd)])
   );
+}
+
+/** Newest rate-limit reading from the cc-track mod; null when none was ever sent. */
+export async function getLatestUsage(): Promise<UsageView | null> {
+  return withDb(async (db) => {
+    const { data } = await db
+      .from("events")
+      .select("data,created_at")
+      .eq("type", "session_usage")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const row = data as { data: unknown; created_at: string } | null;
+    return row ? buildUsageView(row.data, row.created_at) : null;
+  });
 }
