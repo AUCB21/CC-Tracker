@@ -169,7 +169,13 @@ The newest reading shows at the foot of the sidebar (and the mobile menu):
 5h / 7d limit bars with reset times and the session cost, muted once it is
 over 6 hours old. Nothing shows until the mod has sent one.
 
-Load it from this checkout, so the `.heartbeat` / `start-hidden.vbs` paths
+One command does the setup below (backs up `settings.json` first):
+
+```bash
+node hooks/install.mjs --mod            # reuses ~/.cc-track/config.json; add --url/--key on a fresh machine
+```
+
+By hand: load it from this checkout, so the `.heartbeat` / `start-hidden.vbs` paths
 resolve. In `~/.claude/settings.json`:
 
 ```json
