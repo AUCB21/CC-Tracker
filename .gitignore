@@ -96,3 +96,7 @@ src/plugins/impeccable-live.client.ts
 .agents/
 .claude/skills/
 skills-lock.json
+
+# Written by Claude Code when it loads the cc-track mod
+mods/*/.claude-plugin/types/
+mods/*/tsconfig.json

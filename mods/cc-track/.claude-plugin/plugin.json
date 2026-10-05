@@ -1,0 +1,8 @@
+{
+  "name": "cc-track",
+  "version": "0.1.0",
+  "description": "Forwards Claude Code session events to the CC-Track tracker from inside Claude Code, replacing the settings-hook forwarder.",
+  "author": {
+    "name": "AUCB21"
+  }
+}

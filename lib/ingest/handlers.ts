@@ -4,7 +4,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { addEvent, ensureSession, resolveProject } from "./db";
 import type { HookPayload } from "../ingest";
-import { handleNotification, handleStopFailure } from "./misc";
+import { handleNotification, handleSessionUsage, handleStopFailure } from "./misc";
 import { handlePostToolUse } from "./post-tool-use";
 import { handleSessionEnd } from "./session-end";
 import { handleSessionStart } from "./session-start";
@@ -80,4 +80,5 @@ export const HOOK_HANDLERS: Record<string, HookHandler> = {
   SubagentStop: handleSubagentStop,
   StopFailure: handleStopFailure,
   Notification: handleNotification,
+  SessionUsage: handleSessionUsage,
 };
